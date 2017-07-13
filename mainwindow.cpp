@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 }
 
+MidiPlayer player;
+
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -46,9 +48,11 @@ void MainWindow::on_actionOpen_triggered()
             s.append(QString::number(val) + " ");
         }
         song = manager.Deserialize(array);
-        MidiPlayer player;
-        player.playMidiFile(&song);
 
+        QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,&song);
+        //player.playMidiFile(&song);
+
+       // player.pausePlayBack();
         ui->textEdit->setText(s);
         file.close();
     }
@@ -56,18 +60,15 @@ void MainWindow::on_actionOpen_triggered()
 
 void MainWindow::on_actionSave_triggered()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), QString(),
-              tr("Text Files (*.txt);;C++ Files (*.cpp *.h)"));
 
-      if (!fileName.isEmpty()) {
-          QFile file(fileName);
-          if (!file.open(QIODevice::WriteOnly)) {
-              // error message
-          } else {
-              QTextStream stream(&file);
-              stream << ui->textEdit->toPlainText();
-              stream.flush();
-              file.close();
-          }
       }
+
+void MainWindow::on_PauseButton_clicked()
+{
+    player.pausePlayBack();
+}
+
+void MainWindow::on_StartButton_clicked()
+{
+     player.resumePlayBack();
 }

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QtConcurrent/QtConcurrent>
 
 namespace Ui {
 class MainWindow;
@@ -21,6 +22,10 @@ private slots:
     void on_actionOpen_triggered();
 
     void on_actionSave_triggered();
+
+    void on_PauseButton_clicked();
+
+    void on_StartButton_clicked();
 
 private:
     Ui::MainWindow *ui;

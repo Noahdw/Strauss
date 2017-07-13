@@ -110,59 +110,22 @@ Midi MidiManager::Deserialize(QByteArray &array)
                         event.status = 0x80 | event.channel;
                     }
                 }
+
                 int t = 0;
                 t =  ((unsigned char)array.at(pos))>>4;
                 if (!eventCanAdd) {//No need to run if running status
-                    switch (t) {
-                    //Note on
-                    case 9:
-                        event.status = (unsigned char)array.at(pos);
-                        event.channel =  (unsigned char)array.at(pos) & 15;
-                        event.noteOn = true;
-                        event.dataByte1 = (unsigned char)array.at(++pos);
-                        event.dataByte2 = (unsigned char)array.at(++pos);
-                        event.type = "note";
-                        lastEvent = event;
-                        eventCanAdd = true;
-                        break;
-                        //Note off
-                    case 8:
-                        qDebug() << "Note off handeled";
-                        event.status = (unsigned char)array.at(pos);
-                        event.channel =  (unsigned char)array.at(pos) & 15;
-                        event.noteOn = true;
-                        event.dataByte1 = (unsigned char)array.at(++pos);
-                        if ((unsigned char)array.at(++pos) != 0) {
-                            qDebug() << "Note off was not 0 velocity";
-                        }
-                        event.dataByte2 = 0;
-                        event.type = "note";
-                        lastEvent = event;
-                        eventCanAdd = true;
-                        break;
-                        //General purpose DAW stuff
-                    case 11:
-                        pos++;
-                        switch ((unsigned char)array.at(pos)) {
-                        //Sustain pedal
-                        case 64:
-                            eventCanAdd = true;
-                            event.type = "note";
-                            event.status = (unsigned char)array.at(pos-1);
-                            event.channel =  (unsigned char)array.at(pos-1) & 15;
-                            event.dataByte1 = (unsigned char)array.at(pos);
+                    //Normal event
+                    if (((unsigned char)array.at(pos) >>4) != 15) {
+                          event.status = (unsigned char)array.at(pos);
+                            event.channel =  (unsigned char)array.at(pos) & 15;
+                            event.dataByte1 = (unsigned char)array.at(++pos);
                             event.dataByte2 = (unsigned char)array.at(++pos);
-                            lastEvent.status = event.status;
-                            break;
-                        default:
-                            qDebug() << "Unhandled DAW event:" << (unsigned char)array.at(pos);
-                            break;
-                        }
-                        break;
-                        // Meta event
-                    case 15:
-                        pos++;
-                        switch ((unsigned char)array.at(pos)) {
+                            lastEvent = event;
+                            eventCanAdd = true;
+                    }
+                    //Meta event
+                    else if (((unsigned char)array.at(pos) >>4) == 15) {
+                        switch ((unsigned char)array.at(++pos)) {
                         //Track name
                         case 3: {
                             int len = (unsigned char)array.at(++pos);
@@ -183,24 +146,52 @@ Midi MidiManager::Deserialize(QByteArray &array)
                             }
                             track.instrumentName = name;
                             break;
-
                         }
-                        //End of track
-                        case 47:
-                          pos =  track.length + currentPos;
+                            //Time signature
+                        case 88:
+                        {
+                            int len = (unsigned char)array.at(++pos);
+                            for (int var = 0; var < len; ++var) {
+
+                                pos++;
+                                //unhandled for now, wtf does the data mean
+                                //length is actually variable length, should fix
+                            }
                             break;
-                        default:
-                            qDebug() << "Unhandled meta event:" << (unsigned char)array.at(pos);
+                        }
+                        case 89:
+                        {
+                            int len = (unsigned char)array.at(++pos);
+                            for (int var = 0; var < len; ++var) {
+
+                                pos++;
+                                //unhandled for now, wtf does the data mean
+                            }
+                            break;
+                        }
+                        case 81:
+                        {
+                            int len = (unsigned char)array.at(++pos);
+                            for (int var = 0; var < len; ++var) {
+
+                                pos++;
+                                //unhandled for now, wtf does the data mean
+                            }
+                            break;
+                        }
+                            //End of track
+                            case 47:
+                                pos =  track.length + currentPos;
+                                break;
+                        case 33:
+                            pos++;
                             break;
 
+                         default:
+                            qDebug() << "Meta event unhandled: " << (unsigned char)array.at(pos);
+                            break;
                         }
-                        break;
-                    default:
-                        qDebug() << "Unhandled event:" << t;
-                        break;
                     }
-
-
                 }
                 if (eventCanAdd) {
                     track.events.append(event);

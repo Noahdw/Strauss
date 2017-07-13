@@ -11,7 +11,8 @@ class MidiPlayer
 public:
     MidiPlayer();
     void playMidiFile(Midi *song);
-
+    void pausePlayBack();
+    void resumePlayBack();
 };
 
 #endif // MIDIPLAYER_H
