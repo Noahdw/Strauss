@@ -6,10 +6,7 @@ class Tracks
 {
 public:
     Tracks();
-    int length;
-    QList<Event> events;
-    QString trackName;
-    QString instrumentName;
+
 };
 
 #endif // TRACKS_H

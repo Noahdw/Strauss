@@ -7,13 +7,6 @@ class Midi
 public:
     Midi();
 
-    QList<Tracks> tracks;
-    int format;
-    int trackChunks;
-    bool divisionFormat;
-    int ticksPerQuarterNote;
-    int deltaTimeSMTPE;
-    int framesPerSecondSMTPE;
 
 };
 

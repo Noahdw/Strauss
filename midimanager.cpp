@@ -1,9 +1,12 @@
 #include "midimanager.h"
 
+
+
 MidiManager::MidiManager()
 {
 
 }
+mSong song;
 
 QByteArray MidiManager::ReadMidi(QFile &file)
 {
@@ -23,10 +26,10 @@ QByteArray MidiManager::ReadMidi(QFile &file)
     return array;
 
 }
-Midi MidiManager::Deserialize(QByteArray &array)
+mSong MidiManager::Deserialize(QByteArray &array)
 {
     //One extra byte at pos 0 of array for some reason, 0 based indexing cancels it out
-    Midi song;
+
     song.format = array.at(10);
     song.trackChunks = array.at(12); // no one needs more than 127 tracks anyways
     qint16 bits;
@@ -36,9 +39,12 @@ Midi MidiManager::Deserialize(QByteArray &array)
     {
         song.deltaTimeSMTPE = array.at(13) & 127;
         song.framesPerSecondSMTPE = ~(array.at(14))+1;
+         song.ticksPerQuarterNote = 0;
     }
     else
     {
+         song.deltaTimeSMTPE = 0;
+         song.framesPerSecondSMTPE = 0;
         bits = ((unsigned char)(array.at(13)) << 8) | (unsigned char)array.at(14);
         song.ticksPerQuarterNote = bits;
     }
@@ -47,7 +53,9 @@ Midi MidiManager::Deserialize(QByteArray &array)
     if (true) { // was if format is 0, but ya know
         //Runs for amount of tracks in a song
         for (int var = 0; var < song.trackChunks; ++var) {
-            Tracks track;
+           mTrack track = mTrack();
+           track.trackName = "";
+           track.instrumentName ="";
             currentPos += 4; //should put on first byte of Length
             track.length = ((unsigned char)(array.at(currentPos)) << 24 |
                             (unsigned char)(array.at(currentPos+1)) << 16 |
@@ -55,7 +63,7 @@ Midi MidiManager::Deserialize(QByteArray &array)
                             (unsigned char)(array.at(currentPos+3)));
             currentPos += 4; //should put on first byte after length
 
-            Event lastEvent;
+            mEvent lastEvent = mEvent();
 
             //Runs for amount of bytes in a track, each iteration is a new event
             for (int pos = currentPos; pos < track.length + currentPos; ++pos) {
@@ -95,7 +103,7 @@ Midi MidiManager::Deserialize(QByteArray &array)
                     deltaTime = (deltaTime >> 2) | 8421504;
                     pos+=4;
                 }
-                Event event;
+                mEvent event = mEvent();
                 event.deltaTime = deltaTime;
                 //Running status
                 if (((unsigned char)array.at(pos)  & 128) != 128) {
@@ -106,100 +114,98 @@ Midi MidiManager::Deserialize(QByteArray &array)
                     event.dataByte2 = (unsigned char)array.at(++pos);
                     event.type = "note";
                     if (event.dataByte2 == 0) {
-                        event.noteOn = false;
+                       // event.noteOn = false;
                         event.status = 0x80 | event.channel;
                     }
                 }
-
                 int t = 0;
-                t =  ((unsigned char)array.at(pos))>>4;
-                if (!eventCanAdd) {//No need to run if running status
-                    //Normal event
-                    if (((unsigned char)array.at(pos) >>4) != 15) {
-                          event.status = (unsigned char)array.at(pos);
-                            event.channel =  (unsigned char)array.at(pos) & 15;
-                            event.dataByte1 = (unsigned char)array.at(++pos);
-                            event.dataByte2 = (unsigned char)array.at(++pos);
-                            lastEvent = event;
-                            eventCanAdd = true;
-                    }
-                    //Meta event
-                    else if (((unsigned char)array.at(pos) >>4) == 15) {
-                        switch ((unsigned char)array.at(++pos)) {
-                        //Track name
-                        case 3: {
-                            int len = (unsigned char)array.at(++pos);
-                            QString name;
-                            name.resize(len);
-                            for (int var = 0; var < len; ++var) {
-                                name[var] = (unsigned char)array.at(++pos);
+                                t =  ((unsigned char)array.at(pos))>>4;
+                                if (!eventCanAdd) {//No need to run if running status
+                                    //Normal event
+                                    if (((unsigned char)array.at(pos) >>4) != 15) {
+                                          event.status = (unsigned char)array.at(pos);
+                                            event.channel =  (unsigned char)array.at(pos) & 15;
+                                            event.dataByte1 = (unsigned char)array.at(++pos);
+                                            event.dataByte2 = (unsigned char)array.at(++pos);
+                                            lastEvent = event;
+                                            eventCanAdd = true;
+                                    }
+                                    //Meta event
+                                    else if (((unsigned char)array.at(pos) >>4) == 15) {
+                                        switch ((unsigned char)array.at(++pos)) {
+                                        //Track name
+                                        case 3: {
+                                            int len = (unsigned char)array.at(++pos);
+                                            QString name;
+                                            name.resize(len);
+                                            for (int var = 0; var < len; ++var) {
+                                                name[var] = (unsigned char)array.at(++pos);
+                                            }
+                                            track.trackName = name;
+                                            break;
+                                        }
+                                        case 4:{
+                                            int len = (unsigned char)array.at(++pos);
+                                            QString name;
+                                            name.resize(len);
+                                            for (int var = 0; var < len; ++var) {
+                                                name[var] = (unsigned char)array.at(++pos);
+                                            }
+                                            track.instrumentName = name;
+                                            break;
+                                        }
+                                            //Time signature
+                                        case 88:
+                                        {
+                                            int len = (unsigned char)array.at(++pos);
+                                            for (int var = 0; var < len; ++var) {
+
+                                                pos++;
+                                                //unhandled for now, wtf does the data mean
+                                                //length is actually variable length, should fix
+                                            }
+                                            break;
+                                        }
+                                        case 89:
+                                        {
+                                            int len = (unsigned char)array.at(++pos);
+                                            for (int var = 0; var < len; ++var) {
+
+                                                pos++;
+                                                //unhandled for now, wtf does the data mean
+                                            }
+                                            break;
+                                        }
+                                        case 81:
+                                        {
+                                            int len = (unsigned char)array.at(++pos);
+                                            for (int var = 0; var < len; ++var) {
+
+                                                pos++;
+                                                //unhandled for now, wtf does the data mean
+                                            }
+                                            break;
+                                        }
+                                            //End of track
+                                            case 47:
+                                                pos =  track.length + currentPos;
+                                                break;
+                                        case 33:
+                                            pos++;
+                                            break;
+
+                                         default:
+                                            qDebug() << "Meta event unhandled: " << (unsigned char)array.at(pos);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (eventCanAdd) {
+                                    track.events.append(event);
+                                }
                             }
-                            track.trackName = name;
-                            break;
-                        }
-                        case 4:{
-                            int len = (unsigned char)array.at(++pos);
-                            QString name;
-                            name.resize(len);
-                            for (int var = 0; var < len; ++var) {
-                                name[var] = (unsigned char)array.at(++pos);
-                            }
-                            track.instrumentName = name;
-                            break;
-                        }
-                            //Time signature
-                        case 88:
-                        {
-                            int len = (unsigned char)array.at(++pos);
-                            for (int var = 0; var < len; ++var) {
 
-                                pos++;
-                                //unhandled for now, wtf does the data mean
-                                //length is actually variable length, should fix
-                            }
-                            break;
-                        }
-                        case 89:
-                        {
-                            int len = (unsigned char)array.at(++pos);
-                            for (int var = 0; var < len; ++var) {
-
-                                pos++;
-                                //unhandled for now, wtf does the data mean
-                            }
-                            break;
-                        }
-                        case 81:
-                        {
-                            int len = (unsigned char)array.at(++pos);
-                            for (int var = 0; var < len; ++var) {
-
-                                pos++;
-                                //unhandled for now, wtf does the data mean
-                            }
-                            break;
-                        }
-                            //End of track
-                            case 47:
-                                pos =  track.length + currentPos;
-                                break;
-                        case 33:
-                            pos++;
-                            break;
-
-                         default:
-                            qDebug() << "Meta event unhandled: " << (unsigned char)array.at(pos);
-                            break;
-                        }
-                    }
-                }
-                if (eventCanAdd) {
-                    track.events.append(event);
-                }
-            }
-
-            song.tracks.append(track);
-
+                            song.tracks.append(track);
         }
     }
     else if (song.format == 1) {

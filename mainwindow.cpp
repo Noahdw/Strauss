@@ -7,16 +7,18 @@
 #include <QTextStream>
 #include <midi.h>
 #include <midiplayer.h>
+#include<QtConcurrent/QtConcurrent>
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    //PianoRoll pRoll(this);
     ui->setupUi(this);
+    //pRoll.createPianoRoll();
 }
-
-MidiPlayer player;
-
+  MidiPlayer player;
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -38,30 +40,38 @@ void MainWindow::on_actionOpen_triggered()
             QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
             return;
         }
-        MidiManager manager;
-        Midi song;
+        MidiManager * manager = new MidiManager;
+
         QString s;
 
-        QByteArray array = manager.ReadMidi(file);
+        QByteArray array = manager->ReadMidi(file);
         for (int var = 0; var < array.length(); ++var) {
             qint8 val= array.at(var);
             s.append(QString::number(val) + " ");
         }
-        song = manager.Deserialize(array);
 
-        QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,&song);
-        //player.playMidiFile(&song);
+
+
+
+
+
+        manager->song = manager->Deserialize(array);
+
+
+             QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
+
+
+
+
 
        // player.pausePlayBack();
-        ui->textEdit->setText(s);
+       // ui->textEdit->setText(s);
+
         file.close();
     }
 }
 
-void MainWindow::on_actionSave_triggered()
-{
 
-      }
 
 void MainWindow::on_PauseButton_clicked()
 {
@@ -70,5 +80,8 @@ void MainWindow::on_PauseButton_clicked()
 
 void MainWindow::on_StartButton_clicked()
 {
-     player.resumePlayBack();
+   player.resumePlayBack();
 }
+
+void MainWindow::on_actionSave_triggered()
+{}

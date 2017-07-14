@@ -4,15 +4,17 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <QDebug>
+#include<midimanager.h>
 #pragma comment (lib, "winmm.lib")
 
 class MidiPlayer
 {
 public:
     MidiPlayer();
-    void playMidiFile(Midi *song);
+    void playMidiFile(MidiManager *song);
     void pausePlayBack();
     void resumePlayBack();
+
 };
 
 #endif // MIDIPLAYER_H
