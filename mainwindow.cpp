@@ -8,15 +8,15 @@
 #include <midi.h>
 #include <midiplayer.h>
 #include<QtConcurrent/QtConcurrent>
-
+#include <pianoroll.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    //PianoRoll pRoll(this);
+
     ui->setupUi(this);
-    //pRoll.createPianoRoll();
+   // pRoll.createPianoRoll();
 }
   MidiPlayer player;
 MainWindow::~MainWindow()

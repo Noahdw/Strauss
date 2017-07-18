@@ -4,8 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-
+QT       += core gui\
+            quickwidgets
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = MidiInter
@@ -42,3 +42,10 @@ HEADERS  += mainwindow.h\
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm
+
+DISTFILES += \
+    PianoRollForm.ui.qml \
+    Main.qml \
+    PianoKeys.qml \
+    PianoRoll.qml
+QML +=

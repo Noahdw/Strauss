@@ -8,7 +8,7 @@ MidiPlayer::MidiPlayer()
 HANDLE hEvent;
 void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
 HMIDISTRM outHandle;
-
+unsigned int DeviceID = 1;
 
 
 void MidiPlayer::playMidiFile(MidiManager *manager){
@@ -23,9 +23,9 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
 
         event.dwDeltaTime = manager->song.tracks.at(0).events.at(var).deltaTime;
         event.dwStreamID = 0;
-        DWORD nvnt =( (manager->song.tracks.at(0).events.at(var).dataByte2 << 16 |
+        DWORD nvnt =( manager->song.tracks.at(0).events.at(var).dataByte2 << 16 |
                        manager->song.tracks.at(0).events.at(var).dataByte1 << 8 |
-                       manager->song.tracks.at(0).events.at(var).status));
+                       manager->song.tracks.at(0).events.at(var).status);
         event.dwEvent = nvnt;
 
         evnts[tots] = event;
@@ -39,7 +39,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
         tempNotes[var*3 + 2] = evnts[var].dwEvent;
     }
 
-    unsigned int DeviceID = 1;
+
     unsigned long result;
 
     hEvent = CreateEvent(0, FALSE, FALSE, 0);
@@ -161,14 +161,81 @@ void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD d
             break;
     }
 }
-
+bool streamOpen = false;
 void MidiPlayer::pausePlayBack(){
     midiStreamPause(outHandle);
 }
+void MidiPlayer::Midiman(QString note,QString offOn){
+
+    int noteT = note.toInt();
+    uchar noteTT = noteT;
+    uchar velocity = 80;
+    DWORD inote;
+    uchar status = 0x90;
+    if (offOn == "off") {
+
+   velocity = 0;
+   status = 0x80;
+
+    }
+    inote =( velocity << 16 |
+                    noteTT << 8 |
+                    status);
+    int result;
+    std::vector<int> v1;
+     qDebug() << "PLAYNOTE(): " <<  inote;
+    int notes[] = {0, 0, 0x007F3C90};
+    v1.push_back(0);
+    v1.push_back(0);
+    v1.push_back(inote);
+
+    hEvent = CreateEvent(0, FALSE, FALSE, 0);
+    if (hEvent==NULL) {
+        qDebug() << "CCould not creat event";
+    }
+    if (!streamOpen) {
+
+
+     result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
+      if (result!=MMSYSERR_NOERROR){
+          qDebug() << "CCOULD NOT OPEN STREAM?";
+      }
+      else{streamOpen = true;}
+ }
+     MIDIHDR buffer;
+     buffer.lpData =(LPSTR)&v1[0];
+     buffer.dwBufferLength = sizeof(v1[0]) * v1.size();
+     buffer.dwBytesRecorded = sizeof(v1[0]) * v1.size();
+     buffer.dwFlags = 0;
+    result = midiOutPrepareHeader((HMIDIOUT)outHandle,&buffer,sizeof(buffer));
+   result = midiStreamOut(outHandle,&buffer,sizeof(buffer));
+   if (result) {
+       qDebug() << "midiStreamOut playNote() error:" << result;
+   }
+   result = midiStreamRestart(outHandle);
+   if (result) {
+       qDebug() << "midiStreamRestart playNote() error";
+
+   }
+
+   WaitForSingleObject(hEvent, INFINITE);
+   midiOutUnprepareHeader((HMIDIOUT)outHandle, &buffer, sizeof(buffer));
+
+//midiStreamClose(outHandle);
+//streamOpen = false;
+//CloseHandle(hEvent);
+
+}
+
 void MidiPlayer::resumePlayBack(){
     int result = midiStreamRestart(outHandle);
     if (result) {
         qDebug() << "resumePlayBack error";
 
     }
+}
+
+void MidiPlayer::playNote(QString note,QString offOn){
+      QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,offOn);
+
 }
