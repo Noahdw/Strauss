@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
 
     view->show();
-    window.show();
+   // window.show();
 
     return app.exec();
 }
