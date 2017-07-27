@@ -47,5 +47,9 @@ DISTFILES += \
     PianoRollForm.ui.qml \
     Main.qml \
     PianoKeys.qml \
-    PianoRoll.qml
+    PianoRoll.qml \
+    DrawGrid.qml \
+    PianoRollNoteForm.ui.qml \
+    PianoRollNote.qml \
+    ScaleMenu.qml
 QML +=

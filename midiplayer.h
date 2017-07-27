@@ -17,6 +17,7 @@ public:
     void pausePlayBack();
     void resumePlayBack();
     void Midiman(QString note,QString offOn);
+    QVector<int> noteVecInit;
 public slots:
     void playNote(QString note,QString onOff);
 };

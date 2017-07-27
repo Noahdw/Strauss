@@ -24,11 +24,11 @@ Column {
             onPressed: {
                 playNote(rect1.objectName,"on")
 
-                pressed= 0;
+
             }
             onReleased: {
                 playNote(rect1.objectName,"off")
-                pressed = 1;
+
             }
 
             onEntered: {
@@ -60,11 +60,11 @@ Column {
             onPressed: {
                 playNote(rect2.objectName,"on")
                 console.log(rect2.objectName);
-                pressed = 0
+
             }
             onReleased: {
                 playNote(rect2.objectName,"off")
-                pressed = 1;
+
             }
             onEntered: {
                 parent.color = "red"
@@ -99,7 +99,7 @@ Column {
             }
             onReleased: {
                 playNote(rect3.objectName,"off")
-                pressed = 1;
+
             }
             onEntered: {
                 parent.color = "red"

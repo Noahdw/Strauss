@@ -10,15 +10,18 @@
 #include<QtConcurrent/QtConcurrent>
 #include <pianoroll.h>
 
-MainWindow::MainWindow(QWidget *parent) :
+MidiPlayer player;
+MidiManager *manager;
+
+MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-
+    manager = mngr;
     ui->setupUi(this);
    // pRoll.createPianoRoll();
 }
-  MidiPlayer player;
+
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -40,7 +43,7 @@ void MainWindow::on_actionOpen_triggered()
             QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
             return;
         }
-        MidiManager * manager = new MidiManager;
+
 
         QString s;
 
@@ -59,7 +62,7 @@ void MainWindow::on_actionOpen_triggered()
 
 
              QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
-
+            //manager->printMidiToScreen();
 
 
 

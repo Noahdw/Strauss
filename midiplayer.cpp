@@ -37,6 +37,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
         tempNotes[var*3] = evnts[var].dwDeltaTime;
         tempNotes[var*3 + 1] = 0;
         tempNotes[var*3 + 2] = evnts[var].dwEvent;
+
     }
 
 
