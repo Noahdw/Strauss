@@ -4,35 +4,52 @@ import QtQuick.Layouts 1.1
 PianoRollForm {
     property int pianoCols: 15
     property int pianoColsPos: pianoCols
+    property int scrollPos: scrollKeys.flickableItem.contentY
+    property int scrollPos2: scrollBar.flickableItem.contentY
     id: pRollForm
+    onScrollPosChanged: {
+    scrollBar.flickableItem.contentY = scrollPos
+        scrollKeys.flickableItem.contentY = scrollPos
+    }
+    onScrollPos2Changed: {
+    scrollBar.flickableItem.contentY = scrollPos2
+        scrollKeys.flickableItem.contentY = scrollPos2
+    }
+    Row{
+        ScrollView{
+            id:scrollKeys
+            height: 400
+            width: keyWidth
+             verticalScrollBarPolicy:   Qt.ScrollBarAlwaysOff
 
-    ScrollView{
-        id: scrollBar
-        horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOn
-        verticalScrollBarPolicy:   Qt.ScrollBarAlwaysOn
-        width: main.width;
-        height: 400
 
-        Row{
+        Column {
+            id: pianoCol;
 
-            Column {
-                id: pianoCol;
-
-                Repeater{
-                    id: rep
-                    model:11
-                    delegate: PianoKeys{
-
-                    }
+            Repeater{
+                id: rep
+                model:11
+                delegate: PianoKeys{
 
                 }
 
             }
+
+        }
+        }
+    ScrollView{
+        id: scrollBar
+        horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOn
+        verticalScrollBarPolicy:   Qt.ScrollBarAlwaysOn
+        width: main.width - keyWidth;
+        height: 400
+
             DrawGrid{
 
 
             }
 
-        }
+
+    }
     }
 }

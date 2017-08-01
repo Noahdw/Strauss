@@ -13,8 +13,8 @@ Rectangle {
     property int noteEnd: 0
     property bool freeMove: false
     height: keyHeight
-    width: testSpace * scale
-    color: (activeId === id) ? "darkslateblue" : "light blue"
+    width: noteEnd/tPQN*testSpace
+    color: "light blue"
     x: testSpace * quad * scale +(width*xchange)
     border { width: 1; color: "black" }
 
@@ -24,7 +24,7 @@ Rectangle {
         drag.target: hiddenItem
 
         onClicked: {
-
+            rect.color = "darkslateblue"
             activeId = id
         }
         onDoubleClicked:{
