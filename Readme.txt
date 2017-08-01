@@ -1,0 +1,2 @@
+MidiInter is an attempt to create a DAW (mostly just a piano roll atm) with QML and c++. All midi deserialization written by scratch,
+as well as all Piano roll logic as there are very few projects which pertain to such a niche use.
