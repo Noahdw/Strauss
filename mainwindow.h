@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
+#include <MidiManager.h>
 namespace Ui {
 class MainWindow;
 }
@@ -12,7 +12,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(MidiManager *mngr,QWidget *parent = 0);
     ~MainWindow();
 
 private slots:

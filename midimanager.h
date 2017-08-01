@@ -5,6 +5,9 @@
 #include <tracks.h>
 #include <midi.h>
 #include <QDebug>
+#include <QQmlListProperty>
+
+#include <windows.h>
 struct mEvent
 {
 
@@ -37,14 +40,24 @@ struct mSong
     int framesPerSecondSMTPE;
 };
 
-class MidiManager
+class MidiManager : public QObject
 {
+     Q_OBJECT
+
 public:
+    QQmlListProperty<int> notes();
     MidiManager();
      mSong Deserialize(QByteArray &array);
      QByteArray ReadMidi(QFile &file);
      mTrack track;
+     QVector<int> noteVec;
      mSong song;
+     Q_INVOKABLE QVector<int> getNoteInfo()
+       {
+           return noteVec;
+       }
+public slots:
+
 };
 
 #endif // MIDIMANAGER_H
