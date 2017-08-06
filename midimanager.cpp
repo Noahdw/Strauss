@@ -8,6 +8,7 @@ MidiManager::MidiManager()
 }
 mSong song;
 
+
 QByteArray MidiManager::ReadMidi(QFile &file)
 {
     QDataStream in(&file);
@@ -223,6 +224,41 @@ mSong MidiManager::Deserialize(QByteArray &array)
 
     }
     return song;
+}
+
+void MidiManager::updateMidi(int note, int start, int length){
+    int vLen = noteVec.length();
+    int vPos = 0;
+    int elapsed = 0;
+    QVector<int> newVec;
+    if ( vLen > 0) {
+
+        for (int dw = 0; dw < vLen; dw+=3) {
+            elapsed += noteVec.at(dw);
+            if (elapsed > start) {
+                  elapsed -= noteVec.at(dw);
+                  vPos = dw - 3;
+                  break;
+            }
+        }
+
+        elapsed = start - elapsed; // The delta time
+        for (int pos = 0; pos < noteVec.length(); pos+=3) {
+            if (pos == vPos) {
+                DWORD nvnt =( 80 << 16 |
+                               note << 8 |
+                               0x90);
+                newVec.append(elapsed);
+                newVec.append(0);
+                newVec.append(nvnt);
+            }
+            newVec.append(noteVec.at(pos));
+            newVec.append(noteVec.at(pos+1));
+            newVec.append(noteVec.at(pos+2));
+        }
+
+    }
+    noteVec = newVec;
 }
 
 

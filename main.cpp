@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
         view->rootContext()->setContextProperty("manager", manager);
     auto rootObject = view->rootObject();
     QObject::connect((QObject*)rootObject,SIGNAL(playNote(QString,QString)),player,SLOT(playNote(QString,QString)));
-   // QObject::connect((QObject*)rootObject,SIGNAL(printMidiToScreen()),manager,SLOT(printMidiToScreen()));
+    QObject::connect((QObject*)rootObject,SIGNAL(updateMidi(int,int,int)),manager,SLOT(updateMidi(int,int,int)));
 
 
 

@@ -11,12 +11,15 @@ Rectangle {
     property int xCur: 0
     property int noteStart: 0
     property int noteEnd: 0
+    property int note: 0
     property bool freeMove: false
     height: keyHeight
     width: noteEnd/tPQN*testSpace
     color: "light blue"
     x: testSpace * quad * scale +(width*xchange)
+    y: keyHeight * note
     border { width: 1; color: "black" }
+
 
     MouseArea{
         id: mouseArea

@@ -166,6 +166,7 @@ bool streamOpen = false;
 void MidiPlayer::pausePlayBack(){
     midiStreamPause(outHandle);
 }
+//This allows for playback from the piano roll keyboard
 void MidiPlayer::Midiman(QString note,QString offOn){
 
     int noteT = note.toInt();
@@ -236,6 +237,7 @@ void MidiPlayer::resumePlayBack(){
     }
 }
 
+//Simpy calls Midiman for playback - perhaps not needed but seems to be for threading
 void MidiPlayer::playNote(QString note,QString offOn){
       QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,offOn);
 

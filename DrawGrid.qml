@@ -141,7 +141,10 @@ Canvas{
                     yy=  mouse.y / keyHeight
                     xx = mouse.x /(colSpacing * scaleFactor)
 
-                    component.createObject(canvas2,{"y": keyHeight* yy,"quad": xx,"id": totIds,"scale": scaleFactor});
+                    component.createObject(canvas2,{"note": yy,"quad": xx,"id": totIds,"scale": scaleFactor, "noteEnd": tPQN*scaleFactor});
+
+                    updateMidi(yy,xx*tPQN,tPQN*scaleFactor)
+
 
                     totIds++
                 }

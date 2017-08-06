@@ -13,10 +13,10 @@ struct mEvent
 
     int deltaTime;
     unsigned char dataByte1;
-   unsigned char velocity;
-   unsigned char channel;
-  unsigned  char status;
-  unsigned  char dataByte2;
+    unsigned char velocity;
+    unsigned char channel;
+    unsigned  char status;
+    unsigned  char dataByte2;
     int noteOffOn;
     QString type;
 
@@ -42,21 +42,23 @@ struct mSong
 
 class MidiManager : public QObject
 {
-     Q_OBJECT
+    Q_OBJECT
 
 public:
     QQmlListProperty<int> notes();
     MidiManager();
-     mSong Deserialize(QByteArray &array);
-     QByteArray ReadMidi(QFile &file);
-     mTrack track;
-     QVector<int> noteVec;
-     mSong song;
-     Q_INVOKABLE QVector<int> getNoteInfo()
-       {
-           return noteVec;
-       }
+    mSong Deserialize(QByteArray &array);
+    QByteArray ReadMidi(QFile &file);
+    mTrack track;
+    QVector<int> noteVec;
+    mSong song;
+    Q_INVOKABLE QVector<int> getNoteInfo()
+    {
+        return noteVec;
+    }
+
 public slots:
+      void updateMidi(int note,int start, int length);
 
 };
 
