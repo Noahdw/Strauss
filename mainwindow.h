@@ -26,6 +26,8 @@ private slots:
 
     void on_StartButton_clicked();
 
+    void playSong();
+
 private:
     Ui::MainWindow *ui;
 };

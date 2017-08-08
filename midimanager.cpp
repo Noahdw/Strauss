@@ -7,7 +7,7 @@ MidiManager::MidiManager()
 
 }
 mSong song;
-
+QVector<int>noteVec = QVector<int>();
 
 QByteArray MidiManager::ReadMidi(QFile &file)
 {
@@ -106,6 +106,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 }
                 mEvent event = mEvent();
                 event.deltaTime = deltaTime;
+
                 //Running status
                 if (((unsigned char)array.at(pos)  & 128) != 128) {
                     eventCanAdd = true;
@@ -118,6 +119,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                         // event.noteOn = false;
                         event.status = 0x80 | event.channel;
                     }
+                   // noteVec.append(statusDWORD(event.dataByte1,event.dataByte2,event.status));
                 }
                 int t = 0;
                 t =  ((unsigned char)array.at(pos))>>4;
@@ -128,6 +130,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                         event.channel =  (unsigned char)array.at(pos) & 15;
                         event.dataByte1 = (unsigned char)array.at(++pos);
                         event.dataByte2 = (unsigned char)array.at(++pos);
+                       // noteVec.append(statusDWORD(event.dataByte1,event.dataByte2,event.status));
                         lastEvent = event;
                         eventCanAdd = true;
                     }
@@ -217,9 +220,10 @@ mSong MidiManager::Deserialize(QByteArray &array)
 
         noteVec.append(song.tracks.at(0).events.at(var).deltaTime);
        noteVec.append(0);
-        DWORD nvnt =( song.tracks.at(0).events.at(var).dataByte2 << 16 |
-                       song.tracks.at(0).events.at(var).dataByte1 << 8 |
-                       song.tracks.at(0).events.at(var).status);
+
+       DWORD nvnt =( song.tracks.at(0).events.at(var).dataByte2 << 16 |
+                              song.tracks.at(0).events.at(var).dataByte1 << 8 |
+                              song.tracks.at(0).events.at(var).status);
         noteVec.append(nvnt);
 
     }
@@ -227,40 +231,179 @@ mSong MidiManager::Deserialize(QByteArray &array)
 }
 
 void MidiManager::updateMidi(int note, int start, int length){
+
     int vLen = noteVec.length();
     int vPos = 0;
-    int elapsed = 0;
+    uchar status = 0x90;
+    uchar velocity = 80;
+    int elapsedDT = 0;
+    bool pastTheMark = false;
+    bool beforeTheMark = false;
+    bool zeroDT = false;
+      bool lastNote = false;
     QVector<int> newVec;
     if ( vLen > 0) {
+        //runs twice - once for note start and another for note end
+        for (int rep = 0; rep < 2; ++rep) {
+            if (rep ==1) {
+                //Housekeepint to get ready for next iteration
+                start = start + length;
+                velocity= 0;
+                vLen = noteVec.length();
+                pastTheMark = false;
+                beforeTheMark = false;
+                zeroDT = false;
+                lastNote = false;
+                newVec.clear();
+                elapsedDT = 0;
+            }
 
-        for (int dw = 0; dw < vLen; dw+=3) {
-            elapsed += noteVec.at(dw);
-            if (elapsed > start) {
-                  elapsed -= noteVec.at(dw);
-                  vPos = dw - 3;
-                  break;
+        //Start by getting the DT that elapsed before the Start value is hit
+        //If I go over Start value, Determine whether Start is before or after current DT.
+        //If I never go over, that means I placed value far right of all other notes.
+        for (int i = 1; i < vLen-1; i+=3) {
+            elapsedDT += noteVec.at(i);
+            if (elapsedDT  >= start) {
+                if (elapsedDT == start) {
+                    zeroDT = true;
+                      vPos = i;
+                    break;
+
+
+                }
+                 elapsedDT -= noteVec.at(i);
+                  if (elapsedDT < start) {
+                     pastTheMark = true;
+                     vPos = i-3;
+                     elapsedDT = start - elapsedDT;
+
+                 }
+                 else{
+                     beforeTheMark = true;
+                     vPos = i-3;
+                     elapsedDT = elapsedDT - start;
+                 }
+                 break;
+
+            }
+            else if(i+ 3 == vLen ){
+                lastNote = true;
+                vPos = i+3;
+                elapsedDT = start - elapsedDT;
+            }
+
+        }
+        //Now reconstruct the original Vector one by one, putting in the new note start and end
+        //where appropriate. Must determine whether new value comes before or after the current I pos.
+        // Also must adjust the DT of the next event if I put a new value BEFORE an existing one.
+        qDebug() << vPos;
+        qDebug() << vLen;
+           newVec.append(noteVec.at(0)); //Always make sure tpqn is here
+        for (int i = 1; i <= vLen; i+=3) {
+            if (!lastNote && i == vLen) {
+                break; //gtfo
+
+            }
+            if (vPos == i) {
+                //Only add the new note as vector will be maxed
+                if (lastNote) {
+                    qDebug() << "LastNote Hit";
+                    newVec.append(elapsedDT);
+                    newVec.append(0);
+                    DWORD nvnt =( velocity << 16 |
+                                 note << 8 |
+                                 status);
+                      newVec.append(nvnt);
+                      break;
+                }
+                else if(zeroDT){
+                        qDebug() << "zero DT - chord ";
+                    DWORD nvnt =( velocity << 16 |
+                                 note << 8 |
+                                 status);
+                    newVec.append(noteVec.at(i));
+                    newVec.append(noteVec.at(i+1));
+                    newVec.append(noteVec.at(i+2));
+                    newVec.append(0);
+                    newVec.append(0);
+                    newVec.append(nvnt);
+
+                }
+                //Add new note after existing event
+                else if (pastTheMark) {
+                     qDebug() << "pastTheMark true Hit";
+                    DWORD nvnt =( velocity << 16 |
+                                 note << 8 |
+                                 status);
+                    newVec.append(noteVec.at(i));
+                    newVec.append(noteVec.at(i+1));
+                    newVec.append(noteVec.at(i+2));
+                    newVec.append(elapsedDT);
+                    newVec.append(0);
+                    newVec.append(nvnt);
+
+                }
+                //Add new event before existing, adjust the DT of existing
+                else if(beforeTheMark){
+                     qDebug() << "pastTheMark false Hit";
+                    DWORD nvnt =( velocity << 16 |
+                                 note << 8 |
+                                 0x90);
+                    newVec.append(elapsedDT);
+                    newVec.append(0);
+                    newVec.append(nvnt);
+                    newVec.append(noteVec.at(i)-start);
+                    newVec.append(noteVec.at(i+1));
+                    newVec.append(noteVec.at(i+2));
+
+                }
+
+            }
+            // Add existing events as normal
+            else{
+                newVec.append(noteVec.at(i));
+                newVec.append(noteVec.at(i+1));
+                newVec.append(noteVec.at(i+2));
+
             }
         }
-
-        elapsed = start - elapsed; // The delta time
-        for (int pos = 0; pos < noteVec.length(); pos+=3) {
-            if (pos == vPos) {
-                DWORD nvnt =( 80 << 16 |
-                               note << 8 |
-                               0x90);
-                newVec.append(elapsed);
-                newVec.append(0);
-                newVec.append(nvnt);
-            }
-            newVec.append(noteVec.at(pos));
-            newVec.append(noteVec.at(pos+1));
-            newVec.append(noteVec.at(pos+2));
+        if (rep == 0) {
+             noteVec = newVec;
         }
 
     }
+    }
+
+    //This is called just once to make sure I start the list with the TPQN
+    else{
+        song.ticksPerQuarterNote = 120;
+        DWORD nvnt =( velocity << 16 |
+                       note << 8 |
+                       status);
+            newVec.append(120);//tpqn
+            newVec.append(start);
+            newVec.append(0);
+            newVec.append(nvnt);
+            nvnt =( 0 << 16 |
+                  note << 8 |
+                  0x90);
+            newVec.append(length);
+            newVec.append(0);
+            newVec.append(nvnt);
+
+
+    }
     noteVec = newVec;
+
 }
 
+ DWORD MidiManager::statusDWORD(uchar db1, uchar db2, uchar status){
+    DWORD nvnt =( db2 << 16 |
+                   db1 << 8 |
+                  status);
+    return nvnt;
+
+}
 
 //Great resource http://cs.fit.edu/~ryan/cse4051/projects/midi/midi.html#mff0
 //http://www.mobilefish.com/tutorials/midi/midi_quickguide_specification.html

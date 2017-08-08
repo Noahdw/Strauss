@@ -44,7 +44,6 @@ void MainWindow::on_actionOpen_triggered()
             return;
         }
 
-
         QString s;
 
         QByteArray array = manager->ReadMidi(file);
@@ -53,22 +52,11 @@ void MainWindow::on_actionOpen_triggered()
             s.append(QString::number(val) + " ");
         }
 
-
-
-
-
-
         manager->song = manager->Deserialize(array);
 
 
-             QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
+             //QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
             //manager->printMidiToScreen();
-
-
-
-
-       // player.pausePlayBack();
-       // ui->textEdit->setText(s);
 
         file.close();
     }
@@ -88,3 +76,8 @@ void MainWindow::on_StartButton_clicked()
 
 void MainWindow::on_actionSave_triggered()
 {}
+
+void MainWindow::playSong(){
+     QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
+
+}

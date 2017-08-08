@@ -56,7 +56,7 @@ public:
     {
         return noteVec;
     }
-
+    static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
 public slots:
       void updateMidi(int note,int start, int length);
 

@@ -14,7 +14,7 @@ PianoRollForm {
     property int keyHeight: 12
     property int testSpace: 132*12/totalCols // Keyheight*numkeys/cols. Initial value. Will be overriden.
     property int activeId: -1
-    property int tPQN: 100
+    property int tPQN: 120
     property int totalCols: 4*20 //Means 20 whole notes
     property double scaleFactor: 1
     width: Screen.width ; height: 600
@@ -55,7 +55,7 @@ PianoRollForm {
         MouseArea{
             anchors.fill: parent
             onClicked: {
-                main.addNotes()
+                main.playSong()
 
             }
         }

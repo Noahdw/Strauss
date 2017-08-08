@@ -11,48 +11,21 @@ HMIDISTRM outHandle;
 unsigned int DeviceID = 1;
 
 
+
 void MidiPlayer::playMidiFile(MidiManager *manager){
-    int size = manager->song.tracks.at(0).events.length();
-    MIDIEVENT evnts[manager->song.tracks.at(0).events.length()];
 
     MIDIPROPTIMEDIV prop;
-    int tots = 0;
-    MIDIEVENT event;
-    for (int var = 0; var < size; ++var) {
-
-
-        event.dwDeltaTime = manager->song.tracks.at(0).events.at(var).deltaTime;
-        event.dwStreamID = 0;
-        DWORD nvnt =( manager->song.tracks.at(0).events.at(var).dataByte2 << 16 |
-                       manager->song.tracks.at(0).events.at(var).dataByte1 << 8 |
-                       manager->song.tracks.at(0).events.at(var).status);
-        event.dwEvent = nvnt;
-
-        evnts[tots] = event;
-        tots++;
-    }
-
-    int tempNotes[tots*3];
-    for (int var = 0; var < tots; ++var) {
-        tempNotes[var*3] = evnts[var].dwDeltaTime;
-        tempNotes[var*3 + 1] = 0;
-        tempNotes[var*3 + 2] = evnts[var].dwEvent;
-
-    }
-
-
     unsigned long result;
 
     hEvent = CreateEvent(0, FALSE, FALSE, 0);
     if (hEvent==NULL) {
-        qDebug() << "CCould not creat event";
+        qDebug() << "Could not creat event";
     }
 
     result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
       if (result!=MMSYSERR_NOERROR){
-          qDebug() << "CCOULD NOT OPEN STREAM?";
+          qDebug() << "COULD NOT OPEN STREAM?";
       }
-
 
     prop.cbStruct = sizeof(MIDIPROPTIMEDIV);
     prop.dwTimeDiv =manager->song.ticksPerQuarterNote;
@@ -60,22 +33,19 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
 
     MIDIHDR buffer;
     MIDIHDR buffer1;
-   // MIDIHDR buffer2;
-
 
     const int tpqn = manager->song.ticksPerQuarterNote;
-    int totalTicks;
+    int totalTicks = 0;
 
-
-
-
-    std::vector<int> v1,v2;
-    for (int var = 0; var < sizeof(tempNotes)/sizeof(tempNotes[0]); var+=3) {
-        totalTicks += tempNotes[var];
+    std::vector<int> v1;
+    for (int var = 1; var < manager->noteVec.length()-2; var+=3) {
+           qDebug() << var;
+            qDebug() << manager->noteVec.length();
+        totalTicks +=  manager->noteVec.at(var);
         if (totalTicks < tpqn) {
-            v1.push_back(tempNotes[var]);
-            v1.push_back(tempNotes[var + 1]);
-            v1.push_back(tempNotes[var + 2]);
+            v1.push_back(manager->noteVec.at(var));
+            v1.push_back(manager->noteVec.at(var + 1));
+            v1.push_back(manager->noteVec.at(var + 2));
         }
         else {
             buffer1.lpData =(LPSTR)&v1[0];
@@ -89,9 +59,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
             if (result) {
                 qDebug() << "midiOutPrepareHeader error:" << result;
             }
-            for (int var = 0; var < 10; ++var) {
 
-            }
             result = midiStreamOut(outHandle,&buffer,sizeof(buffer));
             if (result) {
                 qDebug() << "midiStreamOut error:" << result;
@@ -104,9 +72,12 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
 
             WaitForSingleObject(hEvent, INFINITE);
             v1.clear();
-            v1.push_back(tempNotes[var]);
-            v1.push_back(tempNotes[var + 1]);
-            v1.push_back(tempNotes[var + 2]);
+            if ((var + 3) >= manager->noteVec.length()) {
+                break;
+            }
+            v1.push_back(manager->noteVec.at(var));
+            v1.push_back(manager->noteVec.at(var + 1));
+            v1.push_back(manager->noteVec.at(var + 2));
             totalTicks = 0;
         }
 

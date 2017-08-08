@@ -5,6 +5,7 @@
 #include <midiplayer.h>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -20,6 +21,7 @@ int main(int argc, char *argv[])
     auto rootObject = view->rootObject();
     QObject::connect((QObject*)rootObject,SIGNAL(playNote(QString,QString)),player,SLOT(playNote(QString,QString)));
     QObject::connect((QObject*)rootObject,SIGNAL(updateMidi(int,int,int)),manager,SLOT(updateMidi(int,int,int)));
+    QObject::connect((QObject*)rootObject,SIGNAL(playSong()),&window,SLOT(playSong()));
 
 
 

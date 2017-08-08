@@ -143,7 +143,7 @@ Canvas{
 
                     component.createObject(canvas2,{"note": yy,"quad": xx,"id": totIds,"scale": scaleFactor, "noteEnd": tPQN*scaleFactor});
 
-                    updateMidi(yy,xx*tPQN,tPQN*scaleFactor)
+                    updateMidi(rows-yy,xx*tPQN,tPQN*scaleFactor)
 
 
                     totIds++
