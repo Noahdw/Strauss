@@ -46,6 +46,12 @@ Menu {
               scaleFactor = .25
             }
         }
+        MenuItem {
+            text: "1/32 bar"
+            onTriggered:{
+              scaleFactor = .125
+            }
+        }
     }
 
 

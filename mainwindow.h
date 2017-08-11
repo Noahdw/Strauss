@@ -22,7 +22,7 @@ private slots:
 
     void on_actionSave_triggered();
 
-    void on_PauseButton_clicked();
+    void on_PauseButton_clicked(int type);
 
     void on_StartButton_clicked();
 

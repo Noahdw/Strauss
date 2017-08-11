@@ -1,9 +1,7 @@
 #ifndef MIDIMANAGER_H
 #define MIDIMANAGER_H
 #include <QFileDialog>
-#include <QFile>
-#include <tracks.h>
-#include <midi.h>
+
 #include <QDebug>
 #include <QQmlListProperty>
 

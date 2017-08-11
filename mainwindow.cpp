@@ -5,7 +5,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QTextStream>
-#include <midi.h>
+
 #include <midiplayer.h>
 #include<QtConcurrent/QtConcurrent>
 #include <pianoroll.h>
@@ -64,9 +64,14 @@ void MainWindow::on_actionOpen_triggered()
 
 
 
-void MainWindow::on_PauseButton_clicked()
+void MainWindow::on_PauseButton_clicked(int type)
 {
-    player.pausePlayBack();
+    if (type == -1) {
+           player.pausePlayBack();
+    }
+    else
+        player.resumePlayBack();
+
 }
 
 void MainWindow::on_StartButton_clicked()
@@ -76,8 +81,24 @@ void MainWindow::on_StartButton_clicked()
 
 void MainWindow::on_actionSave_triggered()
 {}
+QFuture<void> future;
+bool stopped = false;
 
+//Resets song back to DT 0 and continue playing.
+//needBreak stops qtConc from running if song is still playing, shouldBreak is a flag
+//for midiplayer to reset song pos.
 void MainWindow::playSong(){
-     QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
+    qDebug() << player.outHandle;
+    if ( player.needBreak) {
+
+            midiOutReset((HMIDIOUT)player.outHandle);
+            qDebug() << "stopping playback";
+           player.shouldBreak = true;
+    }
+    else{
+         player.needBreak = true;
+        qDebug() << "starting playback";
+        future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
+            }
 
 }

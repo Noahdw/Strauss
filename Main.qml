@@ -8,8 +8,10 @@ PianoRollForm {
     signal addNotes()
     signal playSong()
     signal updateMidi(int note, int start, int length)
+    signal on_PauseButton_clicked(int type)
     property int globalKeys: 127
     property int pressed: 0
+     property int pauseOrResume: 1
     property int keyWidth: 30
     property int keyHeight: 12
     property int testSpace: 132*12/totalCols // Keyheight*numkeys/cols. Initial value. Will be overriden.
@@ -21,6 +23,8 @@ PianoRollForm {
 
     PianoRoll{
         anchors.bottom: parent.bottom;
+        anchors.left : parent.left
+
 
     }
     Rectangle{
@@ -50,6 +54,10 @@ PianoRollForm {
             width:1
             color:"black"
         }
+        Text {
+
+            text: qsTr("Play")
+        }
         anchors.top: parent.top
         anchors.left: loadRect.right
         MouseArea{
@@ -58,6 +66,34 @@ PianoRollForm {
                 main.playSong()
 
             }
+            onPressed: {playRect.color="dark grey"}
+            onReleased: {playRect.color="grey"}
+        }
+    }
+    Rectangle{
+        id: pauseRect
+        height: 100
+        color:"grey"
+        width:100
+        border{
+            width:1
+            color:"black"
+        }
+        Text {
+
+            text: qsTr("Pause/Resume")
+        }
+        anchors.top: parent.top
+        anchors.left: playRect.right
+        MouseArea{
+            anchors.fill: parent
+            onClicked: {
+                pauseOrResume *= -1
+                main.on_PauseButton_clicked(pauseOrResume)
+
+            }
+            onPressed: {pauseRect.color="dark grey"}
+            onReleased: {pauseRect.color="grey"}
         }
     }
 

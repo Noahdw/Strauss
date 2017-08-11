@@ -119,7 +119,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                         // event.noteOn = false;
                         event.status = 0x80 | event.channel;
                     }
-                   // noteVec.append(statusDWORD(event.dataByte1,event.dataByte2,event.status));
+                    // noteVec.append(statusDWORD(event.dataByte1,event.dataByte2,event.status));
                 }
                 int t = 0;
                 t =  ((unsigned char)array.at(pos))>>4;
@@ -130,7 +130,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                         event.channel =  (unsigned char)array.at(pos) & 15;
                         event.dataByte1 = (unsigned char)array.at(++pos);
                         event.dataByte2 = (unsigned char)array.at(++pos);
-                       // noteVec.append(statusDWORD(event.dataByte1,event.dataByte2,event.status));
+                        // noteVec.append(statusDWORD(event.dataByte1,event.dataByte2,event.status));
                         lastEvent = event;
                         eventCanAdd = true;
                     }
@@ -219,11 +219,11 @@ mSong MidiManager::Deserialize(QByteArray &array)
     for (int var = 0; var < song.tracks.at(0).events.length(); ++var) {
 
         noteVec.append(song.tracks.at(0).events.at(var).deltaTime);
-       noteVec.append(0);
+        noteVec.append(0);
 
-       DWORD nvnt =( song.tracks.at(0).events.at(var).dataByte2 << 16 |
-                              song.tracks.at(0).events.at(var).dataByte1 << 8 |
-                              song.tracks.at(0).events.at(var).status);
+        DWORD nvnt =( song.tracks.at(0).events.at(var).dataByte2 << 16 |
+                      song.tracks.at(0).events.at(var).dataByte1 << 8 |
+                      song.tracks.at(0).events.at(var).status);
         noteVec.append(nvnt);
 
     }
@@ -239,14 +239,15 @@ void MidiManager::updateMidi(int note, int start, int length){
     int elapsedDT = 0;
     bool pastTheMark = false;
     bool beforeTheMark = false;
+    bool hitTheMark = false;
     bool zeroDT = false;
-      bool lastNote = false;
+    bool lastNote = false;
     QVector<int> newVec;
     if ( vLen > 0) {
         //runs twice - once for note start and another for note end
         for (int rep = 0; rep < 2; ++rep) {
             if (rep ==1) {
-                //Housekeepint to get ready for next iteration
+                //Housekeeping to get ready for next iteration
                 start = start + length;
                 velocity= 0;
                 vLen = noteVec.length();
@@ -258,148 +259,150 @@ void MidiManager::updateMidi(int note, int start, int length){
                 elapsedDT = 0;
             }
 
-        //Start by getting the DT that elapsed before the Start value is hit
-        //If I go over Start value, Determine whether Start is before or after current DT.
-        //If I never go over, that means I placed value far right of all other notes.
-        for (int i = 1; i < vLen-1; i+=3) {
-            elapsedDT += noteVec.at(i);
-            if (elapsedDT  >= start) {
-                if (elapsedDT == start) {
-                    zeroDT = true;
-                      vPos = i;
+            //Start by getting the DT that elapsed before the Start value is hit
+            //If I go over Start value, Determine whether Start is before or after current DT.
+            //If I never go over, that means I placed value far right of all other notes.
+            for (int i = 1; i < vLen-1; i+=3) {
+                elapsedDT += noteVec.at(i);
+                if (elapsedDT  >= start) {
+                    if (elapsedDT == start) {
+                        zeroDT = true;
+                        vPos = i;
+                        break;
+
+
+                    }
+                    elapsedDT -= noteVec.at(i);
+                    if (elapsedDT < start) {
+                        pastTheMark = true;
+                        vPos = i-3;
+                        elapsedDT = start - elapsedDT;
+
+                    }
+                    else{
+                        beforeTheMark = true;
+                        vPos = i-3;
+                        elapsedDT = elapsedDT - start;
+                    }
                     break;
 
+                }
+                else if(i+ 3 == vLen ){
+                    lastNote = true;
+                    vPos = i+3;
+                    elapsedDT = start - elapsedDT;
+                }
+
+            }
+            //Now reconstruct the original Vector one by one, putting in the new note start and end
+            //where appropriate. Must determine whether new value comes before or after the current I pos.
+            // Also must adjust the DT of the next event if I put a new value BEFORE an existing one.
+            newVec.append(noteVec.at(0)); //Always make sure tpqn is here
+            for (int i = 1; i <= vLen; i+=3) {
+                if (!lastNote && i == vLen) {
+                    break; //gtfo
 
                 }
-                 elapsedDT -= noteVec.at(i);
-                  if (elapsedDT < start) {
-                     pastTheMark = true;
-                     vPos = i-3;
-                     elapsedDT = start - elapsedDT;
-
-                 }
-                 else{
-                     beforeTheMark = true;
-                     vPos = i-3;
-                     elapsedDT = elapsedDT - start;
-                 }
-                 break;
-
-            }
-            else if(i+ 3 == vLen ){
-                lastNote = true;
-                vPos = i+3;
-                elapsedDT = start - elapsedDT;
-            }
-
-        }
-        //Now reconstruct the original Vector one by one, putting in the new note start and end
-        //where appropriate. Must determine whether new value comes before or after the current I pos.
-        // Also must adjust the DT of the next event if I put a new value BEFORE an existing one.
-        qDebug() << vPos;
-        qDebug() << vLen;
-           newVec.append(noteVec.at(0)); //Always make sure tpqn is here
-        for (int i = 1; i <= vLen; i+=3) {
-            if (!lastNote && i == vLen) {
-                break; //gtfo
-
-            }
-            if (vPos == i) {
-                //Only add the new note as vector will be maxed
-                if (lastNote) {
-                    qDebug() << "LastNote Hit";
-                    newVec.append(elapsedDT);
-                    newVec.append(0);
-                    DWORD nvnt =( velocity << 16 |
-                                 note << 8 |
-                                 status);
-                      newVec.append(nvnt);
-                      break;
-                }
-                else if(zeroDT){
+                if (vPos == i) {
+                    //Only add the new note as vector will be maxed
+                    if (lastNote) {
+                        qDebug() << "LastNote Hit";
+                        newVec.append(elapsedDT);
+                        newVec.append(0);
+                        DWORD nvnt =( velocity << 16 |
+                                      note << 8 |
+                                      status);
+                        newVec.append(nvnt);
+                        break;
+                    }
+                    else if(zeroDT){
                         qDebug() << "zero DT - chord ";
-                    DWORD nvnt =( velocity << 16 |
-                                 note << 8 |
-                                 status);
-                    newVec.append(noteVec.at(i));
-                    newVec.append(noteVec.at(i+1));
-                    newVec.append(noteVec.at(i+2));
-                    newVec.append(0);
-                    newVec.append(0);
-                    newVec.append(nvnt);
+                        DWORD nvnt =( velocity << 16 |
+                                      note << 8 |
+                                      status);
+                        newVec.append(noteVec.at(i));
+                        newVec.append(noteVec.at(i+1));
+                        newVec.append(noteVec.at(i+2));
+                        newVec.append(0);
+                        newVec.append(0);
+                        newVec.append(nvnt);
+
+                    }
+                    //Add new note after existing event
+                    else if (pastTheMark) {
+                        qDebug() << "pastTheMark true Hit";
+                        DWORD nvnt =( velocity << 16 |
+                                      note << 8 |
+                                      status);
+                        newVec.append(noteVec.at(i));
+                        newVec.append(noteVec.at(i+1));
+                        newVec.append(noteVec.at(i+2));
+                        newVec.append(elapsedDT);
+                        newVec.append(0);
+                        newVec.append(nvnt);
+                        hitTheMark = true;
+
+                    }
+                    //Add new event before existing, adjust the DT of existing
+                    else if(beforeTheMark){
+                        qDebug() << "pastTheMark false Hit";
+                        DWORD nvnt =( velocity << 16 |
+                                      note << 8 |
+                                      0x90);
+                        newVec.append(elapsedDT);
+                        newVec.append(0);
+                        newVec.append(nvnt);
+                        newVec.append(noteVec.at(i)-start);
+                        newVec.append(noteVec.at(i+1));
+                        newVec.append(noteVec.at(i+2));
+
+                    }
 
                 }
-                //Add new note after existing event
-                else if (pastTheMark) {
-                     qDebug() << "pastTheMark true Hit";
-                    DWORD nvnt =( velocity << 16 |
-                                 note << 8 |
-                                 status);
-                    newVec.append(noteVec.at(i));
-                    newVec.append(noteVec.at(i+1));
-                    newVec.append(noteVec.at(i+2));
-                    newVec.append(elapsedDT);
-                    newVec.append(0);
-                    newVec.append(nvnt);
-
-                }
-                //Add new event before existing, adjust the DT of existing
-                else if(beforeTheMark){
-                     qDebug() << "pastTheMark false Hit";
-                    DWORD nvnt =( velocity << 16 |
-                                 note << 8 |
-                                 0x90);
-                    newVec.append(elapsedDT);
-                    newVec.append(0);
-                    newVec.append(nvnt);
-                    newVec.append(noteVec.at(i)-start);
+                // Add existing events as normal
+                else{
+                    //Seems this is needed for events that come inbetween longer notes
+                    int PTMvar =0;
+                    if (hitTheMark) {
+                        PTMvar = elapsedDT;
+                        hitTheMark =false;
+                    }
+                    newVec.append(noteVec.at(i)-PTMvar);
                     newVec.append(noteVec.at(i+1));
                     newVec.append(noteVec.at(i+2));
 
                 }
-
             }
-            // Add existing events as normal
-            else{
-                newVec.append(noteVec.at(i));
-                newVec.append(noteVec.at(i+1));
-                newVec.append(noteVec.at(i+2));
-
+            if (rep == 0) {
+                noteVec = newVec;
             }
         }
-        if (rep == 0) {
-             noteVec = newVec;
-        }
-
-    }
     }
 
     //This is called just once to make sure I start the list with the TPQN
     else{
         song.ticksPerQuarterNote = 120;
         DWORD nvnt =( velocity << 16 |
-                       note << 8 |
-                       status);
-            newVec.append(120);//tpqn
-            newVec.append(start);
-            newVec.append(0);
-            newVec.append(nvnt);
-            nvnt =( 0 << 16 |
-                  note << 8 |
-                  0x90);
-            newVec.append(length);
-            newVec.append(0);
-            newVec.append(nvnt);
-
-
+                      note << 8 |
+                      status);
+        newVec.append(120);//tpqn
+        newVec.append(start);
+        newVec.append(0);
+        newVec.append(nvnt);
+        nvnt =( 0 << 16 |
+                note << 8 |
+                0x90);
+        newVec.append(length);
+        newVec.append(0);
+        newVec.append(nvnt);
     }
     noteVec = newVec;
 
 }
 
- DWORD MidiManager::statusDWORD(uchar db1, uchar db2, uchar status){
+DWORD MidiManager::statusDWORD(uchar db1, uchar db2, uchar status){
     DWORD nvnt =( db2 << 16 |
-                   db1 << 8 |
+                  db1 << 8 |
                   status);
     return nvnt;
 

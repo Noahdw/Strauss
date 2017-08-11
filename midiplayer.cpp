@@ -5,14 +5,17 @@ MidiPlayer::MidiPlayer()
 {
 
 }
-HANDLE hEvent;
+uint DeviceID = 1;
 void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
-HMIDISTRM outHandle;
-unsigned int DeviceID = 1;
 
+
+HANDLE hEvent;
+//HMIDISTRM outHandle;
 
 
 void MidiPlayer::playMidiFile(MidiManager *manager){
+
+
 
     MIDIPROPTIMEDIV prop;
     unsigned long result;
@@ -25,7 +28,9 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
     result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
       if (result!=MMSYSERR_NOERROR){
           qDebug() << "COULD NOT OPEN STREAM?";
+
       }
+
 
     prop.cbStruct = sizeof(MIDIPROPTIMEDIV);
     prop.dwTimeDiv =manager->song.ticksPerQuarterNote;
@@ -39,8 +44,17 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
 
     std::vector<int> v1;
     for (int var = 1; var < manager->noteVec.length()-2; var+=3) {
-           qDebug() << var;
-            qDebug() << manager->noteVec.length();
+        //Used to put song back at beginning and continue playing
+        if (shouldBreak) {
+            qDebug() << "breaking";
+            shouldBreak = false;
+            needBreak = true;
+            var = 1;
+            totalTicks = 0;
+            v1.clear();
+        }
+
+
         totalTicks +=  manager->noteVec.at(var);
         if (totalTicks < tpqn) {
             v1.push_back(manager->noteVec.at(var));
@@ -70,6 +84,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
 
             }
 
+
             WaitForSingleObject(hEvent, INFINITE);
             v1.clear();
             if ((var + 3) >= manager->noteVec.length()) {
@@ -88,6 +103,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
     }
    midiStreamClose(outHandle);
    CloseHandle(hEvent);
+  needBreak = false;
 }
 
 void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)

@@ -143,7 +143,8 @@ Canvas{
 
                     component.createObject(canvas2,{"note": yy,"quad": xx,"id": totIds,"scale": scaleFactor, "noteEnd": tPQN*scaleFactor});
 
-                    updateMidi(rows-yy,xx*tPQN,tPQN*scaleFactor)
+                    updateMidi(rows-yy,xx*tPQN*scaleFactor,tPQN*scaleFactor)
+
 
 
                     totIds++
@@ -187,6 +188,12 @@ Canvas{
                 }
                 else{
                     scrollBar.flickableItem.contentY -= zoom * 20
+                    if(scrollBar.flickableItem.contentY < 0){
+                    scrollBar.flickableItem.contentY = 0;
+                    }
+                    if(scrollBar.flickableItem.contentY  + scrollBar.height > pianoCol.height){
+                    scrollBar.flickableItem.contentY = pianoCol.height -scrollBar.height;
+                    }
                     if(!drewVerticals){
                      canvas.requestPaint()
                      drewVerticals = true

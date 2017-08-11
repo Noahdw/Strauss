@@ -15,6 +15,12 @@ PianoRollForm {
     scrollBar.flickableItem.contentY = scrollPos2
         scrollKeys.flickableItem.contentY = scrollPos2
     }
+    Rectangle{
+      border.color: "black"
+      border.width: 1
+      color:"transparent"
+      height: 401
+      width: main.width +keyWidth
     Row{
         ScrollView{
             id:scrollKeys
@@ -52,4 +58,5 @@ PianoRollForm {
 
     }
     }
+}
 }

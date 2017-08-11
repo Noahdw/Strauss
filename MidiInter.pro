@@ -25,18 +25,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp\
-            tracks.cpp\
             midiplayer.cpp\
             midimanager.cpp\
-            midi.cpp\
             event.cpp \
     pianoroll.cpp
 
 HEADERS  += mainwindow.h\
-            tracks.h\
             midiplayer.h\
             midimanager.h\
-            midi.h\
             event.h \
     pianoroll.h
 
