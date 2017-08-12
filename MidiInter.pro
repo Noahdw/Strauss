@@ -47,5 +47,6 @@ DISTFILES += \
     DrawGrid.qml \
     PianoRollNoteForm.ui.qml \
     PianoRollNote.qml \
-    ScaleMenu.qml
+    ScaleMenu.qml \
+    VelocityBar.qml
 QML +=

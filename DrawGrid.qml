@@ -11,6 +11,7 @@ Canvas{
     property int columns: totalCols
     property int totIds: 0
     property int wheelZoom: 0
+    property int defaultVelocity: 75
     property int colSpacing: (scrollBar.width/columns + wheelZoom) // Spacing between columns, aka quarter notes
     //This is just for horizontal lines that don't redraw ever
     onPaint: {
@@ -138,12 +139,20 @@ Canvas{
             onDoubleClicked: {
                 if(mouse.button === Qt.LeftButton){
                     var component = Qt.createComponent("PianoRollNote.qml");
+
                     yy=  mouse.y / keyHeight
                     xx = mouse.x /(colSpacing * scaleFactor)
 
                     component.createObject(canvas2,{"note": yy,"quad": xx,"id": totIds,"scale": scaleFactor, "noteEnd": tPQN*scaleFactor});
 
-                    updateMidi(rows-yy,xx*tPQN*scaleFactor,tPQN*scaleFactor)
+                    var totDT = tPQN * totalCols
+                   var OldRange = (totDT - 0)
+                   var NewRange = (canvasWidth - 0)
+                   var NewValue = (((xx*tPQN*scaleFactor - 0) * NewRange) / OldRange) + 1
+                     var vcomponent = Qt.createComponent("VelocityBar.qml");
+                    defaultVelocity = Math.floor((Math.random() * 57) + 70)
+                    vcomponent.createObject(velocityCanvas,{"note": rows-yy,"dT":xx*tPQN*scaleFactor,"xPos":NewValue,"velocity":defaultVelocity});
+                    updateMidi(rows-yy,defaultVelocity,xx*tPQN*scaleFactor,tPQN*scaleFactor)
 
 
 
@@ -181,7 +190,8 @@ Canvas{
                         canvas.width = scrollBar.width
 
                     }
-
+                    scrollXBinding = scrollBar.flickableItem.contentX
+                    canvasWidth = canvas.width
                     testSpace = colSpacing
                     console.log( testSpace)
                     //canvas.requestPaint()

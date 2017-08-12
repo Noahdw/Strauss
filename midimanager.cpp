@@ -230,12 +230,12 @@ mSong MidiManager::Deserialize(QByteArray &array)
     return song;
 }
 
-void MidiManager::updateMidi(int note, int start, int length){
+void MidiManager::updateMidi(int note,int veloc, int start, int length){
 
     int vLen = noteVec.length();
     int vPos = 0;
     uchar status = 0x90;
-    uchar velocity = 80;
+    uchar velocity = veloc;
     int elapsedDT = 0;
     bool pastTheMark = false;
     bool beforeTheMark = false;
