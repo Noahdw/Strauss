@@ -5,11 +5,11 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QTextStream>
-
+#include <QDebug>
 #include <midiplayer.h>
 #include<QtConcurrent/QtConcurrent>
 #include <pianoroll.h>
-
+#include <pianorollitem.h>
 MidiPlayer player;
 MidiManager *manager;
 
@@ -17,14 +17,43 @@ MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    PianoRoll *pianoRollView = new PianoRoll;
+     pianoRollView->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+
     manager = mngr;
+    scene = new QGraphicsScene;
+    scene->setSceneRect(*pianoRollView->sceneRect);
+
     ui->setupUi(this);
-   // pRoll.createPianoRoll();
+    setCentralWidget(pianoRollView);
+
+    QObject::connect(pianoRollView,&PianoRoll::addNoteToPROLL,this,&MainWindow::updatePROLL);
+    QObject::connect(pianoRollView,&PianoRoll::deleteNotesFromPROLL,this,&MainWindow::deleteFromPROLL);
+    pianoRollView->setScene(scene);
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::updatePROLL(int x,int y, int width,int start, int length)
+{
+  PianoRollItem *pNote = new PianoRollItem;
+  scene->addItem(pNote);
+pNote->setPos(x,y);
+
+
+pNote->setBoundingRect(width);
+
+manager->updateMidi(127 - y/pNote->keyHeight,80,start,length);
+}
+void MainWindow::deleteFromPROLL(QGraphicsItem *item)
+{
+
+scene->removeItem(item);
+delete item;
 }
 
 void MainWindow::on_quitButton_clicked()
@@ -59,6 +88,9 @@ void MainWindow::on_actionOpen_triggered()
             //manager->printMidiToScreen();
 
         file.close();
+
+
+
     }
 }
 
@@ -80,7 +112,10 @@ void MainWindow::on_StartButton_clicked()
 }
 
 void MainWindow::on_actionSave_triggered()
-{}
+{
+   playSong();
+
+}
 QFuture<void> future;
 bool stopped = false;
 

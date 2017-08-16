@@ -173,7 +173,7 @@ void MidiPlayer::Midiman(QString note,QString offOn){
     int result;
     std::vector<int> v1;
      qDebug() << "PLAYNOTE(): " <<  inote;
-    int notes[] = {0, 0, 0x007F3C90};
+    //int notes[] = {0, 0, 0x007F3C90};
     v1.push_back(0);
     v1.push_back(0);
     v1.push_back(inote);

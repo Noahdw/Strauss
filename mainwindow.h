@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <MidiManager.h>
+#include <QGraphicsScene>
 namespace Ui {
 class MainWindow;
 }
@@ -28,8 +29,13 @@ private slots:
 
     void playSong();
 
+    void updatePROLL(int x,int y,int width,int start, int length);
+
+    void deleteFromPROLL(QGraphicsItem *item);
+
 private:
     Ui::MainWindow *ui;
+    QGraphicsScene *scene;
 };
 
 #endif // MAINWINDOW_H

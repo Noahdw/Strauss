@@ -5,7 +5,8 @@
 #include <midiplayer.h>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-
+#include <pianoroll.h>
+#include <pianorollitem.h>
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
@@ -16,6 +17,7 @@ int main(int argc, char *argv[])
     MidiPlayer *player = new MidiPlayer;
 
 
+
     view->setSource(QUrl::fromLocalFile("C:/Users/Puter/documents/MidiInter/Main.qml"));
         view->rootContext()->setContextProperty("manager", manager);
     auto rootObject = view->rootObject();
@@ -24,6 +26,9 @@ int main(int argc, char *argv[])
     QObject::connect((QObject*)rootObject,SIGNAL(playSong()),&window,SLOT(playSong()));
     QObject::connect((QObject*)rootObject,SIGNAL(on_PauseButton_clicked(int)),&window,SLOT(on_PauseButton_clicked(int)));
 
+
+
+   // pRoll->show();
 
 
     view->show();

@@ -28,13 +28,15 @@ SOURCES += main.cpp\
             midiplayer.cpp\
             midimanager.cpp\
             event.cpp \
-    pianoroll.cpp
+    pianoroll.cpp \
+    pianorollitem.cpp
 
 HEADERS  += mainwindow.h\
             midiplayer.h\
             midimanager.h\
             event.h \
-    pianoroll.h
+    pianoroll.h \
+    pianorollitem.h
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm

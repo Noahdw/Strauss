@@ -2,19 +2,30 @@
 #define PIANOROLL_H
 #include <QWidget>
 #include <QPainter>
+#include <QGraphicsView>
+#include <QMouseEvent>
+#include <QMenu>
 
-class PianoRoll  : public QWidget {
+class PianoRoll : public QGraphicsView{
 Q_OBJECT
 public:
-    PianoRoll(QWidget * _parent);
+    PianoRoll(QWidget* parent = 0);
 
-    void createPianoRoll(QPaintEvent *);
+    const QRectF *sceneRect;
+signals:
+    void addNoteToPROLL(int x,int y,int width,int start, int length);
+    void deleteNotesFromPROLL(QGraphicsItem * item);
 
-    protected:
-    virtual void paintEvent(QPaintEvent * event);
+public slots:
+      void ShowContextMenu(const QPoint &pos);
+      void scaleFactorChanged(double scale);
+protected:
+      void mouseDoubleClickEvent(QMouseEvent  *event);
+      void paintEvent(QPaintEvent * event);
+      void mousePressEvent(QMouseEvent *event);
+      void drawBackground(QPainter * painter, const QRectF & rect);
+      void wheelEvent(QWheelEvent *event);
 
-    private:
-        QWidget * m_contents;
 };
 
 
