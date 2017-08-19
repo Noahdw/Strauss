@@ -215,6 +215,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
     else if (song.format == 1) {
 
     }
+    noteVec.clear();
     noteVec.append(song.ticksPerQuarterNote);
     for (int var = 0; var < song.tracks.at(0).events.length(); ++var) {
 

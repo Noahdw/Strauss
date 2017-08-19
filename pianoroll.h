@@ -12,9 +12,15 @@ public:
     PianoRoll(QWidget* parent = 0);
 
     const QRectF *sceneRect;
+    void notifyViewChanged(int tpqn,int cols);
+    int cols = 50;
+    int colSpacing = 0;
+    int tPQN = 120;
+    int totalDT = tPQN*cols;
 signals:
     void addNoteToPROLL(int x,int y,int width,int start, int length);
     void deleteNotesFromPROLL(QGraphicsItem * item);
+    void changeSceneRect(QRectF newRect,const QRectF *oldRect,QRectF visibleRect);
 
 public slots:
       void ShowContextMenu(const QPoint &pos);

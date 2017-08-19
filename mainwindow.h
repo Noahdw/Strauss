@@ -33,6 +33,10 @@ private slots:
 
     void deleteFromPROLL(QGraphicsItem *item);
 
+    void on_actionPlay_triggered();
+
+    void updateSceneRect(QRectF newRect,const QRectF *oldRect,QRectF visibleRect);
+
 private:
     Ui::MainWindow *ui;
     QGraphicsScene *scene;

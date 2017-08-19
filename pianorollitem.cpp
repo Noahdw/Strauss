@@ -1,9 +1,10 @@
 #include "pianorollitem.h"
 #include <QDebug>
 
+
 PianoRollItem::PianoRollItem()
 {
-
+brush = (QColor(102, 179, 255));
 }
 
 
@@ -16,7 +17,7 @@ QRectF PianoRollItem::boundingRect() const
 void PianoRollItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
     QRectF rect = boundingRect();
-    QBrush brush(QColor(102, 179, 255));
+
     QPen pen(Qt::black,1);
     painter->setPen(pen);
     painter->fillRect(rect,brush);
@@ -35,5 +36,5 @@ void PianoRollItem::setBoundingRect(int _width){
 
       prepareGeometryChange();
       this->width = _width;
-      update();
+
 }

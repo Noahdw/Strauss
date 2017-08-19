@@ -9,7 +9,9 @@
 #include <pianorollitem.h>
 int main(int argc, char *argv[])
 {
+
     QApplication app(argc, argv);
+
      MidiManager *manager = new MidiManager;
     MainWindow window(manager);
    // PianoRoll piano(&window);
