@@ -10,11 +10,11 @@ class PianoRoll : public QGraphicsView{
 Q_OBJECT
 public:
     PianoRoll(QWidget* parent = 0);
-
+    void clearActiveNotes();
     const QRectF *sceneRect;
     void notifyViewChanged(int tpqn,int cols);
     int cols = 50;
-    int colSpacing = 0;
+    double colSpacing = 0;
     int tPQN = 120;
     int totalDT = tPQN*cols;
 signals:

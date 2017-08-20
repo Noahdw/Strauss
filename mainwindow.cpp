@@ -13,6 +13,7 @@
 MidiPlayer player;
 MidiManager *manager;
 PianoRoll *pianoRollView;
+int totalDT;
 
 MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
     QMainWindow(parent),
@@ -24,7 +25,7 @@ MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
     manager = mngr;
     scene = new QGraphicsScene;
     scene->setSceneRect(*pianoRollView->sceneRect);
-    scene->setItemIndexMethod(QGraphicsScene::NoIndex);
+  scene->setItemIndexMethod(QGraphicsScene::NoIndex);
     ui->setupUi(this);
     setCentralWidget(pianoRollView);
 
@@ -32,6 +33,7 @@ MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
     QObject::connect(pianoRollView,&PianoRoll::deleteNotesFromPROLL,this,&MainWindow::deleteFromPROLL);
      QObject::connect(pianoRollView,&PianoRoll::changeSceneRect,this,&MainWindow::updateSceneRect);
     pianoRollView->setScene(scene);
+   totalDT  = pianoRollView->tPQN*pianoRollView->cols;
 
 }
 
@@ -46,27 +48,33 @@ void MainWindow::updatePROLL(int x,int y, int width,int start, int length)
     scene->addItem(pNote);
     pNote->setPos(x,y);
     pNote->setBoundingRect(width);
-    manager->updateMidi(127 - y/pNote->keyHeight,80,start,length);
+    pNote->noteStart = start;
+    pNote->noteEnd = length;
+    manager->updateMidi(127 - y/pNote->keyHeight,70,start,length);
 }
 void MainWindow::deleteFromPROLL(QGraphicsItem *item)
 {
 
     scene->removeItem(item);
     delete item;
+    item=nullptr;
 }
 
 void MainWindow::updateSceneRect(QRectF newRect,const QRectF *oldRect,QRectF visibleRect)
 {
     scene->setSceneRect(newRect);
-    int oldRange = (oldRect->width() - 0);
+    int oldRange = (totalDT - 0);
     int newRange = (newRect.width() - 0);
+
     foreach (auto item, scene->items(newRect,Qt::IntersectsItemBoundingRect)) {
         PianoRollItem * pNote = dynamic_cast<PianoRollItem*>(item);
 
-        int newX = (((item->x() - 0) * newRange) / oldRange) + 0;
-        int newWidth = (((item->boundingRect().width() - 0) * newRange) / oldRange) + 0;
+        int newX = (((pNote->noteStart - 0) * newRange) / oldRange) + 0;
+        int newWidth = (((pNote->noteEnd - 0) * newRange) / oldRange) + 0;
+         pNote->setX(newX);
         pNote->setBoundingRect(newWidth);
-        pNote->setX(newX);
+
+
 
     }
 }
@@ -106,7 +114,7 @@ void MainWindow::on_actionOpen_triggered()
 
         for (int i = 1; i < manager->noteVec.length(); i+=3){
             dw += manager->noteVec.at(i);
-
+         totalDT = dw;
         }
         int tqn = dw/manager->noteVec.at(0);//tpqn is 0 pos for now, tqn tells total quarter notes
 
@@ -115,6 +123,8 @@ void MainWindow::on_actionOpen_triggered()
         int curNote = 0;
         int elapsedDW = 0;
         int noteEnd = 0;
+        int OldRange = (dw - 0)  ;
+        int NewRange = (scene->width() - 0)  ;
         for(int i = 1; i < manager->noteVec.length(); i+=3){
 
 
@@ -127,12 +137,16 @@ void MainWindow::on_actionOpen_triggered()
                     noteEnd+= manager->noteVec.at(j -2);
                     if(((manager->noteVec.at(j) >> 8) & 127) == curNote ){
 
+                       int newX= (((elapsedDW - 0) * NewRange) / OldRange) + 0;
+                       int newWidth= (((noteEnd - 0) * NewRange) / OldRange) + 0;
                         PianoRollItem *pNote = new PianoRollItem;
                         scene->addItem(pNote);
-                      pNote->setPos(elapsedDW/tqn*pianoRollView->colSpacing,127*PianoRollItem::keyHeight - curNote*PianoRollItem::keyHeight);
+                      pNote->setPos(newX,127*PianoRollItem::keyHeight - curNote*PianoRollItem::keyHeight);
 
-                        qDebug() << elapsedDW/(tqn*pianoRollView->colSpacing);
-                      pNote->setBoundingRect(noteEnd/tqn*pianoRollView->colSpacing);
+
+                      pNote->setBoundingRect(newWidth);
+                      pNote->noteStart = elapsedDW;
+                      pNote->noteEnd = noteEnd;
                         noteEnd = 0;
                         break;
                     }
