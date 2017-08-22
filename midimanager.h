@@ -1,9 +1,7 @@
 #ifndef MIDIMANAGER_H
 #define MIDIMANAGER_H
 #include <QFileDialog>
-#include <QFile>
-#include <tracks.h>
-#include <midi.h>
+
 #include <QDebug>
 #include <QQmlListProperty>
 
@@ -13,10 +11,10 @@ struct mEvent
 
     int deltaTime;
     unsigned char dataByte1;
-   unsigned char velocity;
-   unsigned char channel;
-  unsigned  char status;
-  unsigned  char dataByte2;
+    unsigned char velocity;
+    unsigned char channel;
+    unsigned  char status;
+    unsigned  char dataByte2;
     int noteOffOn;
     QString type;
 
@@ -27,6 +25,7 @@ struct mTrack
     QList<mEvent> events;
     QString trackName;
     QString instrumentName;
+    QVector<int> listOfNotes;
 };
 struct mSong
 {
@@ -42,21 +41,27 @@ struct mSong
 
 class MidiManager : public QObject
 {
-     Q_OBJECT
+    Q_OBJECT
 
 public:
     QQmlListProperty<int> notes();
     MidiManager();
-     mSong Deserialize(QByteArray &array);
-     QByteArray ReadMidi(QFile &file);
-     mTrack track;
-     QVector<int> noteVec;
-     mSong song;
-     Q_INVOKABLE QVector<int> getNoteInfo()
-       {
-           return noteVec;
-       }
+    mSong Deserialize(QByteArray &array);
+    QByteArray ReadMidi(QFile &file);
+    mTrack track;
+    QVector<int> noteVec;
+    mSong song;
+    Q_INVOKABLE QVector<int> getNoteInfo()
+    {
+        return noteVec;
+    }
+    static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
+
+signals:
+    void notifyTrackViewChanged(mSong *song);
+
 public slots:
+      void updateMidi(int note,int veloc,int start, int length);
 
 };
 

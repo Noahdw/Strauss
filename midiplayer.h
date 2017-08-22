@@ -1,6 +1,6 @@
 #ifndef MIDIPLAYER_H
 #define MIDIPLAYER_H
-#include <midi.h>
+
 #include <windows.h>
 #include <mmsystem.h>
 #include <QDebug>
@@ -18,6 +18,10 @@ public:
     void resumePlayBack();
     void Midiman(QString note,QString offOn);
     QVector<int> noteVecInit;
+   // HANDLE hEvent;
+    HMIDISTRM outHandle;
+    bool shouldBreak;
+    bool needBreak;
 public slots:
     void playNote(QString note,QString onOff);
 };

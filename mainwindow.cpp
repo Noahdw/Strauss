@@ -1,41 +1,59 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
-#include <midimanager.h>
-#include <QFileDialog>
-#include <QFile>
-#include <QMessageBox>
-#include <QTextStream>
-#include <midi.h>
-#include <midiplayer.h>
-#include<QtConcurrent/QtConcurrent>
-#include <pianoroll.h>
 
 MidiPlayer player;
 MidiManager *manager;
+PianoRoll *pianoRollView;
+TrackView * trackview;
 
 MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    QMainWindow(parent)
 {
-    manager = mngr;
-    ui->setupUi(this);
-   // pRoll.createPianoRoll();
+    centralWidget = new QWidget(this);
+    setCentralWidget(centralWidget);
+
+    pianoRollView = new PianoRoll;
+    trackview = new TrackView;
+    manager = new MidiManager;
+    pianoRollView->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+    trackview->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+    QVBoxLayout *trackLayout = new QVBoxLayout;
+    mainLayout->addLayout(trackLayout);
+    mainLayout->addWidget(pianoRollView);
+    centralWidget->setLayout(mainLayout);
+
+
+    setUpMenuBar();
+    QObject::connect(pianoRollView,&PianoRoll::addNoteToPROLL,this,&MainWindow::updatePROLL);
+    QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackview,&TrackView::trackViewChanged);
+
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+    //  delete ui;
 }
+
+void MainWindow::updatePROLL(int x,int y, int width,int start, int length)
+{
+    manager->updateMidi(127 - y/PianoRollItem::keyHeight,70,start,length);
+}
+
 
 void MainWindow::on_quitButton_clicked()
 {
+    midiStreamStop(player.outHandle);
+
     QCoreApplication::quit();
 }
 
-void MainWindow::on_actionOpen_triggered()
+
+//Opens and deserializes a song
+void MainWindow::openFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), QString(),
-            tr("Midi Files (*.mid)"));
+                                                    tr("Midi Files (*.mid)"));
 
     if (!fileName.isEmpty()) {
         QFile file(fileName);
@@ -43,8 +61,6 @@ void MainWindow::on_actionOpen_triggered()
             QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
             return;
         }
-
-
         QString s;
 
         QByteArray array = manager->ReadMidi(file);
@@ -53,38 +69,90 @@ void MainWindow::on_actionOpen_triggered()
             s.append(QString::number(val) + " ");
         }
 
-
-
-
-
-
         manager->song = manager->Deserialize(array);
-
-
-             QFuture<void> future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
-            //manager->printMidiToScreen();
-
-
-
-
-       // player.pausePlayBack();
-       // ui->textEdit->setText(s);
+        pianoRollView->convertFileToItems(*manager);
 
         file.close();
     }
 }
 
 
-
-void MainWindow::on_PauseButton_clicked()
+void MainWindow::on_PauseButton_clicked(int type)
 {
-    player.pausePlayBack();
+    if (type == -1) {
+        player.pausePlayBack();
+    }
+    else
+        player.resumePlayBack();
+
 }
 
 void MainWindow::on_StartButton_clicked()
 {
-   player.resumePlayBack();
+    player.resumePlayBack();
 }
 
 void MainWindow::on_actionSave_triggered()
-{}
+{
+    playSong();
+
+}
+QFuture<void> future;
+bool stopped = false;
+
+//Resets song back to DT 0 and continue playing.
+//needBreak stops qtConc from running if song is still playing, shouldBreak is a flag
+//for midiplayer to reset song pos.
+void MainWindow::playSong(){
+    qDebug() << player.outHandle;
+    if ( player.needBreak) {
+
+        midiOutReset((HMIDIOUT)player.outHandle);
+        qDebug() << "stopping playback";
+        player.shouldBreak = true;
+    }
+    else{
+        player.needBreak = true;
+        qDebug() << "starting playback";
+        future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
+    }
+}
+
+void MainWindow::on_actionPlay_triggered()
+{
+    playSong();
+}
+
+void MainWindow::deleteAllNotes()
+{
+    pianoRollView->deleteAllNotes();
+}
+
+void MainWindow::setUpMenuBar()
+{
+
+    //Create action crap
+    openFileAction = new QAction(tr("&Open"),this);
+    openFileAction->setStatusTip(tr("Open an existing midi file"));
+    connect(openFileAction, &QAction::triggered, this, &MainWindow::openFile);
+
+    playSongAction = new QAction(tr("&Play"),this);
+    playSongAction->setStatusTip(tr("play the current song"));
+    connect(playSongAction, &QAction::triggered, this, &MainWindow::playSong);
+
+    deleteAllNotesAction = new QAction(tr("&Delete all"),this);
+    deleteAllNotesAction->setStatusTip(tr("Delete all notes from the roll"));
+    connect(deleteAllNotesAction, &QAction::triggered, this, &MainWindow::deleteAllNotes);
+    //Add pause
+
+    //Create menu crap
+
+    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(openFileAction);
+    fileMenu->addAction(playSongAction);
+
+    QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
+    editMenu->addAction(deleteAllNotesAction);
+
+
+}

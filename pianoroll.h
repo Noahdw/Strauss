@@ -2,19 +2,38 @@
 #define PIANOROLL_H
 #include <QWidget>
 #include <QPainter>
-
-class PianoRoll  : public QWidget {
+#include <QGraphicsView>
+#include <QMouseEvent>
+#include <QMenu>
+#include <midimanager.h>
+class PianoRoll : public QGraphicsView{
 Q_OBJECT
 public:
-    PianoRoll(QWidget * _parent);
+    PianoRoll(QWidget* parent = 0);
+    void clearActiveNotes();
+    void convertFileToItems(MidiManager &manager );
+    void deleteAllNotes();
+    const QRectF *sceneRect;
+    int cols = 50;
+    double colSpacing = 0;
+    int tPQN = 120;
+    int totalDT = tPQN*cols;
+signals:
+    void addNoteToPROLL(int x,int y,int width,int start, int length);
 
-    void createPianoRoll(QPaintEvent *);
-
-    protected:
-    virtual void paintEvent(QPaintEvent * event);
-
-    private:
-        QWidget * m_contents;
+public slots:
+      void ShowContextMenu(const QPoint &pos);
+      void scaleFactorChanged(double scale);
+protected:
+      void mouseDoubleClickEvent(QMouseEvent  *event);
+      void paintEvent(QPaintEvent * event);
+      void mousePressEvent(QMouseEvent *event);
+      void drawBackground(QPainter * painter, const QRectF & rect);
+      void wheelEvent(QWheelEvent *event);
+private:
+      double xscale = 1.1;
+      double minimumColSpacing = 3;
+      QGraphicsScene *scene;
 };
 
 

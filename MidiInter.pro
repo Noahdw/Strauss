@@ -25,31 +25,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp\
-            tracks.cpp\
             midiplayer.cpp\
             midimanager.cpp\
-            midi.cpp\
-            event.cpp \
-    pianoroll.cpp
+    pianoroll.cpp \
+    pianorollitem.cpp \
+    trackview.cpp
 
 HEADERS  += mainwindow.h\
-            tracks.h\
             midiplayer.h\
             midimanager.h\
-            midi.h\
-            event.h \
-    pianoroll.h
+    pianoroll.h \
+    pianorollitem.h \
+    trackview.h
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm
 
-DISTFILES += \
-    PianoRollForm.ui.qml \
-    Main.qml \
-    PianoKeys.qml \
-    PianoRoll.qml \
-    DrawGrid.qml \
-    PianoRollNoteForm.ui.qml \
-    PianoRollNote.qml \
-    ScaleMenu.qml
+DISTFILES +=
 QML +=
