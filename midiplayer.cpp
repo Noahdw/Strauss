@@ -26,14 +26,15 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
     }
 
     result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
-      if (result!=MMSYSERR_NOERROR){
-          qDebug() << "COULD NOT OPEN STREAM?";
+    if (result!=MMSYSERR_NOERROR){
+        qDebug() << "COULD NOT OPEN STREAM?";
 
-      }
+    }
 
 
     prop.cbStruct = sizeof(MIDIPROPTIMEDIV);
     prop.dwTimeDiv =manager->song.ticksPerQuarterNote;
+
     midiStreamProperty(outHandle, (LPBYTE)&prop, MIDIPROP_SET|MIDIPROP_TIMEDIV);
 
     MIDIHDR buffer;
@@ -101,9 +102,9 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
 
         midiOutUnprepareHeader((HMIDIOUT)outHandle, &buffer, sizeof(buffer));
     }
-   midiStreamClose(outHandle);
-   CloseHandle(hEvent);
-  needBreak = false;
+    midiStreamClose(outHandle);
+    CloseHandle(hEvent);
+    needBreak = false;
 }
 
 void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
@@ -114,39 +115,39 @@ void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD d
     /* Determine why Windows called me */
     switch (uMsg)
     {
-        /* Got some event with its MEVT_F_CALLBACK flag set */
+    /* Got some event with its MEVT_F_CALLBACK flag set */
 
-        case MOM_POSITIONCB:
+    case MOM_POSITIONCB:
 
-            /* Assign address of MIDIHDR to a LPMIDIHDR variable. Makes it easier to access the
+        /* Assign address of MIDIHDR to a LPMIDIHDR variable. Makes it easier to access the
                field that contains the pointer to our block of MIDI events */
-            lpMIDIHeader = (LPMIDIHDR)dwParam1;
+        lpMIDIHeader = (LPMIDIHDR)dwParam1;
 
-            /* Get address of the MIDI event that caused this call */
-            lpMIDIEvent = (MIDIEVENT *)&(lpMIDIHeader->lpData[lpMIDIHeader->dwOffset]);
+        /* Get address of the MIDI event that caused this call */
+        lpMIDIEvent = (MIDIEVENT *)&(lpMIDIHeader->lpData[lpMIDIHeader->dwOffset]);
 
-            /* Normally, if you had several different types of events with the
+        /* Normally, if you had several different types of events with the
                MEVT_F_CALLBACK flag set, you'd likely now do a switch on the highest
                byte of the dwEvent field, assuming that you need to do different
                things for different types of events.
             */
 
-            break;
+        break;
 
         /* The last event in the MIDIHDR has played */
-        case MOM_DONE:
+    case MOM_DONE:
 
-            /* Wake up main() */
-            SetEvent(hEvent);
+        /* Wake up main() */
+        SetEvent(hEvent);
 
-            break;
+        break;
 
 
         /* Process these messages if you desire */
-        case MOM_OPEN:
-        case MOM_CLOSE:
+    case MOM_OPEN:
+    case MOM_CLOSE:
 
-            break;
+        break;
     }
 }
 bool streamOpen = false;
@@ -163,16 +164,16 @@ void MidiPlayer::Midiman(QString note,QString offOn){
     uchar status = 0x90;
     if (offOn == "off") {
 
-   velocity = 0;
-   status = 0x80;
+        velocity = 0;
+        status = 0x80;
 
     }
     inote =( velocity << 16 |
-                    noteTT << 8 |
-                    status);
+             noteTT << 8 |
+             status);
     int result;
     std::vector<int> v1;
-     qDebug() << "PLAYNOTE(): " <<  inote;
+    qDebug() << "PLAYNOTE(): " <<  inote;
     //int notes[] = {0, 0, 0x007F3C90};
     v1.push_back(0);
     v1.push_back(0);
@@ -185,34 +186,34 @@ void MidiPlayer::Midiman(QString note,QString offOn){
     if (!streamOpen) {
 
 
-     result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
-      if (result!=MMSYSERR_NOERROR){
-          qDebug() << "CCOULD NOT OPEN STREAM?";
-      }
-      else{streamOpen = true;}
- }
-     MIDIHDR buffer;
-     buffer.lpData =(LPSTR)&v1[0];
-     buffer.dwBufferLength = sizeof(v1[0]) * v1.size();
-     buffer.dwBytesRecorded = sizeof(v1[0]) * v1.size();
-     buffer.dwFlags = 0;
+        result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
+        if (result!=MMSYSERR_NOERROR){
+            qDebug() << "CCOULD NOT OPEN STREAM?";
+        }
+        else{streamOpen = true;}
+    }
+    MIDIHDR buffer;
+    buffer.lpData =(LPSTR)&v1[0];
+    buffer.dwBufferLength = sizeof(v1[0]) * v1.size();
+    buffer.dwBytesRecorded = sizeof(v1[0]) * v1.size();
+    buffer.dwFlags = 0;
     result = midiOutPrepareHeader((HMIDIOUT)outHandle,&buffer,sizeof(buffer));
-   result = midiStreamOut(outHandle,&buffer,sizeof(buffer));
-   if (result) {
-       qDebug() << "midiStreamOut playNote() error:" << result;
-   }
-   result = midiStreamRestart(outHandle);
-   if (result) {
-       qDebug() << "midiStreamRestart playNote() error";
+    result = midiStreamOut(outHandle,&buffer,sizeof(buffer));
+    if (result) {
+        qDebug() << "midiStreamOut playNote() error:" << result;
+    }
+    result = midiStreamRestart(outHandle);
+    if (result) {
+        qDebug() << "midiStreamRestart playNote() error";
 
-   }
+    }
 
-   WaitForSingleObject(hEvent, INFINITE);
-   midiOutUnprepareHeader((HMIDIOUT)outHandle, &buffer, sizeof(buffer));
+    WaitForSingleObject(hEvent, INFINITE);
+    midiOutUnprepareHeader((HMIDIOUT)outHandle, &buffer, sizeof(buffer));
 
-//midiStreamClose(outHandle);
-//streamOpen = false;
-//CloseHandle(hEvent);
+    //midiStreamClose(outHandle);
+    //streamOpen = false;
+    //CloseHandle(hEvent);
 
 }
 
@@ -226,6 +227,6 @@ void MidiPlayer::resumePlayBack(){
 
 //Simpy calls Midiman for playback - perhaps not needed but seems to be for threading
 void MidiPlayer::playNote(QString note,QString offOn){
-      QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,offOn);
+    QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,offOn);
 
 }

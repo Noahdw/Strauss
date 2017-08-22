@@ -25,6 +25,7 @@ struct mTrack
     QList<mEvent> events;
     QString trackName;
     QString instrumentName;
+    QVector<int> listOfNotes;
 };
 struct mSong
 {
@@ -55,6 +56,10 @@ public:
         return noteVec;
     }
     static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
+
+signals:
+    void notifyTrackViewChanged(mSong *song);
+
 public slots:
       void updateMidi(int note,int veloc,int start, int length);
 

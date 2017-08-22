@@ -1,6 +1,19 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <midimanager.h>
+#include <QFileDialog>
+#include <QFile>
+#include <QMessageBox>
+#include <QTextStream>
+#include <QDebug>
+#include <midiplayer.h>
+#include<QtConcurrent/QtConcurrent>
+#include <pianoroll.h>
+#include <pianorollitem.h>
+#include <trackview.h>
+#include <QVBoxLayout>
+#include <QMenuBar>
 #include <QMainWindow>
 #include <MidiManager.h>
 #include <QGraphicsScene>
@@ -11,6 +24,7 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+    QWidget *centralWidget;
 
 public:
     explicit MainWindow(MidiManager *mngr,QWidget *parent = 0);
@@ -19,7 +33,7 @@ public:
 private slots:
     void on_quitButton_clicked();
 
-    void on_actionOpen_triggered();
+    void openFile();
 
     void on_actionSave_triggered();
 
@@ -31,15 +45,23 @@ private slots:
 
     void updatePROLL(int x,int y,int width,int start, int length);
 
-    void deleteFromPROLL(QGraphicsItem *item);
-
     void on_actionPlay_triggered();
 
-    void updateSceneRect(QRectF newRect,const QRectF *oldRect,QRectF visibleRect);
+
+    void deleteAllNotes();
 
 private:
-    Ui::MainWindow *ui;
-    QGraphicsScene *scene;
+   // Ui::MainWindow *ui;
+
+    QMenu *fileMenu;
+    QMenu *editMenu;
+    QAction *saveAction;
+    QAction *openFileAction;
+    QAction *playSongAction;
+    QAction *pauseAction;
+    QAction *deleteAllNotesAction;
+
+    void setUpMenuBar();
 };
 
 #endif // MAINWINDOW_H

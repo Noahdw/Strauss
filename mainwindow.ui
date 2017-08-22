@@ -6,58 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>683</width>
+    <width>1477</width>
     <height>509</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralWidget">
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>10</y>
-      <width>79</width>
-      <height>85</height>
-     </rect>
-    </property>
-    <layout class="QGridLayout" name="gridLayout_2">
-     <item row="0" column="0">
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="2" column="0">
-        <widget class="QPushButton" name="quitButton">
-         <property name="text">
-          <string>Quit</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="StartButton">
-         <property name="text">
-          <string>Start</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QPushButton" name="PauseButton">
-         <property name="text">
-          <string>Pause</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
-  </widget>
+  <widget class="QWidget" name="centralWidget"/>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>683</width>
+     <width>1477</width>
      <height>21</height>
     </rect>
    </property>
@@ -69,7 +31,14 @@
     <addaction name="actionSave"/>
     <addaction name="actionPlay"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionDelete_All_Notes"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -93,6 +62,11 @@
   <action name="actionPlay">
    <property name="text">
     <string>Play</string>
+   </property>
+  </action>
+  <action name="actionDelete_All_Notes">
+   <property name="text">
+    <string>Delete All Notes</string>
    </property>
   </action>
  </widget>

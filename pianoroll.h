@@ -5,22 +5,21 @@
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <QMenu>
-
+#include <midimanager.h>
 class PianoRoll : public QGraphicsView{
 Q_OBJECT
 public:
     PianoRoll(QWidget* parent = 0);
     void clearActiveNotes();
+    void convertFileToItems(MidiManager &manager );
+    void deleteAllNotes();
     const QRectF *sceneRect;
-    void notifyViewChanged(int tpqn,int cols);
     int cols = 50;
     double colSpacing = 0;
     int tPQN = 120;
     int totalDT = tPQN*cols;
 signals:
     void addNoteToPROLL(int x,int y,int width,int start, int length);
-    void deleteNotesFromPROLL(QGraphicsItem * item);
-    void changeSceneRect(QRectF newRect,const QRectF *oldRect,QRectF visibleRect);
 
 public slots:
       void ShowContextMenu(const QPoint &pos);
@@ -31,7 +30,10 @@ protected:
       void mousePressEvent(QMouseEvent *event);
       void drawBackground(QPainter * painter, const QRectF & rect);
       void wheelEvent(QWheelEvent *event);
-
+private:
+      double xscale = 1.1;
+      double minimumColSpacing = 3;
+      QGraphicsScene *scene;
 };
 
 

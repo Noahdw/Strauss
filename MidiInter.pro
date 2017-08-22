@@ -27,28 +27,19 @@ SOURCES += main.cpp\
         mainwindow.cpp\
             midiplayer.cpp\
             midimanager.cpp\
-            event.cpp \
     pianoroll.cpp \
-    pianorollitem.cpp
+    pianorollitem.cpp \
+    trackview.cpp
 
 HEADERS  += mainwindow.h\
             midiplayer.h\
             midimanager.h\
-            event.h \
     pianoroll.h \
-    pianorollitem.h
+    pianorollitem.h \
+    trackview.h
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm
 
-DISTFILES += \
-    PianoRollForm.ui.qml \
-    Main.qml \
-    PianoKeys.qml \
-    PianoRoll.qml \
-    DrawGrid.qml \
-    PianoRollNoteForm.ui.qml \
-    PianoRollNote.qml \
-    ScaleMenu.qml \
-    VelocityBar.qml
+DISTFILES +=
 QML +=

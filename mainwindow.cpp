@@ -1,83 +1,45 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
-#include <midimanager.h>
-#include <QFileDialog>
-#include <QFile>
-#include <QMessageBox>
-#include <QTextStream>
-#include <QDebug>
-#include <midiplayer.h>
-#include<QtConcurrent/QtConcurrent>
-#include <pianoroll.h>
-#include <pianorollitem.h>
+
 MidiPlayer player;
 MidiManager *manager;
 PianoRoll *pianoRollView;
-int totalDT;
+TrackView * trackview;
 
 MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    QMainWindow(parent)
 {
-     pianoRollView = new PianoRoll;
-     pianoRollView->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+    centralWidget = new QWidget(this);
+    setCentralWidget(centralWidget);
 
-    manager = mngr;
-    scene = new QGraphicsScene;
-    scene->setSceneRect(*pianoRollView->sceneRect);
-  scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    ui->setupUi(this);
-    setCentralWidget(pianoRollView);
+    pianoRollView = new PianoRoll;
+    trackview = new TrackView;
+    manager = new MidiManager;
+    pianoRollView->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+    trackview->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+    QVBoxLayout *trackLayout = new QVBoxLayout;
+    mainLayout->addLayout(trackLayout);
+    mainLayout->addWidget(pianoRollView);
+    centralWidget->setLayout(mainLayout);
+
+
+    setUpMenuBar();
     QObject::connect(pianoRollView,&PianoRoll::addNoteToPROLL,this,&MainWindow::updatePROLL);
-    QObject::connect(pianoRollView,&PianoRoll::deleteNotesFromPROLL,this,&MainWindow::deleteFromPROLL);
-     QObject::connect(pianoRollView,&PianoRoll::changeSceneRect,this,&MainWindow::updateSceneRect);
-    pianoRollView->setScene(scene);
-   totalDT  = pianoRollView->tPQN*pianoRollView->cols;
+    QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackview,&TrackView::trackViewChanged);
 
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+    //  delete ui;
 }
 
 void MainWindow::updatePROLL(int x,int y, int width,int start, int length)
 {
-    PianoRollItem *pNote = new PianoRollItem;
-    scene->addItem(pNote);
-    pNote->setPos(x,y);
-    pNote->setBoundingRect(width);
-    pNote->noteStart = start;
-    pNote->noteEnd = length;
-    manager->updateMidi(127 - y/pNote->keyHeight,70,start,length);
-}
-void MainWindow::deleteFromPROLL(QGraphicsItem *item)
-{
-
-    scene->removeItem(item);
-    delete item;
-    item=nullptr;
+    manager->updateMidi(127 - y/PianoRollItem::keyHeight,70,start,length);
 }
 
-void MainWindow::updateSceneRect(QRectF newRect,const QRectF *oldRect,QRectF visibleRect)
-{
-    scene->setSceneRect(newRect);
-    int oldRange = (totalDT - 0);
-    int newRange = (newRect.width() - 0);
-
-    foreach (auto item, scene->items(newRect,Qt::IntersectsItemBoundingRect)) {
-        PianoRollItem * pNote = dynamic_cast<PianoRollItem*>(item);
-
-        int newX = (((pNote->noteStart - 0) * newRange) / oldRange) + 0;
-        int newWidth = (((pNote->noteEnd - 0) * newRange) / oldRange) + 0;
-         pNote->setX(newX);
-        pNote->setBoundingRect(newWidth);
-
-
-
-    }
-}
 
 void MainWindow::on_quitButton_clicked()
 {
@@ -85,11 +47,13 @@ void MainWindow::on_quitButton_clicked()
 
     QCoreApplication::quit();
 }
+
+
 //Opens and deserializes a song
-void MainWindow::on_actionOpen_triggered()
+void MainWindow::openFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), QString(),
-            tr("Midi Files (*.mid)"));
+                                                    tr("Midi Files (*.mid)"));
 
     if (!fileName.isEmpty()) {
         QFile file(fileName);
@@ -97,7 +61,6 @@ void MainWindow::on_actionOpen_triggered()
             QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
             return;
         }
-
         QString s;
 
         QByteArray array = manager->ReadMidi(file);
@@ -107,64 +70,17 @@ void MainWindow::on_actionOpen_triggered()
         }
 
         manager->song = manager->Deserialize(array);
+        pianoRollView->convertFileToItems(*manager);
 
-        //Move later
-
-        int dw = 0;
-
-        for (int i = 1; i < manager->noteVec.length(); i+=3){
-            dw += manager->noteVec.at(i);
-         totalDT = dw;
-        }
-        int tqn = dw/manager->noteVec.at(0);//tpqn is 0 pos for now, tqn tells total quarter notes
-
-
-
-        int curNote = 0;
-        int elapsedDW = 0;
-        int noteEnd = 0;
-        int OldRange = (dw - 0)  ;
-        int NewRange = (scene->width() - 0)  ;
-        for(int i = 1; i < manager->noteVec.length(); i+=3){
-
-
-            elapsedDW += manager->noteVec.at(i);
-            //indicates a note. ignore other junk for now
-            if((manager->noteVec.at(i+2)& 0xF0) ==0x90){
-                curNote = (manager->noteVec.at(i+2) >> 8) & 127;
-                //now I need to find its note off
-                for(int j = i+5; j< manager->noteVec.length(); j+=3){
-                    noteEnd+= manager->noteVec.at(j -2);
-                    if(((manager->noteVec.at(j) >> 8) & 127) == curNote ){
-
-                       int newX= (((elapsedDW - 0) * NewRange) / OldRange) + 0;
-                       int newWidth= (((noteEnd - 0) * NewRange) / OldRange) + 0;
-                        PianoRollItem *pNote = new PianoRollItem;
-                        scene->addItem(pNote);
-                      pNote->setPos(newX,127*PianoRollItem::keyHeight - curNote*PianoRollItem::keyHeight);
-
-
-                      pNote->setBoundingRect(newWidth);
-                      pNote->noteStart = elapsedDW;
-                      pNote->noteEnd = noteEnd;
-                        noteEnd = 0;
-                        break;
-                    }
-                }
-
-            }
-        }
-           pianoRollView->notifyViewChanged(manager->noteVec.at(0),tqn);
         file.close();
     }
 }
 
 
-
 void MainWindow::on_PauseButton_clicked(int type)
 {
     if (type == -1) {
-           player.pausePlayBack();
+        player.pausePlayBack();
     }
     else
         player.resumePlayBack();
@@ -173,12 +89,12 @@ void MainWindow::on_PauseButton_clicked(int type)
 
 void MainWindow::on_StartButton_clicked()
 {
-   player.resumePlayBack();
+    player.resumePlayBack();
 }
 
 void MainWindow::on_actionSave_triggered()
 {
-   playSong();
+    playSong();
 
 }
 QFuture<void> future;
@@ -191,19 +107,52 @@ void MainWindow::playSong(){
     qDebug() << player.outHandle;
     if ( player.needBreak) {
 
-            midiOutReset((HMIDIOUT)player.outHandle);
-            qDebug() << "stopping playback";
-           player.shouldBreak = true;
+        midiOutReset((HMIDIOUT)player.outHandle);
+        qDebug() << "stopping playback";
+        player.shouldBreak = true;
     }
     else{
-         player.needBreak = true;
+        player.needBreak = true;
         qDebug() << "starting playback";
         future = QtConcurrent::run(&player,&MidiPlayer::playMidiFile,manager);
-            }
-
+    }
 }
 
 void MainWindow::on_actionPlay_triggered()
 {
-playSong();
+    playSong();
+}
+
+void MainWindow::deleteAllNotes()
+{
+    pianoRollView->deleteAllNotes();
+}
+
+void MainWindow::setUpMenuBar()
+{
+
+    //Create action crap
+    openFileAction = new QAction(tr("&Open"),this);
+    openFileAction->setStatusTip(tr("Open an existing midi file"));
+    connect(openFileAction, &QAction::triggered, this, &MainWindow::openFile);
+
+    playSongAction = new QAction(tr("&Play"),this);
+    playSongAction->setStatusTip(tr("play the current song"));
+    connect(playSongAction, &QAction::triggered, this, &MainWindow::playSong);
+
+    deleteAllNotesAction = new QAction(tr("&Delete all"),this);
+    deleteAllNotesAction->setStatusTip(tr("Delete all notes from the roll"));
+    connect(deleteAllNotesAction, &QAction::triggered, this, &MainWindow::deleteAllNotes);
+    //Add pause
+
+    //Create menu crap
+
+    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(openFileAction);
+    fileMenu->addAction(playSongAction);
+
+    QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
+    editMenu->addAction(deleteAllNotesAction);
+
+
 }
