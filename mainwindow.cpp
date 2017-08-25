@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include <keyboard.h>
 
 MidiPlayer player;
 MidiManager *manager;
@@ -12,21 +13,34 @@ MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
     setCentralWidget(centralWidget);
 
     pianoRollView = new PianoRoll;
-    trackview = new TrackView;
+
     manager = new MidiManager;
     pianoRollView->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-    trackview->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
+    QScrollArea *trackScrollArea = new QScrollArea;
+    trackScrollArea->setBackgroundRole(QPalette::Dark);
+    trackScrollArea->setWidgetResizable(true);
+    trackScrollArea->setFixedSize(70+10,300);
+    trackScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+
+
+    trackContainer = new TrackContainer;
+    prollContainer = new PianoRollContainer;
+    trackContainer->setPianoRollReference(prollContainer);
+    trackScrollArea->setWidget(trackContainer);
     QVBoxLayout *mainLayout = new QVBoxLayout;
-    QVBoxLayout *trackLayout = new QVBoxLayout;
-    mainLayout->addLayout(trackLayout);
-    mainLayout->addWidget(pianoRollView);
+    mainLayout->addWidget(trackScrollArea);
+    mainLayout->addWidget(prollContainer);
     centralWidget->setLayout(mainLayout);
 
 
     setUpMenuBar();
-    QObject::connect(pianoRollView,&PianoRoll::addNoteToPROLL,this,&MainWindow::updatePROLL);
-    QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackview,&TrackView::trackViewChanged);
+    QObject::connect(prollContainer->pianoRoll,&PianoRoll::addNoteToPROLL,this,&MainWindow::updatePROLL);
+    QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
+    QObject::connect(prollContainer->keyboard,&Keyboard::playSelectedNote,&player,&MidiPlayer::playNote);
+    QObject::connect(prollContainer,&PianoRollContainer::connectSignals,this,&MainWindow::connectSlots);
 
 }
 
@@ -70,7 +84,7 @@ void MainWindow::openFile()
         }
 
         manager->song = manager->Deserialize(array);
-        pianoRollView->convertFileToItems(*manager);
+        prollContainer->pianoRoll->convertFileToItems(*manager);
 
         file.close();
     }
@@ -125,7 +139,7 @@ void MainWindow::on_actionPlay_triggered()
 
 void MainWindow::deleteAllNotes()
 {
-    pianoRollView->deleteAllNotes();
+    prollContainer->pianoRoll->deleteAllNotes();
 }
 
 void MainWindow::setUpMenuBar()
@@ -154,5 +168,12 @@ void MainWindow::setUpMenuBar()
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(deleteAllNotesAction);
 
+
+}
+
+void MainWindow::connectSlots(PianoRoll*proll,Keyboard *key)
+{
+    QObject::connect(proll,&PianoRoll::addNoteToPROLL,this,&MainWindow::updatePROLL);
+    QObject::connect(key,&Keyboard::playSelectedNote,&player,&MidiPlayer::playNote);
 
 }

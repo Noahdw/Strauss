@@ -17,6 +17,8 @@
 #include <QMainWindow>
 #include <MidiManager.h>
 #include <QGraphicsScene>
+#include <pianorollcontainer.h>
+#include <trackcontainer.h>
 namespace Ui {
 class MainWindow;
 }
@@ -50,8 +52,11 @@ private slots:
 
     void deleteAllNotes();
 
+    void connectSlots(PianoRoll*proll,Keyboard *key);
+
 private:
-   // Ui::MainWindow *ui;
+   PianoRollContainer *prollContainer;
+   TrackContainer *trackContainer;
 
     QMenu *fileMenu;
     QMenu *editMenu;

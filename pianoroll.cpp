@@ -6,33 +6,32 @@
 #include <QScrollBar>
 #include <QList>
 #include <midimanager.h>
+#include <trackview.h>
 QList<PianoRollItem*> activeNotes;
-double scaleFactor = 1;
-double xscale = 1.1;
+
 PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
 {
     setFixedSize(1400,400);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setViewportUpdateMode(MinimalViewportUpdate);
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setContextMenuPolicy(Qt::CustomContextMenu);
 
     scene = new QGraphicsScene;
-    scene->setSceneRect(0,0,tPQN*cols,PianoRollItem::keyHeight*127);
+    scene->setSceneRect(0,0,tPQN*cols,PianoRollItem::keyHeight*128);
     scene->setItemIndexMethod(QGraphicsScene::NoIndex);
     this->setScene(scene);
 
 
     colSpacing = width()/cols;
-    sceneRect = new QRectF(0,0,tPQN*cols,PianoRollItem::keyHeight*127);
+    sceneRect = new QRectF(0,0,tPQN*cols,PianoRollItem::keyHeight*128);
 
     connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
             this, SLOT(ShowContextMenu(const QPoint &)));
 
     this->scale(((float)width() / (tPQN*cols)),1);
     viewport()->update();
-
 
 }
 
@@ -68,7 +67,7 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
             pNote->setPos(quadrant,newY);
             pNote->setBoundingRect(length);
             //pNote->setMatrix(this->matrix());
-            scene->update(0,0,tPQN*cols,PianoRollItem::keyHeight*127);
+            scene->update(0,0,tPQN*cols,PianoRollItem::keyHeight*128);
             pNote->noteStart = quadrant;
             pNote->noteEnd = length;
 
@@ -133,7 +132,7 @@ void PianoRoll::convertFileToItems( MidiManager &manager)
     int tqn = dw/manager.noteVec.at(0);//tpqn is 0 pos for now, tqn tells total quarter notes
 
 
-    scene->setSceneRect(0,0,dw,127*PianoRollItem::keyHeight);
+    scene->setSceneRect(0,0,dw,128*PianoRollItem::keyHeight);
     int curNote = 0;
     int elapsedDW = 0;
     int noteEnd = 0;
@@ -152,7 +151,7 @@ void PianoRoll::convertFileToItems( MidiManager &manager)
 
                     PianoRollItem *pNote = new PianoRollItem;
                     scene->addItem(pNote);
-                    pNote->setPos(elapsedDW,127*PianoRollItem::keyHeight - curNote*PianoRollItem::keyHeight);
+                    pNote->setPos(elapsedDW,128*PianoRollItem::keyHeight - curNote*PianoRollItem::keyHeight);
 
                     pNote->setBoundingRect(noteEnd);
                     pNote->noteStart = elapsedDW;
@@ -168,11 +167,12 @@ void PianoRoll::convertFileToItems( MidiManager &manager)
     cols = tqn;
     tPQN = manager.noteVec.at(0);
     colSpacing = (double)width()/cols;
+
+    this->resetMatrix();
+    scale((float)width() / (tPQN*cols),1);
     if (tPQN*scaleFactor*transform().m11()<minimumColSpacing) {
         scaleFactor = 16;
     }
-    this->resetMatrix();
-    scale((float)width() / (tPQN*cols),1);
     qDebug() <<"Cols: " << cols;
     qDebug() <<"colSpacing: " << colSpacing;
     qDebug() << tPQN;
@@ -180,6 +180,70 @@ void PianoRoll::convertFileToItems( MidiManager &manager)
     this->update();
     horizontalScrollBar()->setValue(0);
     verticalScrollBar()->setValue(0);
+
+}
+
+void PianoRoll::convertTrackToItems()
+{
+
+    int dw = 0;
+
+    for (int i = 0; i < track->track.listOfNotes.length(); i+=3){
+        dw += track->track.listOfNotes.at(i);
+        totalDT = dw;
+    }
+    int tqn = dw/MidiManager::TPQN;//tpqn is 0 pos for now, tqn tells total quarter notes
+
+
+    scene->setSceneRect(0,0,dw,128*PianoRollItem::keyHeight);
+    int curNote = 0;
+    int elapsedDW = 0;
+    int noteEnd = 0;
+
+    for(int i = 0; i < track->track.listOfNotes.length(); i+=3){
+
+        elapsedDW += track->track.listOfNotes.at(i);
+        //indicates a note. ignore other junk for now
+        if((track->track.listOfNotes.at(i+2)& 0xF0) ==0x90){
+            curNote = (track->track.listOfNotes.at(i+2) >> 8) & 127;
+            //now I need to find its note off
+
+            for(int j = i+5; j< track->track.listOfNotes.length(); j+=3){
+                noteEnd+= track->track.listOfNotes.at(j -2);
+                if(((track->track.listOfNotes.at(j) >> 8) & 127) == curNote ){
+
+                    PianoRollItem *pNote = new PianoRollItem;
+                    scene->addItem(pNote);
+                    pNote->setPos(elapsedDW,128*PianoRollItem::keyHeight - curNote*PianoRollItem::keyHeight);
+
+                    pNote->setBoundingRect(noteEnd);
+                    pNote->noteStart = elapsedDW;
+                    pNote->noteEnd = noteEnd;
+                    noteEnd = 0;
+                    break;
+                }
+            }
+
+        }
+    }
+
+    cols = tqn;
+    tPQN = MidiManager::TPQN;
+    colSpacing = (double)width()/cols;
+
+    this->resetMatrix();
+    scale((float)width() / (tPQN*cols),1);
+    if (tPQN*scaleFactor*transform().m11()<minimumColSpacing) {
+        scaleFactor = 16;
+    }
+    qDebug() <<"Cols: " << cols;
+    qDebug() <<"colSpacing: " << colSpacing;
+    qDebug() << tPQN;
+    this->viewport()->update();
+    this->update();
+    horizontalScrollBar()->setValue(0);
+    verticalScrollBar()->setValue(0);
+
 
 }
 
@@ -242,7 +306,7 @@ void PianoRoll::drawBackground(QPainter * painter, const QRectF & rect)
 
     //Draws the horizontals lines
 
-    for (int var = 0; var <= 127; ++var)
+    for (int var = 0; var <= 128; ++var)
     {
         painter->drawLine(0,var*PianoRollItem::keyHeight-verticalScrollBar()->value(),
                           width()+horizontalScrollBar()->value(),var*PianoRollItem::keyHeight-verticalScrollBar()->value());
@@ -316,10 +380,11 @@ void PianoRoll::wheelEvent(QWheelEvent *event)
     }
     else
     {
-        yscroller=event->angleDelta().y() /120*11;
+        yscroller=event->angleDelta().y() /120*14;
 
         wheelPos=this->verticalScrollBar();
         wheelPos->setValue(verticalScrollBar()->value()-yscroller);
+        emit updateScrollWheel(verticalScrollBar()->value());
     }
 
 }

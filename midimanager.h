@@ -50,7 +50,8 @@ public:
     QByteArray ReadMidi(QFile &file);
     mTrack track;
     QVector<int> noteVec;
-    mSong song;
+    mSong  song;
+    static int TPQN;
     Q_INVOKABLE QVector<int> getNoteInfo()
     {
         return noteVec;
