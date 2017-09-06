@@ -10,7 +10,8 @@ PianoRollContainer::PianoRollContainer()
     layout->addWidget(keyboard);
     layout->addWidget(pianoRoll);
     layout->setSpacing(0);
-    layout->setMargin(0);
+    layout->setContentsMargins(0,0,0,0);
+
     QWidget *initview = new QWidget;
     initview->setLayout(layout);
     stackedLayout->addWidget(initview);
@@ -22,7 +23,7 @@ PianoRollContainer::PianoRollContainer()
 void PianoRollContainer::switchPianoRoll(int id)
 {
     if (stackedLayout->currentIndex() != id) {
-         stackedLayout->setCurrentIndex(id);
+        stackedLayout->setCurrentIndex(id);
     }
 
 
@@ -35,14 +36,17 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     roll->track = view;
     roll->convertTrackToItems();
     Keyboard *key = new Keyboard;
-  QHBoxLayout *hlayout = new QHBoxLayout;
-  hlayout->addWidget(key);
-  hlayout->addWidget(roll);
-  hlayout->setSpacing(0);
-  hlayout->setMargin(0);
-  QWidget *initview = new QWidget;
-  initview->setLayout(hlayout);
-   stackedLayout->addWidget(initview);
+
+    QHBoxLayout *hlayout = new QHBoxLayout;
+    hlayout->addWidget(key);
+    hlayout->addWidget(roll);
+    hlayout->setSpacing(0);
+    hlayout->setContentsMargins(0,0,0,0);
+
+    QWidget *initview = new QWidget;
+    initview->setLayout(hlayout);
+    stackedLayout->addWidget(initview);
     QObject::connect(roll,&PianoRoll::updateScrollWheel,key,&Keyboard::scrollWheelChanged);
+
     emit connectSignals(roll,key);
 }

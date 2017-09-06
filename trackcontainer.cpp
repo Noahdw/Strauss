@@ -4,6 +4,7 @@ TrackContainer::TrackContainer()
 {
 vLayout = new QVBoxLayout;
 vLayout->setSpacing(0);
+vLayout->setContentsMargins(0,0,0,0);
 
 setLayout(vLayout);
 }

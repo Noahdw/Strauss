@@ -232,12 +232,13 @@ void PianoRoll::convertTrackToItems()
     colSpacing = (double)width()/cols;
 
     this->resetMatrix();
-    scale((float)width() / (tPQN*cols),1);
-    if (tPQN*scaleFactor*transform().m11()<minimumColSpacing) {
-        scaleFactor = 16;
+    scale((float)width() / (dw),1);
+    while(tPQN*scaleFactor*transform().m11()<minimumColSpacing) {
+
+        scaleFactor *=2;
     }
     qDebug() <<"Cols: " << cols;
-    qDebug() <<"colSpacing: " << colSpacing;
+    qDebug() <<"m11: " << transform().m11();
     qDebug() << tPQN;
     this->viewport()->update();
     this->update();

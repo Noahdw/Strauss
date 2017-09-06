@@ -9,7 +9,8 @@
 #include <QLabel>
 #include <QBoxLayout>
 #include <QGraphicsRectItem>
-class TrackView: public QWidget
+#include <QFrame>
+class TrackView: public QFrame
 {
     Q_OBJECT
 

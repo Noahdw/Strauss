@@ -19,6 +19,7 @@
 #include <QGraphicsScene>
 #include <pianorollcontainer.h>
 #include <trackcontainer.h>
+ #include <QLibrary>
 namespace Ui {
 class MainWindow;
 }
@@ -49,6 +50,7 @@ private slots:
 
     void on_actionPlay_triggered();
 
+    void openVST();
 
     void deleteAllNotes();
 
@@ -65,6 +67,7 @@ private:
     QAction *playSongAction;
     QAction *pauseAction;
     QAction *deleteAllNotesAction;
+    QAction *openVSTAction;
 
     void setUpMenuBar();
 };

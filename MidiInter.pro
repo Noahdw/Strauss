@@ -32,7 +32,9 @@ SOURCES += main.cpp\
     trackview.cpp \
     keyboard.cpp \
     pianorollcontainer.cpp \
-    trackcontainer.cpp
+    trackcontainer.cpp \
+    vst2hostcallback.cpp \
+    audiomanager.cpp
 
 HEADERS  += mainwindow.h\
             midiplayer.h\
@@ -42,10 +44,27 @@ HEADERS  += mainwindow.h\
     trackview.h \
     keyboard.h \
     pianorollcontainer.h \
-    trackcontainer.h
+    trackcontainer.h \
+    vst2hostcallback.h \
+    audiomanager.h
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm
 
+
 DISTFILES +=
 QML +=
+
+
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lportaudio_x64
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lportaudio_x64
+
+INCLUDEPATH += $$PWD/Debug
+DEPENDPATH += $$PWD/Debug
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lportaudio_x64
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lportaudio_x64
+
+INCLUDEPATH += $$PWD/Release
+DEPENDPATH += $$PWD/Release
