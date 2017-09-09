@@ -27,8 +27,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
 
     result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
     if (result!=MMSYSERR_NOERROR){
-        qDebug() << "COULD NOT OPEN STREAM?";
-
+        qDebug() << "COULD NOT OPEN STREAM1";
     }
 
 
@@ -155,14 +154,14 @@ void MidiPlayer::pausePlayBack(){
     midiStreamPause(outHandle);
 }
 //This allows for playback from the piano roll keyboard
-void MidiPlayer::Midiman(QString note,QString offOn){
+void MidiPlayer::Midiman(int note,bool active){
 
-    int noteT = note.toInt();
-    uchar noteTT = noteT;
+
+    uchar noteTT = note;
     uchar velocity = 80;
     DWORD inote;
     uchar status = 0x90;
-    if (offOn == "off") {
+    if (!active) {
 
         velocity = 0;
         status = 0x80;
@@ -226,7 +225,7 @@ void MidiPlayer::resumePlayBack(){
 }
 
 //Simpy calls Midiman for playback - perhaps not needed but seems to be for threading
-void MidiPlayer::playNote(QString note,QString offOn){
-    QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,offOn);
+void MidiPlayer::playNote(int note,bool active){
+    QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,active);
 
 }

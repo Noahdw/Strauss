@@ -16,14 +16,14 @@ public:
     void playMidiFile(MidiManager *song);
     void pausePlayBack();
     void resumePlayBack();
-    void Midiman(QString note,QString offOn);
+    void Midiman(int note,bool active);
     QVector<int> noteVecInit;
    // HANDLE hEvent;
     HMIDISTRM outHandle;
     bool shouldBreak;
     bool needBreak;
 public slots:
-    void playNote(QString note,QString onOff);
+    void playNote(int note,bool active);
 };
 
 #endif // MIDIPLAYER_H

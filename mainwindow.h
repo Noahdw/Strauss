@@ -17,6 +17,9 @@
 #include <QMainWindow>
 #include <MidiManager.h>
 #include <QGraphicsScene>
+#include <pianorollcontainer.h>
+#include <trackcontainer.h>
+ #include <QLibrary>
 namespace Ui {
 class MainWindow;
 }
@@ -47,11 +50,15 @@ private slots:
 
     void on_actionPlay_triggered();
 
+    void openVST();
 
     void deleteAllNotes();
 
+    void connectSlots(PianoRoll*proll,Keyboard *key);
+
 private:
-   // Ui::MainWindow *ui;
+   PianoRollContainer *prollContainer;
+   TrackContainer *trackContainer;
 
     QMenu *fileMenu;
     QMenu *editMenu;
@@ -60,6 +67,7 @@ private:
     QAction *playSongAction;
     QAction *pauseAction;
     QAction *deleteAllNotesAction;
+    QAction *openVSTAction;
 
     void setUpMenuBar();
 };

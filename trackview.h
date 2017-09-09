@@ -6,17 +6,29 @@
 #include <QMouseEvent>
 #include <QMenu>
 #include <midimanager.h>
-class TrackView: public QGraphicsView{
+#include <QLabel>
+#include <QBoxLayout>
+#include <QGraphicsRectItem>
+#include <QFrame>
+class TrackView: public QFrame
+{
     Q_OBJECT
 
 public:
-    TrackView(QWidget* parent = 0);
-
-public slots:
-    void trackViewChanged(mSong *song);
+    TrackView(mTrack track,QWidget* parent = 0);
+    int id;
+    mTrack track;
 
 private:
-QGraphicsScene *scene;
+    QString instrumentName;
+    QLabel *instrumentLabel;
+    QVBoxLayout *vlayout;
+    const int widgetWidth = 70;
+signals:
+    void trackClickedOn(int id);
+protected:
+    void paintEvent(QPaintEvent * event);
+    void mousePressEvent(QMouseEvent *event);
 };
 
 #endif // TRACKVIEW_H

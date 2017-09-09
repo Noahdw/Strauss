@@ -50,12 +50,14 @@ public:
     QByteArray ReadMidi(QFile &file);
     mTrack track;
     QVector<int> noteVec;
-    mSong song;
-    Q_INVOKABLE QVector<int> getNoteInfo()
+    mSong  song;
+    static int TPQN;
+    QVector<int>* getNoteVecPointer()
     {
-        return noteVec;
+        return &noteVec;
     }
     static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
+
 
 signals:
     void notifyTrackViewChanged(mSong *song);

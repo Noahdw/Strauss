@@ -6,7 +6,7 @@ MidiManager::MidiManager()
 }
 mSong song;
 //QVector<int>noteVec = QVector<int>();
-
+int MidiManager::TPQN = 0;
 
 QByteArray MidiManager::ReadMidi(QFile &file)
 {
@@ -83,24 +83,23 @@ mSong MidiManager::Deserialize(QByteArray &array)
                     //A bit messy but inverts the bit 7n values, shifts the last bit 1 right (makes second to last a 0)
                     deltaTime = (unsigned char)(array.at(pos) ^ 128) << 7;
                     deltaTime = (deltaTime | ((unsigned char)array.at(pos+1)));
-                    \
+
                     pos+=2;
                 }
                 else if (array.at(pos+2) >> 7 == 0)
                 {
-                    deltaTime = ((unsigned char)(array.at(pos)) << 16 |
-                                 (unsigned char)(array.at(pos+1)) << 8 |
-                                 (unsigned char)(array.at(pos+2))) << 2;
-                    deltaTime = (deltaTime >> 2) | 32896;
+                    deltaTime = ((unsigned char)(array.at(pos) ^ 128) << 14 |
+                                 (unsigned char)(array.at(pos+1)) << 7 |
+                                 (unsigned char)(array.at(pos+2)));
+
                     pos+=3;
                 }
                 else if ((unsigned char)array.at(pos+3) >> 7 == 0)
                 {
-                    deltaTime = ((unsigned char)(array.at(pos)) << 24 |
-                                 (unsigned char)(array.at(pos+1)) << 16 |
-                                 (unsigned char)(array.at(pos+2)) << 8 |
-                                 (unsigned char)(array.at(pos+3))) << 2;
-                    deltaTime = (deltaTime >> 2) | 8421504;
+                    deltaTime = ((unsigned char)(array.at(pos)^ 128) << 21 |
+                                 (unsigned char)(array.at(pos+1)) << 14 |
+                                 (unsigned char)(array.at(pos+2)) << 7 |
+                                 (unsigned char)(array.at(pos+3)));
                     pos+=4;
                 }
                 mEvent event = mEvent();
@@ -256,6 +255,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
 
         }
     }
+    MidiManager::TPQN = song.ticksPerQuarterNote;
     emit notifyTrackViewChanged(&song);
     return song;
 }
