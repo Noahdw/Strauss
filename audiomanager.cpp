@@ -23,7 +23,7 @@ void AudioManager::startPortAudio()
    }
     isRunning = true;
     initializeIO();
-    silenceChannel(outputss,2,1024);
+    silenceChannel(outputss,5,256);
 
 
 }
@@ -58,12 +58,17 @@ void AudioManager::initializeIO() {
   // inputs and outputs are assumed to be float** and are declared elsewhere,
   // most likely the are fields owned by this class. numChannels and blocksize
   // are also fields, both should be size_t (or unsigned int, if you prefer).
-  inputss = (float**)malloc(sizeof(float**) * 2);
-  outputss = (float**)malloc(sizeof(float**) * 2);
-  for(int channel = 0; channel < 2; channel++) {
+  inputss = (float**)malloc(sizeof(float**) * 5);
+  outputss = (float**)malloc(sizeof(float**) * 5);
+  for(int channel = 0; channel < 5; channel++) {
     inputss[channel] = (float*)malloc(sizeof(float*) * blocksize);
     outputss[channel] = (float*)malloc(sizeof(float*) * blocksize);
   }
+}
+
+void AudioManager::requestPlaybackRestart()
+{
+    masterPlug->restartPlayback();
 }
 void AudioManager::silenceChannel(float **channelData, int numChannels, long numFrames) {
   for(int channel = 0; channel < numChannels; ++channel) {
@@ -91,7 +96,7 @@ int num = 0;
                            PaStreamCallbackFlags statusFlags,
                            void *userData )
 {
-    qDebug() << ++num;
+   // qDebug() << ++num;
 
     /* Cast data passed through stream to our structure. */
     paTestData *data = (paTestData*)userData;
@@ -99,10 +104,11 @@ int num = 0;
     unsigned int i;
 
     (void) inputBuffer; /* Prevent unused variable warning. */
-
-     masterPlug->processAudio(masterEffect,inputss,outputss,1024);
+     masterPlug->processMidi(masterEffect);
+     masterPlug->processAudio(masterEffect,inputss,outputss,256);
     for( i=0; i<framesPerBuffer; i++ )
     {
+       //  qDebug() << outputss[0][i];
         *out++ =outputss[0][i] ;  /* left */
         *out++ =outputss[1][i]; /* right */
 

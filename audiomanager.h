@@ -22,6 +22,7 @@ public:
     void startStream(Vst2HostCallback *plugin,AEffect*effect);
     void silenceChannel(float **channelData, int numChannels, long numFrames);
     void initializeIO();
+    void requestPlaybackRestart();
     bool isRunning = false;
     uint blocksize =0;
     float sampleRate =0;

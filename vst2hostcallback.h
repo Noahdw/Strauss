@@ -3,12 +3,13 @@
 #include "SDK/aeffectx.h"
 #include <SDK/aeffect.h>
 #include <SDK/vstfxstore.h>
-
+#include <midimanager.h>
+#include <qvector.h>
 class Vst2HostCallback
 {
 
 public:
-    Vst2HostCallback();
+    Vst2HostCallback(MidiManager *mngr);
     AEffect* loadPlugin(char* fileName);
     int configurePluginCallbacks(AEffect *plugin);
     void startPlugin(AEffect *plugin);
@@ -16,12 +17,17 @@ public:
     void processAudio(AEffect *plugin, float **inputs, float **outputs,
       long numFrames);
     void silenceChannel(float **channelData, int numChannels, long numFrames);
-    void processMidi(AEffect *plugin, VstEvents *events);
+    void processMidi(AEffect *plugin);
+    void initializeMidiEvents();
+    void restartPlayback();
     
-    unsigned int blocksize = 512;
+    unsigned int blocksize = 256;
     float sampleRate = 44100.0f;
-private:
 
+private:
+MidiManager *manager;
+VstEvents *events;
+LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
 
 };
 //from http://teragonaudio.com/article/How-to-make-your-own-VST-host.html

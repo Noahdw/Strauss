@@ -52,11 +52,12 @@ public:
     QVector<int> noteVec;
     mSong  song;
     static int TPQN;
-    Q_INVOKABLE QVector<int> getNoteInfo()
+    QVector<int>* getNoteVecPointer()
     {
-        return noteVec;
+        return &noteVec;
     }
     static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
+
 
 signals:
     void notifyTrackViewChanged(mSong *song);

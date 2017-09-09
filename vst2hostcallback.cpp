@@ -2,12 +2,12 @@
 #include <Windows.h>
 #include <qdebug.h>
 #include <SDK/audioeffectx.h>
-
+#include <qdatetime.h>
 #pragma comment(lib,"user32.lib")
 
-Vst2HostCallback::Vst2HostCallback()
+Vst2HostCallback::Vst2HostCallback(MidiManager *mngr)
 {
-
+    manager = mngr;
 }
 dispatcherFuncPtr dispatcher;
 HMODULE hinst;
@@ -15,9 +15,16 @@ float **outputs;
 float ** inputs;
 uint numChannels = 2;
 float sRate;
+int noteVecPos = 1;
+uint maxNotes = 256;
+int TPQN = 120;
+int BPM = 500000;
+float samplesPerTick = 0;
+uint framesTillBlock = 0;
+bool hasReachedEnd = false;
 int processLevel = kVstProcessLevelUser; //1
-//static VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
-// VstInt32 index, VstInt32 value, void *ptr, float opt);
+double sPos = 0;
+VstTimeInfo time;
 
 
 extern "C"{
@@ -25,7 +32,7 @@ bool firstRun = true;
 VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
                                    VstInt32 index, VstInt32 value, void *ptr, float opt)
 {
-    qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
+   // qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
     //http://jdmcox.com/PianoRollComposer.cpp for opcodes
     switch (opcode) {
     case audioMasterVersion:
@@ -41,18 +48,30 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         break;
     case audioMasterGetTime:
     {
-        VstTimeInfo *time = new VstTimeInfo();
-        time->samplePos = 0;
-        time->sampleRate = sRate;
-        time->tempo = 120;
-        time->ppqPos = 0;
-        time->barStartPos = 0;
-        time->timeSigDenominator = 4;
-        time->timeSigNumerator = 4;
+        // some help from https://github.com/elieserdejesus/JamTaba/blob/master/src/Common/vst/VstHost.cpp
 
+        time.samplePos = sPos;
+        time.sampleRate = sRate;
+        time.nanoSeconds = QDateTime::currentDateTime().currentMSecsSinceEpoch() * 1000000.0;
+        time.tempo = 120;
+        time.ppqPos = ((time.samplePos)/((60.0 / time.tempo) * sRate)) + 1;
+        // qDebug() << time.ppqPos;
+        time.barStartPos = 0;
+        time.cycleStartPos = 0.0;
+        time.cycleEndPos = 0.0;
+        time.timeSigDenominator = 4;
+        time.timeSigNumerator = 4;
+        time.smpteOffset  = 0;
+        time.smpteFrameRate  = 1;
+        time.samplesToNextClock = 0;
+        time.flags = 0;
+        time.flags |= kVstTempoValid;
+        time.flags |= kVstTimeSigValid;
+        time.flags |= kVstPpqPosValid;
+        time.flags |= kVstTransportPlaying;
 
         qDebug() << "audioMasterGetTime" << opcode;
-        return (VstIntPtr)time;
+        return (VstIntPtr)&time;
     }
     case 6:
         qDebug() << "audioMasterWantMidi" << opcode;
@@ -115,6 +134,7 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     // Instantiate the plugin
     plugin = mainEntryPoint((audioMasterCallback)hostCallback);
     sRate = sampleRate;
+    samplesPerTick =(BPM / TPQN )/(1000000/sRate);
     return plugin;
 }
 
@@ -139,6 +159,22 @@ int Vst2HostCallback::configurePluginCallbacks(AEffect *plugin) {
     return (int)plugin;
 }
 
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+int WINAPI MainProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+    case WM_CLOSE:
+
+        return true;
+    }
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
 void Vst2HostCallback::startPlugin(AEffect *plugin) {
 
     dispatcher(plugin, effOpen, 0, 0, NULL, 0.0f);
@@ -146,48 +182,44 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
     dispatcher(plugin, effSetBlockSize, 0, blocksize, NULL, 0.0f);
     dispatcher(plugin, effMainsChanged, 0, 1, NULL, 0.0f);
 
+    //This crap taken from https://github.com/falkTX/dssi-vst/blob/master/dssi-vst-server.cpp
+    WNDCLASSEXA wclass = { };
+    wclass.cbSize = sizeof(WNDCLASSEXA);
+    wclass.style = 0;
+    wclass.lpfnWndProc = WndProc;
+    wclass.cbClsExtra = 0;
+    wclass.cbWndExtra = 0;
+    wclass.hInstance = hinst;
+    wclass.hIcon = LoadIcon(hinst, (LPCWSTR)APPLICATION_CLASS_NAME);
+    wclass.hCursor = LoadCursor(0, IDC_ARROW);
+    wclass.lpszMenuName = (LPCSTR)"MIDIINTER_HOST";
+    wclass.lpszClassName = APPLICATION_CLASS_NAME;
+    wclass.hIconSm = 0;
+    wclass.hbrBackground =0;
+
+    int err =  RegisterClassExA(const_cast<const WNDCLASSEXA*>(&wclass));
+    if (err == 0) {
+        qDebug() <<  "Error - Could not register class: " << GetLastError();
+        return;
+    }
+
     HWND editor;
-    editor = CreateWindowExA(WS_OVERLAPPEDWINDOW,"myclass","mywindow",WS_OVERLAPPEDWINDOW,
+    editor = CreateWindowExA(0,APPLICATION_CLASS_NAME,"mywindow",WS_OVERLAPPEDWINDOW,
                              CW_USEDEFAULT, CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,NULL,hinst,NULL);
     if (editor == NULL) {
-        qDebug() <<  "Could not create window - Error: " << GetLastError();
+        qDebug() <<  "Error - Could not create window: " << GetLastError();
         return;
     }
     dispatcher(plugin,effEditOpen,0,0,editor,0);
     ShowWindow(editor,SW_SHOW);
     UpdateWindow(editor);
-    //initializeIO();
 
+    initializeMidiEvents();
+    qDebug() <<"This plugin has:" << plugin->numOutputs << " outputs";
 }
 
-void Vst2HostCallback::initializeIO() {
-    // inputs and outputs are assumed to be float** and are declared elsewhere,
-    // most likely the are fields owned by this class. numChannels and blocksize
-    // are also fields, both should be size_t (or unsigned int, if you prefer).
-    inputs = (float**)malloc(sizeof(float**) * numChannels);
-    outputs = (float**)malloc(sizeof(float**) * numChannels);
-    for(int channel = 0; channel < numChannels; channel++) {
-        inputs[channel] = (float*)malloc(sizeof(float*) * blocksize);
-        outputs[channel] = (float*)malloc(sizeof(float*) * blocksize);
-    }
-}
-
-void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **outputs,
-                                    long numFrames) {
-    // Always reset the output array before processing.
-    // silenceChannel(outputs, numChannels, numFrames);
 
 
-
-
-    // silenceChannel(inputs, numChannels, numFrames);
-    qDebug() << plugin->numInputs;
-    // qDebug() << 2;
-
-    plugin->processReplacing(plugin, inputs, outputs, numFrames);
-    qDebug() << "processReplacing end";
-
-}
 
 void Vst2HostCallback::silenceChannel(float **channelData, int numChannels, long numFrames) {
     for(int channel = 0; channel < numChannels; ++channel) {
@@ -196,19 +228,116 @@ void Vst2HostCallback::silenceChannel(float **channelData, int numChannels, long
         }
     }
 }
-
-void Vst2HostCallback::processMidi(AEffect *plugin, VstEvents *events)
-{
+/*
+This is used to convert midi arrays into blocks for processing
+*/
+void Vst2HostCallback::processMidi(AEffect *plugin)
+{ 
     processLevel = kVstProcessLevelRealtime;
+
+    events->numEvents =0;
+
+    uint i = 0;
+    int pos = 0;
+    bool canSkip = false;
+    int df =0;
+    // If we are too many samples away from inputing an event, subtract blocksize and give empty vstevents
+    if (!hasReachedEnd) {
+
+        while(i < blocksize){
+            qDebug() << framesTillBlock;
+            if (noteVecPos >= manager->noteVec.length()) {
+                qDebug() << "notevec length :" << manager->noteVec.length();
+                qDebug() << "Reached end of midi";
+                hasReachedEnd = true;
+                break;
+            }
+            if (framesTillBlock > 0) {
+                if (framesTillBlock < blocksize) {
+                    canSkip = true;
+                }
+                else
+                {
+                    framesTillBlock -= blocksize;
+                    break;
+                }
+            }
+            if (!canSkip) {
+                //Deltaframes, bless its heart, is actually samples since the start of a block.
+                // A lot of sources claimed it was Microseconds since the start. Wrong.
+                df = manager->noteVec.at(noteVecPos) * samplesPerTick;
+                i+=df;
+                if (i > blocksize) {
+                    framesTillBlock = df - (blocksize - i);
+                    break;
+                }
+            }
+            else
+            {
+                df = framesTillBlock;
+                i+=df;
+                canSkip = false;
+            }
+
+            framesTillBlock = 0;
+
+
+            //can add new event as we are in block timeframe
+            VstMidiEvent* evnt = new VstMidiEvent;
+
+            evnt->byteSize =24;
+            evnt->deltaFrames = df;
+            evnt->type = kVstMidiType;
+            evnt->flags = 0;
+            evnt->detune = 0;
+            evnt->noteOffVelocity = 0;
+            evnt->reserved1 = 0;
+            evnt->reserved2 = 0;
+            evnt->midiData[0] =  (uchar)manager->noteVec.at(noteVecPos+2) & 0xFF;
+            evnt->midiData[1] = (uchar)(manager->noteVec.at(noteVecPos+2) >>8) & 0xFF;
+            evnt->midiData[2] = (uchar)(manager->noteVec.at(noteVecPos+2) >>16) & 0xFF;
+            evnt->midiData[3] = 0;
+            evnt->noteOffset = 0;
+            evnt->noteLength = 0;
+
+            events->events[pos] = (VstEvent*)evnt;
+
+            ++pos;
+            ++events->numEvents;
+            noteVecPos +=3;
+        }
+    }
     dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
-    qDebug() << "processReplacing begin";
+    sPos += blocksize;
+
+}
+//There is no need to malloc every call and create new events. Reuse just one structure.
+void Vst2HostCallback::initializeMidiEvents()
+{
+    int numEventsRequired = maxNotes;
+
+    events = (VstEvents*)malloc(sizeof(VstEvents) + sizeof(VstEvents*)*(numEventsRequired));
+    events->numEvents = numEventsRequired;
+    events->reserved = 0;
+    qDebug() << "initializeMidiEvents okay";
+}
+
+void Vst2HostCallback::restartPlayback()
+{
+    noteVecPos = 1;
+    hasReachedEnd = false;
+}
+
+
+void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **outputs,
+                                    long numFrames) {
+    // qDebug() << plugin->numInputs;
 
     if (plugin->flags & effFlagsCanReplacing) {
-        // processAudio(plugin,inputs,outputs,1024);
+        plugin->processReplacing(plugin, inputs, outputs, numFrames);
     }
     else{
         qDebug() << "processReplacing not supported by plugin";
     }
-
-
 }
+
