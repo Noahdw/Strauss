@@ -5,26 +5,25 @@
 #include <audiomanager.h>
 MidiPlayer player;
 MidiManager *manager;
-PianoRoll *pianoRollView;
-TrackView * trackview;
+
+
 AudioManager* audioManager;
 
 //temp
 Vst2HostCallback* host;
 AEffect *plugin = NULL;
 
-MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
+QVector<pluginHolder*> MainWindow::pluginHolderVec;
+
+MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
     centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
-    pianoRollView = new PianoRoll;
     audioManager = new AudioManager;
-
     manager = new MidiManager;
-    host = new Vst2HostCallback(manager);
-    pianoRollView->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+
 
     QScrollArea *trackScrollArea = new QScrollArea;
     trackScrollArea->setBackgroundRole(QPalette::Light);
@@ -33,9 +32,6 @@ MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
     trackScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-
-
-
 
     trackContainer = new TrackContainer;
     prollContainer = new PianoRollContainer;
@@ -47,22 +43,24 @@ MainWindow::MainWindow(MidiManager *mngr,QWidget *parent) :
     centralWidget->setLayout(mainLayout);
 
 
-    setUpMenuBar();
-    QObject::connect(prollContainer->pianoRoll,&PianoRoll::addNoteToPROLL,this,&MainWindow::updatePROLL);
+
     QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
-    QObject::connect(prollContainer->keyboard,&Keyboard::playSelectedNote,&player,&MidiPlayer::playNote);
     QObject::connect(prollContainer,&PianoRollContainer::connectSignals,this,&MainWindow::connectSlots);
 
+    addNewTrack();
+    setUpMenuBar();
 }
 
 MainWindow::~MainWindow()
 {
-    //  delete ui;
+
 }
 
+
+//remove later
 void MainWindow::updatePROLL(int x,int y, int width,int start, int length)
 {
-    manager->updateMidi(127 - y/PianoRollItem::keyHeight,70,start,length);
+    //manager->updateMidi(127 - y/PianoRollItem::keyHeight,70,start,length);
 }
 
 
@@ -95,7 +93,7 @@ void MainWindow::openFile()
         }
 
         manager->song = manager->Deserialize(array);
-        prollContainer->pianoRoll->convertFileToItems(*manager);
+       // prollContainer->pianoRoll->convertFileToItems(*manager);
 
         file.close();
     }
@@ -131,23 +129,21 @@ bool stopped = false;
 void MainWindow::playSong(){
     
 
-    if (plugin != NULL) {
 
-          if (!audioManager->isRunning) {
-              audioManager->sampleRate = host->sampleRate;
-              audioManager->blocksize = host->blocksize;
-              audioManager->startPortAudio();
 
-              audioManager->openStream();
-              audioManager->startStream(host,plugin);
-          }
-          else
-          {
-            audioManager->requestPlaybackRestart();
-          }
-
+    if (!audioManager->isRunning) {
+        audioManager->startPortAudio();
+        audioManager->openStream();
+        audioManager->startStream();
 
     }
+    else
+    {
+        audioManager->requestPlaybackRestart();
+    }
+
+
+
 
 }
 
@@ -161,32 +157,32 @@ void MainWindow::openVST()
 
 
 
-    QFileDialog dialog;
-    QString fileName  = dialog.getOpenFileName(this, tr("Open File"), QString(),
-                                               tr("dll Files (*.dll)"));
+//    QFileDialog dialog;
+//    QString fileName  = dialog.getOpenFileName(this, tr("Open File"), QString(),
+//                                               tr("dll Files (*.dll)"));
 
-    if (!fileName.isEmpty()) {
-        QByteArray array = fileName.toLocal8Bit();
-        char* file = array.data();
-
-
-
-        plugin = host->loadPlugin(file);
-        if (plugin == NULL) {
-            qDebug() << "NULLPTR PLUGIN";
-            return;
-        }
-        int state = host->configurePluginCallbacks(plugin);
-        if (state == -1) {
-            qDebug() << "Failed to configure button. abort startPlugin";
-            return;
-        }
-        host->startPlugin(plugin);
+//    if (!fileName.isEmpty()) {
+//        QByteArray array = fileName.toLocal8Bit();
+//        char* file = array.data();
 
 
 
+//        plugin = host->loadPlugin(file);
+//        if (plugin == NULL) {
+//            qDebug() << "NULLPTR PLUGIN";
+//            return;
+//        }
+//        int state = host->configurePluginCallbacks(plugin);
+//        if (state == -1) {
+//            qDebug() << "Failed to configure button. abort startPlugin";
+//            return;
+//        }
+//        host->startPlugin(plugin);
 
-    }
+
+
+
+//    }
 }
 
 void MainWindow::deleteAllNotes()
@@ -214,6 +210,10 @@ void MainWindow::setUpMenuBar()
     openVSTAction = new QAction(tr("&Open VST"),this);
     openVSTAction->setStatusTip(tr("Opens a VST"));
     connect(openVSTAction, &QAction::triggered, this, &MainWindow::openVST);
+
+    addNewTrackAction = new QAction(tr("&Add Track"),this);
+    addNewTrackAction->setStatusTip(tr("Adds a new MIDI track"));
+    connect(addNewTrackAction, &QAction::triggered, this, &MainWindow::addNewTrack);
     //Add pause
 
     //Create menu crap
@@ -225,13 +225,32 @@ void MainWindow::setUpMenuBar()
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(deleteAllNotesAction);
+    editMenu->addAction(addNewTrackAction);
 
 
 }
 
-void MainWindow::connectSlots(PianoRoll*proll,Keyboard *key)
+void MainWindow::connectSlots(PianoRoll*proll,Keyboard *key,VelocityView *veloc)
 {
-    QObject::connect(proll,&PianoRoll::addNoteToPROLL,this,&MainWindow::updatePROLL);
-    QObject::connect(key,&Keyboard::playSelectedNote,&player,&MidiPlayer::playNote);
+    QObject::connect(proll,&PianoRoll::addNoteToPROLL,manager,&MidiManager::updateMidiAdd);
+    QObject::connect(proll,&PianoRoll::deleteNoteFromPROLL,manager,&MidiManager::updateMidiDelete);
+      QObject::connect(proll,&PianoRoll::updateVelocityViewItems,veloc,&VelocityView::updateItems);
+       QObject::connect(proll,&PianoRoll::setVelocityViewScale,veloc,&VelocityView::setScale);
+    QObject::connect(key,&Keyboard::playSelectedNote,proll,&PianoRoll::playKeyboardNote);
 
 }
+
+void MainWindow::addNewTrack()
+{
+    mTrack *track = new mTrack;
+    track->instrumentName = "New Track";
+
+
+    TrackView *view = new TrackView(track);
+    trackContainer->addSingleView(view);
+
+
+
+}
+
+

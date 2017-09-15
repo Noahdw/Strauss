@@ -3,10 +3,12 @@
 #include <QGraphicsItem>
 #include <pianorollitem.h>
 #include <QDebug>
-TrackView::TrackView(mTrack track,QWidget *parent) : QFrame(parent)
+#include <mainwindow.h>
+TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
 {
+
     this->track = track;
-    instrumentName = track.instrumentName;
+    instrumentName = track->instrumentName;
     if (instrumentName == "") {
         instrumentName = "new track";
     }
@@ -20,6 +22,7 @@ TrackView::TrackView(mTrack track,QWidget *parent) : QFrame(parent)
     setFrameStyle(QFrame::Box | QFrame::Raised);
     setLineWidth(0);
     setMidLineWidth(0);
+    plugin.host = new Vst2HostCallback(track);
 
 }
 
@@ -38,6 +41,35 @@ void TrackView::mousePressEvent(QMouseEvent *event)
 {
     //
    emit trackClickedOn(id);
+    if (plugin.effect ==NULL) {
+         qDebug() << "No plugin is currently set";
+
+         QFileDialog dialog;
+         QString fileName  = dialog.getOpenFileName(this, tr("Open File"), QString(),
+                                                    tr("dll Files (*.dll)"));
+
+         if (!fileName.isEmpty()) {
+             QByteArray array = fileName.toLocal8Bit();
+             char* file = array.data();
+
+             plugin.effect = plugin.host->loadPlugin(file);
+             if (plugin.effect == NULL) {
+                 qDebug() << "NULLPTR PLUGIN: in loadPlugin";
+                 return;
+             }
+             int state = plugin.host->configurePluginCallbacks(plugin.effect);
+             if (state == -1) {
+                 qDebug() << "Failed to configurePluginCallbacks. abort startPlugin";
+                 return;
+             }
+             plugin.host->startPlugin(plugin.effect);
+         }
+         MainWindow::pluginHolderVec.append(&plugin);
+    }
+    else
+    {
+
+    }
     qDebug() << id;
 }
 

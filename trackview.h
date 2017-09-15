@@ -5,25 +5,30 @@
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <QMenu>
-#include <midimanager.h>
+
 #include <QLabel>
 #include <QBoxLayout>
 #include <QGraphicsRectItem>
 #include <QFrame>
+#include <vst2hostcallback.h>
+
+
+
 class TrackView: public QFrame
 {
     Q_OBJECT
 
 public:
-    TrackView(mTrack track,QWidget* parent = 0);
+    TrackView(mTrack *track,QWidget* parent = 0);
     int id;
-    mTrack track;
-
+    mTrack *track;
+    pluginHolder plugin;
 private:
     QString instrumentName;
     QLabel *instrumentLabel;
     QVBoxLayout *vlayout;
     const int widgetWidth = 70;
+
 signals:
     void trackClickedOn(int id);
 protected:

@@ -14,9 +14,10 @@ class Keyboard: public QGraphicsView{
     Q_OBJECT
 public:
     Keyboard(QWidget* parent = 0);
+    int noteWidth = 24;
 private:
     QGraphicsScene *scene;
-    int noteWidth = 24;
+
     void addNotesToScene();
     QGraphicsRectItem *activeNote;
     QBrush activeBrush;

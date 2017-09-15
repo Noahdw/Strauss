@@ -6,8 +6,9 @@
 #include <QScrollBar>
 #include <QList>
 #include <midimanager.h>
-#include <trackview.h>
+
 QList<PianoRollItem*> activeNotes;
+int defaultCols = 50;
 
 PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
 {
@@ -33,6 +34,7 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     this->scale(((float)width() / (tPQN*cols)),1);
     viewport()->update();
 
+
 }
 
 void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
@@ -41,12 +43,19 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
     {
 
         QGraphicsItem *item = itemAt(event->pos());
+        PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
         if (item!=0) {
             //deletes an existing note from song
+
+               int note =127 - (pItem->y()/PianoRollItem::keyHeight);
+              emit updateVelocityViewItems(pItem->noteStart,0,note,false);
+            emit deleteNoteFromPROLL(pItem->noteStart,pItem->noteEnd,note,track->track);
+
             scene->removeItem(item);
             delete item;
             item=nullptr;
             activeNotes.clear();
+
         }
         else{
             //Adds a new note to song
@@ -70,9 +79,10 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
             scene->update(0,0,tPQN*cols,PianoRollItem::keyHeight*128);
             pNote->noteStart = quadrant;
             pNote->noteEnd = length;
-
-            emit addNoteToPROLL(quadrant,newY,colSpacing*scaleFactor,quadrant,length);
-
+            int note =127-newY/PianoRollItem::keyHeight;
+            emit updateVelocityViewItems(quadrant,70,note,true);
+            emit addNoteToPROLL(note,70,quadrant,length,track->track);
+            qDebug() << track->track->listOfNotes.length();
             QGraphicsView::mouseDoubleClickEvent(event);
         }
     }
@@ -120,97 +130,38 @@ void PianoRoll::clearActiveNotes()
     activeNotes.clear();
 }
 
-void PianoRoll::convertFileToItems( MidiManager &manager)
-{
-
-    int dw = 0;
-
-    for (int i = 1; i < manager.noteVec.length(); i+=3){
-        dw += manager.noteVec.at(i);
-        totalDT = dw;
-    }
-    int tqn = dw/manager.noteVec.at(0);//tpqn is 0 pos for now, tqn tells total quarter notes
-
-
-    scene->setSceneRect(0,0,dw,128*PianoRollItem::keyHeight);
-    int curNote = 0;
-    int elapsedDW = 0;
-    int noteEnd = 0;
-
-    for(int i = 1; i < manager.noteVec.length(); i+=3){
-
-        elapsedDW += manager.noteVec.at(i);
-        //indicates a note. ignore other junk for now
-        if((manager.noteVec.at(i+2)& 0xF0) ==0x90){
-            curNote = (manager.noteVec.at(i+2) >> 8) & 127;
-            //now I need to find its note off
-
-            for(int j = i+5; j< manager.noteVec.length(); j+=3){
-                noteEnd+= manager.noteVec.at(j -2);
-                if(((manager.noteVec.at(j) >> 8) & 127) == curNote ){
-
-                    PianoRollItem *pNote = new PianoRollItem;
-                    scene->addItem(pNote);
-                    pNote->setPos(elapsedDW,128*PianoRollItem::keyHeight - curNote*PianoRollItem::keyHeight);
-
-                    pNote->setBoundingRect(noteEnd);
-                    pNote->noteStart = elapsedDW;
-                    pNote->noteEnd = noteEnd;
-                    noteEnd = 0;
-                    break;
-                }
-            }
-
-        }
-    }
-
-    cols = tqn;
-    tPQN = manager.noteVec.at(0);
-    colSpacing = (double)width()/cols;
-
-    this->resetMatrix();
-    scale((float)width() / (tPQN*cols),1);
-    if (tPQN*scaleFactor*transform().m11()<minimumColSpacing) {
-        scaleFactor = 16;
-    }
-    qDebug() <<"Cols: " << cols;
-    qDebug() <<"colSpacing: " << colSpacing;
-    qDebug() << tPQN;
-    this->viewport()->update();
-    this->update();
-    horizontalScrollBar()->setValue(0);
-    verticalScrollBar()->setValue(0);
-
-}
 
 void PianoRoll::convertTrackToItems()
 {
 
     int dw = 0;
 
-    for (int i = 0; i < track->track.listOfNotes.length(); i+=3){
-        dw += track->track.listOfNotes.at(i);
+    for (int i = 0; i < track->track->listOfNotes.length(); i+=3){
+        dw += track->track->listOfNotes.at(i);
         totalDT = dw;
     }
     int tqn = dw/MidiManager::TPQN;//tpqn is 0 pos for now, tqn tells total quarter notes
-
+    if (tqn == 0) {
+        tqn = cols;
+        dw = MidiManager::TPQN*cols;
+    }
 
     scene->setSceneRect(0,0,dw,128*PianoRollItem::keyHeight);
     int curNote = 0;
     int elapsedDW = 0;
     int noteEnd = 0;
 
-    for(int i = 0; i < track->track.listOfNotes.length(); i+=3){
+    for(int i = 0; i < track->track->listOfNotes.length(); i+=3){
 
-        elapsedDW += track->track.listOfNotes.at(i);
+        elapsedDW += track->track->listOfNotes.at(i);
         //indicates a note. ignore other junk for now
-        if((track->track.listOfNotes.at(i+2)& 0xF0) ==0x90){
-            curNote = (track->track.listOfNotes.at(i+2) >> 8) & 127;
+        if((track->track->listOfNotes.at(i+2)& 0xF0) ==0x90){
+            curNote = (track->track->listOfNotes.at(i+2) >> 8) & 127;
             //now I need to find its note off
 
-            for(int j = i+5; j< track->track.listOfNotes.length(); j+=3){
-                noteEnd+= track->track.listOfNotes.at(j -2);
-                if(((track->track.listOfNotes.at(j) >> 8) & 127) == curNote ){
+            for(int j = i+5; j< track->track->listOfNotes.length(); j+=3){
+                noteEnd+= track->track->listOfNotes.at(j -2);
+                if(((track->track->listOfNotes.at(j) >> 8) & 127) == curNote ){
 
                     PianoRollItem *pNote = new PianoRollItem;
                     scene->addItem(pNote);
@@ -228,6 +179,7 @@ void PianoRoll::convertTrackToItems()
     }
 
     cols = tqn;
+
     tPQN = MidiManager::TPQN;
     colSpacing = (double)width()/cols;
 
@@ -246,6 +198,13 @@ void PianoRoll::convertTrackToItems()
     verticalScrollBar()->setValue(0);
 
 
+}
+
+void PianoRoll::playKeyboardNote(int note, bool active)
+{
+    track->plugin.host->eventToAdd.hasEventToAdd = true;
+    track->plugin.host->eventToAdd.eventOn = active;
+    track->plugin.host->eventToAdd.note = note;
 }
 
 void PianoRoll::deleteAllNotes()
@@ -360,18 +319,22 @@ void PianoRoll::wheelEvent(QWheelEvent *event)
         int zoom = event->angleDelta().y() /120;
         yscroller=event->angleDelta().y() /120*11;
 
-
+        wheelPos = this->horizontalScrollBar();
         if (zoom > 0) {
             scale(xscale,1);
+
+          emit  setVelocityViewScale(xscale,false,wheelPos->value());
         }
         else{
             scale(0.8/xscale,1);
+            emit setVelocityViewScale(0.8/xscale,false,wheelPos->value());
         }
 
-        this->scale(xscale,1);
+      //  this->scale(xscale,1);
         if (transform().m11() < (float)width() / (tPQN*cols)) {
             resetMatrix();
             scale((float)width() / (tPQN*cols),1);
+            emit setVelocityViewScale((float)width() / (tPQN*cols),true,wheelPos->value());
         }
         colSpacing*=transform().m11();
 

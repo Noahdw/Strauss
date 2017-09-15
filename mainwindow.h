@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <midimanager.h>
 #include <QFileDialog>
 #include <QFile>
 #include <QMessageBox>
@@ -11,7 +10,6 @@
 #include<QtConcurrent/QtConcurrent>
 #include <pianoroll.h>
 #include <pianorollitem.h>
-#include <trackview.h>
 #include <QVBoxLayout>
 #include <QMenuBar>
 #include <QMainWindow>
@@ -19,7 +17,8 @@
 #include <QGraphicsScene>
 #include <pianorollcontainer.h>
 #include <trackcontainer.h>
- #include <QLibrary>
+#include <QLibrary>
+#include <qvector.h>
 namespace Ui {
 class MainWindow;
 }
@@ -30,8 +29,9 @@ class MainWindow : public QMainWindow
     QWidget *centralWidget;
 
 public:
-    explicit MainWindow(MidiManager *mngr,QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    static QVector<pluginHolder*> pluginHolderVec;
 
 private slots:
     void on_quitButton_clicked();
@@ -54,7 +54,9 @@ private slots:
 
     void deleteAllNotes();
 
-    void connectSlots(PianoRoll*proll,Keyboard *key);
+    void connectSlots(PianoRoll*proll,Keyboard *key,VelocityView *veloc);
+
+    void addNewTrack();
 
 private:
    PianoRollContainer *prollContainer;
@@ -68,6 +70,7 @@ private:
     QAction *pauseAction;
     QAction *deleteAllNotesAction;
     QAction *openVSTAction;
+    QAction *addNewTrackAction;
 
     void setUpMenuBar();
 };

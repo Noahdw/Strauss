@@ -1,5 +1,6 @@
 #include "midiplayer.h"
 
+//This class is no longer needed
 
 MidiPlayer::MidiPlayer()
 {
@@ -105,7 +106,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
     CloseHandle(hEvent);
     needBreak = false;
 }
-
+//taken from somewhere, idk.
 void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
 {
     LPMIDIHDR   lpMIDIHeader;

@@ -5,31 +5,67 @@
 #include <SDK/vstfxstore.h>
 #include <midimanager.h>
 #include <qvector.h>
+
+
+struct EventToAdd
+{
+    int note = 0;
+    bool eventOn = false;
+    bool hasEventToAdd = false;
+};
+
 class Vst2HostCallback
 {
 
 public:
-    Vst2HostCallback(MidiManager *mngr);
+    Vst2HostCallback(mTrack *track);
     AEffect* loadPlugin(char* fileName);
     int configurePluginCallbacks(AEffect *plugin);
     void startPlugin(AEffect *plugin);
     void initializeIO();
     void processAudio(AEffect *plugin, float **inputs, float **outputs,
-      long numFrames);
+                      long numFrames);
     void silenceChannel(float **channelData, int numChannels, long numFrames);
     void processMidi(AEffect *plugin);
     void initializeMidiEvents();
     void restartPlayback();
     
+    EventToAdd eventToAdd;
     unsigned int blocksize = 256;
     float sampleRate = 44100.0f;
+    bool canPlay = false;
+
 
 private:
-MidiManager *manager;
-VstEvents *events;
-LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
+    QVector<int> *noteList;
+    VstEvents *events;
+    mTrack *track;
+    LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
+
+    HMODULE hinst;
+    float **outputs;
+    float ** inputs;
+    uint numChannels = 2;
+
+    int noteVecPos = 0;
+    uint maxNotes = 256;
+    int TPQN = MidiManager::TPQN;
+    int BPM = 500000;
+    float samplesPerTick = 0;
+    uint framesTillBlock = 0;
+    bool hasReachedEnd = false;
+
+
+
 
 };
+
+struct pluginHolder
+{
+    Vst2HostCallback *host =NULL;
+    AEffect *effect =NULL;
+};
+
 //from http://teragonaudio.com/article/How-to-make-your-own-VST-host.html
 // C callbacks
 
@@ -45,7 +81,7 @@ LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
 typedef AEffect* (*vstPluginFuncPtr)(audioMasterCallback host);
 // Plugin's dispatcher function
 typedef VstIntPtr (*dispatcherFuncPtr)(AEffect *effect, VstInt32 opCode,
-  VstInt32 index, VstInt32 value, void *ptr, float opt);
+                                       VstInt32 index, VstInt32 value, void *ptr, float opt);
 // Plugin's getParameter() method
 typedef float (*getParameterFuncPtr)(AEffect *effect, VstInt32 index);
 // Plugin's setParameter() method
@@ -54,5 +90,5 @@ typedef void (*setParameterFuncPtr)(AEffect *effect, VstInt32 index, float value
 typedef VstInt32 (*processEventsFuncPtr)(VstEvents *events);
 // Plugin's process() method
 typedef void (*processFuncPtr)(AEffect *effect, float **inputs,
-  float **outputs, VstInt32 sampleFrames);
+                               float **outputs, VstInt32 sampleFrames);
 #endif // VST2HOSTCALLBACK_H

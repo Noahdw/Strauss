@@ -14,6 +14,7 @@ class TrackContainer : public QWidget
 public:
     TrackContainer();
     void setPianoRollReference(PianoRollContainer *prc);
+    void addSingleView(TrackView *view);
 public slots:
     void addTrackView(mSong *song);
 

@@ -88,8 +88,8 @@ void Keyboard::mousePressEvent(QMouseEvent *event)
      activeBrush =note->brush();
      note->setBrush(Qt::red);
     activeNote = note;
-
-   emit playSelectedNote(127 - note->y()/PianoRollItem::keyHeight, true);
+    //broken for now
+    emit playSelectedNote(127 - note->y()/PianoRollItem::keyHeight, true);
 
 }
 
@@ -100,14 +100,15 @@ void Keyboard::mouseDoubleClickEvent(QMouseEvent *event)
      activeBrush =note->brush();
      note->setBrush(Qt::red);
     activeNote = note;
-
+//broken for now
    emit playSelectedNote(127 - note->y()/PianoRollItem::keyHeight, true);
 }
 
 void Keyboard::mouseReleaseEvent(QMouseEvent *event)
 {
     activeNote->setBrush(activeBrush);
-  emit  playSelectedNote(127 - activeNote->y()/PianoRollItem::keyHeight, false);
+    //broken for now
+   emit  playSelectedNote(127 - activeNote->y()/PianoRollItem::keyHeight, false);
 
 }
 
