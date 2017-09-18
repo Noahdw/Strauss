@@ -3,6 +3,7 @@
 #include <qdebug.h>
 #include <SDK/audioeffectx.h>
 #include <qdatetime.h>
+#include <pianoroll.h>
 #pragma comment(lib,"user32.lib")
 
 Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
@@ -59,7 +60,7 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         time.flags |= kVstPpqPosValid;
         time.flags |= kVstTransportPlaying;
 
-        qDebug() << "audioMasterGetTime" << opcode;
+       // qDebug() << "audioMasterGetTime" << opcode;
         return (VstIntPtr)&time;
     }
     case 6:
@@ -123,7 +124,8 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     // Instantiate the plugin
     plugin = mainEntryPoint((audioMasterCallback)hostCallback);
     sRate = sampleRate;
-    samplesPerTick =(BPM / TPQN )/(1000000/sRate);
+
+    samplesPerTick =(BPM / TPQN )/(1000000/sRate)/2;//Why do i need /2 to work????
     return plugin;
 }
 
@@ -226,13 +228,13 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
     processLevel = kVstProcessLevelRealtime;
 
     events->numEvents =0;
-    qDebug() << track->listOfNotes.length();
+  //  qDebug() << track->listOfNotes.length();
     uint i = 0;
     int pos = 0;
     bool canSkip = false;
     int df =0;
     int velocity;
-    qDebug() << eventToAdd.eventOn;
+
     if (eventToAdd.hasEventToAdd) {
 
         (eventToAdd.eventOn) ? velocity = 70 : velocity = 0;
@@ -262,7 +264,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
     if (!hasReachedEnd) {
 
         while(i < blocksize){
-            qDebug() << framesTillBlock;
+         //   qDebug() << framesTillBlock;
             if (noteVecPos >= track->listOfNotes.length()) {
                 qDebug() << "notevec length :" << track->listOfNotes.length();
                 qDebug() << "Reached end of midi";
@@ -344,6 +346,12 @@ void Vst2HostCallback::restartPlayback()
     noteVecPos = 0;
     framesTillBlock = 0;
     hasReachedEnd = false;
+    pianoroll->updateSongTrackerPos();
+}
+
+void Vst2HostCallback::setPianoRollRef(PianoRoll * piano)
+{
+    pianoroll = piano;
 }
 
 

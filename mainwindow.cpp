@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QScrollArea *trackScrollArea = new QScrollArea;
     trackScrollArea->setBackgroundRole(QPalette::Light);
     trackScrollArea->setWidgetResizable(true);
-    trackScrollArea->setFixedSize(70,300);
+    trackScrollArea->setFixedSize(73,300);
     trackScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
@@ -45,8 +45,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
-    QObject::connect(prollContainer,&PianoRollContainer::connectSignals,this,&MainWindow::connectSlots);
-
     addNewTrack();
     setUpMenuBar();
 }
@@ -227,16 +225,6 @@ void MainWindow::setUpMenuBar()
     editMenu->addAction(deleteAllNotesAction);
     editMenu->addAction(addNewTrackAction);
 
-
-}
-
-void MainWindow::connectSlots(PianoRoll*proll,Keyboard *key,VelocityView *veloc)
-{
-    QObject::connect(proll,&PianoRoll::addNoteToPROLL,manager,&MidiManager::updateMidiAdd);
-    QObject::connect(proll,&PianoRoll::deleteNoteFromPROLL,manager,&MidiManager::updateMidiDelete);
-      QObject::connect(proll,&PianoRoll::updateVelocityViewItems,veloc,&VelocityView::updateItems);
-       QObject::connect(proll,&PianoRoll::setVelocityViewScale,veloc,&VelocityView::setScale);
-    QObject::connect(key,&Keyboard::playSelectedNote,proll,&PianoRoll::playKeyboardNote);
 
 }
 

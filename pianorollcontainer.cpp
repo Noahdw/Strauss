@@ -1,9 +1,16 @@
 #include "pianorollcontainer.h"
 
+/*This class represents a collection of widgets whose uses are all linked to
+ * one another. A Piano roll for editing MIDI, a Keyboard to for simple user
+ * playback, and a Velocity view for editing velocities.
+ *
+ * */
+
 PianoRollContainer::PianoRollContainer()
 {      
     stackedLayout = new QStackedLayout;
     this->setLayout(stackedLayout);
+
 }
 
 void PianoRollContainer::switchPianoRoll(int id)
@@ -11,18 +18,17 @@ void PianoRollContainer::switchPianoRoll(int id)
     if (stackedLayout->currentIndex() != id) {
         stackedLayout->setCurrentIndex(id);
     }
-
-
-
 }
 
 void PianoRollContainer::addPianoRolls(TrackView *view)
 {
     PianoRoll *roll = new PianoRoll;
-    roll->track = view;
-    roll->convertTrackToItems();
     Keyboard *key = new Keyboard;
     VelocityView *velocity = new VelocityView;
+
+    roll->track = view;
+    roll->convertTrackToItems();
+
 
     QVBoxLayout *vlayout = new QVBoxLayout;
     QHBoxLayout *hlayout = new QHBoxLayout;
@@ -34,13 +40,20 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     vlayout->setSpacing(0);
 
     QHBoxLayout *hlayout2 = new QHBoxLayout;
-    hlayout2->addWidget(velocity,0,Qt::AlignRight);
+    hlayout2->addSpacing(key->width());
+    hlayout2->addWidget(velocity);
     vlayout->addLayout(hlayout2);
+
 
     QWidget *initview = new QWidget;
     initview->setLayout(vlayout);
     stackedLayout->addWidget(initview);
-    QObject::connect(roll,&PianoRoll::updateScrollWheel,key,&Keyboard::scrollWheelChanged);
 
-    emit connectSignals(roll,key,velocity);
+    roll->setKeyboard(key);
+    roll->setVelocityView(velocity);
+    key->setPianoRoll(roll);
+    view->plugin.host->setPianoRollRef(roll);
+    velocity->setSceneRect(0,0,roll->totalDT,velocity->height());
+    velocity->updateTrackOfItems(view);
+
 }

@@ -4,6 +4,11 @@
 #include <pianorollitem.h>
 #include <QDebug>
 #include <mainwindow.h>
+#include <random>
+
+std::default_random_engine generator;
+std::uniform_int_distribution<int> distribution(1,255);
+
 TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
 {
 
@@ -16,13 +21,20 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     instrumentLabel->setMaximumWidth(widgetWidth-10);
 
     vlayout = new QVBoxLayout;
-    vlayout->addWidget(instrumentLabel);
+    vlayout->setAlignment(Qt::AlignTop);
+    vlayout->addWidget(instrumentLabel,0,Qt::AlignTop|Qt::AlignLeft);
     setLayout(vlayout);
-    setFixedSize(widgetWidth,70);
-    setFrameStyle(QFrame::Box | QFrame::Raised);
-    setLineWidth(0);
-    setMidLineWidth(0);
+    // setLineWidth(0);
+
+    setFixedSize(widgetWidth+lineWidth()*2,70);
+   // setFrameStyle(QFrame::Box | QFrame::Plain);
+    setFrameShape(QFrame::Box);
+    //setMidLineWidth(0);
     plugin.host = new Vst2HostCallback(track);
+    randomRed = distribution(generator);
+    randomGreen = distribution(generator);
+    randomBlue = distribution(generator);
+
 
 }
 
@@ -32,8 +44,10 @@ void TrackView::paintEvent(QPaintEvent *event)
 
     QBrush brush(Qt::lightGray);
     painter->setBrush(brush);
-
-    painter->drawRect(0,0,widgetWidth,70);
+    painter->drawRect(0,0,widgetWidth,70-1);
+    brush.setColor((QColor(randomRed, randomGreen, randomBlue)));
+    painter->setBrush(brush);
+    painter->drawRect(0,0,widgetWidth,30);
 
 }
 
@@ -63,8 +77,9 @@ void TrackView::mousePressEvent(QMouseEvent *event)
                  return;
              }
              plugin.host->startPlugin(plugin.effect);
+             MainWindow::pluginHolderVec.append(&plugin);
          }
-         MainWindow::pluginHolderVec.append(&plugin);
+
     }
     else
     {

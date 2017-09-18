@@ -21,8 +21,6 @@ public:
 public slots:
    void switchPianoRoll(int id);
    void addPianoRolls(TrackView *view);
-signals:
-   void connectSignals(PianoRoll *proll,Keyboard *key, VelocityView *veloc);
 private:
     QHBoxLayout *layout;
     QStackedLayout *stackedLayout;

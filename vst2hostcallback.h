@@ -1,5 +1,8 @@
 #ifndef VST2HOSTCALLBACK_H
 #define VST2HOSTCALLBACK_H
+
+class PianoRoll;
+
 #include "SDK/aeffectx.h"
 #include <SDK/aeffect.h>
 #include <SDK/vstfxstore.h>
@@ -29,6 +32,7 @@ public:
     void processMidi(AEffect *plugin);
     void initializeMidiEvents();
     void restartPlayback();
+    void setPianoRollRef(PianoRoll *piano);
     
     EventToAdd eventToAdd;
     unsigned int blocksize = 256;
@@ -54,7 +58,7 @@ private:
     float samplesPerTick = 0;
     uint framesTillBlock = 0;
     bool hasReachedEnd = false;
-
+    PianoRoll *pianoroll;
 
 
 

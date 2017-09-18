@@ -54,8 +54,6 @@ private slots:
 
     void deleteAllNotes();
 
-    void connectSlots(PianoRoll*proll,Keyboard *key,VelocityView *veloc);
-
     void addNewTrack();
 
 private:

@@ -5,22 +5,25 @@
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <QMenu>
+#include <trackview.h>
 
 class VelocityView : public QGraphicsView{
-   Q_OBJECT
+    Q_OBJECT
 
 public:
     VelocityView(QWidget *parent =0);
-
-public slots:
-      void updateItems(int start, int velocity,int note, bool adding);
-      void setScale(float x,bool needsReset,int wheelPos);
+    void setScale(float x,bool needsReset,int wheelPos);
+    void updateItems(int start, int velocity,int note, bool adding);
+    void updateTrackOfItems(TrackView *track);
+    void onPianoRollResized(float x);
 
 protected:
     void paintEvent(QPaintEvent *event);
 
+
 private:
     QGraphicsScene *scene;
+
 };
 
 #endif // VELOCITYVIEW_H

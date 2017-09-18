@@ -28,7 +28,9 @@ private:
     QLabel *instrumentLabel;
     QVBoxLayout *vlayout;
     const int widgetWidth = 70;
-
+    int randomRed = 0;
+    int randomGreen = 0;
+    int randomBlue = 0;
 signals:
     void trackClickedOn(int id);
 protected:

@@ -57,14 +57,14 @@ public:
         return &noteVec;
     }
     static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
-
+  static  void updateMidiAdd(int note, int veloc, int start, int length, mTrack *track);
+   static  void updateMidiDelete(int start, int length, int note, mTrack *track);
 
 signals:
     void notifyTrackViewChanged(mSong *song);
 
 public slots:
-      void updateMidiAdd(int note, int veloc, int start, int length, mTrack *track);
-      void updateMidiDelete(int start, int length, int note, mTrack *track);
+
 
 };
 

@@ -8,7 +8,7 @@
 #include <pianoroll.h>
 #include <pianorollitem.h>
 int main(int argc, char *argv[])
-{  
+{
     QApplication app(argc, argv);
 
 

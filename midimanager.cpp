@@ -48,7 +48,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
         bits = ((unsigned char)(array.at(13)) << 8) | (unsigned char)array.at(14);
         song.ticksPerQuarterNote = bits;
     }
-
+    double tpqnScale = TPQN / song.ticksPerQuarterNote;
     int currentPos = 15;
     if (true) { // was (if format is 0), but ya know who really cares
         //Runs for amount of tracks in a song
@@ -80,9 +80,8 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 }
                 else if (array.at(pos+1) >> 7 == 0)
                 {
-                    //A bit messy but inverts the bit 7n values, shifts the last bit 1 right (makes second to last a 0)
                     deltaTime = (unsigned char)(array.at(pos) ^ 128) << 7;
-                    deltaTime = (deltaTime | ((unsigned char)array.at(pos+1)));
+                    deltaTime = ((uchar)deltaTime | ((unsigned char)array.at(pos+1)));
 
                     pos+=2;
                 }
@@ -103,7 +102,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                     pos+=4;
                 }
                 mEvent event = mEvent();
-                event.deltaTime = deltaTime;
+                event.deltaTime = deltaTime *tpqnScale;
                 //Most of this is deprecated and should be removed
                 //Running status
                 if (((unsigned char)array.at(pos)  & 128) != 128) {
@@ -218,14 +217,9 @@ mSong MidiManager::Deserialize(QByteArray &array)
     else if (song.format == 1) {
 
     }
-    \
-
-    //Note for later: Redesign everything to use [0] as first note, not the tpqn
-    // This class can hold instances of all tracks i need, but don't rely
-    //too heavily on its song structure.
 
     for (int curTrack = 0; curTrack < song.tracks.length(); ++curTrack) {
-        \
+
         for (int var = 0; var < song.tracks.at(curTrack)->events.length(); ++var) {
 
             song.tracks[curTrack]->listOfNotes.append(song.tracks.at(curTrack)->events.at(var).deltaTime);
@@ -238,7 +232,6 @@ mSong MidiManager::Deserialize(QByteArray &array)
 
         }
     }
-    MidiManager::TPQN = song.ticksPerQuarterNote;
     emit notifyTrackViewChanged(&song);
     return song;
 }
@@ -290,12 +283,18 @@ void MidiManager::updateMidiAdd(int note,int veloc, int start, int length,mTrack
                     if (elapsedDT < start) {
                         pastTheMark = true;
                         vPos = i-3;
+                        if (vPos < 0) {
+                            vPos = 0;
+                        }
                         elapsedDT = start - elapsedDT;
 
                     }
                     else{
                         beforeTheMark = true;
                         vPos = i-3;
+                        if (vPos < 0) {
+                            vPos = 0;
+                        }
                         elapsedDT = elapsedDT - start;
                     }
                     break;
@@ -330,7 +329,7 @@ void MidiManager::updateMidiAdd(int note,int veloc, int start, int length,mTrack
                         break;
                     }
                     else if(zeroDT){
-                         qDebug() << "zero DT - chord ";
+                        qDebug() << "zero DT - chord ";
                         newVec.append(track->listOfNotes.at(i));
                         newVec.append(track->listOfNotes.at(i+1));
                         newVec.append(track->listOfNotes.at(i+2));
