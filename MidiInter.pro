@@ -35,7 +35,9 @@ SOURCES += main.cpp\
     trackcontainer.cpp \
     vst2hostcallback.cpp \
     audiomanager.cpp \
-    velocityview.cpp
+    velocityview.cpp \
+    trackmidiview.cpp \
+    velocityviewitem.cpp
 
 HEADERS  += mainwindow.h\
             midiplayer.h\
@@ -48,7 +50,9 @@ HEADERS  += mainwindow.h\
     trackcontainer.h \
     vst2hostcallback.h \
     audiomanager.h \
-    velocityview.h
+    velocityview.h \
+    trackmidiview.h \
+    velocityviewitem.h
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm

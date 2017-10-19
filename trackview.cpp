@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <mainwindow.h>
 #include <random>
+#include <trackmidiview.h>
 
 std::default_random_engine generator;
 std::uniform_int_distribution<int> distribution(1,255);

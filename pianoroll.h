@@ -16,14 +16,16 @@ class VelocityView;
 #include <QTimeLine>
 #include <QGraphicsItemAnimation>
 #include <QTimer>
+#include <trackmidiview.h>
 
 class PianoRoll : public QGraphicsView{
 Q_OBJECT
 public:
     PianoRoll(QWidget* parent = 0);
     TrackView *track;
-    const QRectF *sceneRect;
-
+    Keyboard *getKeyboard();
+    VelocityView *velocityView;
+     QRectF *sceneRect;
     double colSpacing = 0;
     double scaleFactor = 1;
     int cols = 50;
@@ -31,20 +33,18 @@ public:
     int totalDT = tPQN*cols;
 
     void setKeyboard(Keyboard *kboard);
-    Keyboard *getKeyboard();
-
     void setVelocityView(VelocityView *view);
     void playKeyboardNote(int note, bool active);
     void clearActiveNotes();
     void deleteAllNotes();
     void setScrollWheelValue(int value);
     void updateSongTrackerPos();
+
 public slots:
       void ShowContextMenu(const QPoint &pos);
       void scaleFactorChanged(double scale);
       void convertTrackToItems();
       void turnNoteOff(int note);
-
 
 protected:
       void mouseDoubleClickEvent(QMouseEvent  *event);
@@ -58,7 +58,6 @@ private:
       const double minimumColSpacing = 3;
       QGraphicsScene *scene;
       Keyboard *keyboard;
-      VelocityView *velocityView;
       QTimeLine *timer;
       QGraphicsItemAnimation *animation;
       int lastYNote = 0;

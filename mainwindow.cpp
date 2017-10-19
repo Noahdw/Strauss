@@ -28,7 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QScrollArea *trackScrollArea = new QScrollArea;
     trackScrollArea->setBackgroundRole(QPalette::Light);
     trackScrollArea->setWidgetResizable(true);
-    trackScrollArea->setFixedSize(73,300);
+    trackScrollArea->setMinimumWidth(1000);
+    trackScrollArea->setMinimumHeight(300);
     trackScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
@@ -47,6 +48,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
     addNewTrack();
     setUpMenuBar();
+
+
+    audioManager->startPortAudio();
+    audioManager->openStream();
+    audioManager->startStream();
 }
 
 MainWindow::~MainWindow()
@@ -125,23 +131,8 @@ bool stopped = false;
 // Starts audio engine if a plugin is active
 // restarts a song if pressed while playing
 void MainWindow::playSong(){
-    
 
-
-
-    if (!audioManager->isRunning) {
-        audioManager->startPortAudio();
-        audioManager->openStream();
-        audioManager->startStream();
-
-    }
-    else
-    {
-        audioManager->requestPlaybackRestart();
-    }
-
-
-
+   audioManager->requestPlaybackRestart();
 
 }
 

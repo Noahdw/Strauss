@@ -1,6 +1,7 @@
 #ifndef PIANOROLLNOTE_H
 #define PIANOROLLNOTE_H
 
+class VelocityView;
 
 
 #include <QGraphicsItem>
@@ -9,6 +10,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <pianoroll.h>
 #include <QScrollBar>
+#include <QTimer>
 class PianoRollItem : public QGraphicsItem
 {
 
@@ -31,6 +33,7 @@ private:
     int width;
     int lastXPos;
     int lastYPos;
+    int lastYWithSound;
 
 };
 

@@ -3,44 +3,69 @@
 #include <QGraphicsRectItem>
 #include <pianorollitem.h>
 #include <QScrollBar>
-   int viewHeight = 80;
+#include <velocityviewitem.h>
+#include <trackview.h>
+int viewHeight = 70;
 VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
 {
-   // setFixedSize(1400,viewHeight);
-     setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Minimum );
+    // setFixedSize(1400,viewHeight);
+    //  setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Minimum );
 
     //setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-     setViewportUpdateMode(MinimalViewportUpdate);
+    setViewportUpdateMode(MinimalViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
     //setContextMenuPolicy(Qt::CustomContextMenu);
     setMinimumWidth(1000);
     setMinimumHeight(70);
+    setMaximumHeight(70);
     scene = new QGraphicsScene;
-    scene->setSceneRect(0,0,MidiManager::TPQN*50,viewHeight);
+    qDebug() << "Height:" << height();
+    scene->setSceneRect(0,0,MidiManager::TPQN*50,height());
     this->setScene(scene);
     this->scale(((float)width() / (MidiManager::TPQN*50)),1);
+
 
 }
 
 void VelocityView::updateItems(int start, int velocity, int note, bool adding)
-{//move this into custom qGraphicsItem class
- if (adding) {
-  QGraphicsRectItem *line = new QGraphicsRectItem(0,0,1,velocity);
-     line->setCacheMode(QGraphicsItem::NoCache);
-      scene->addItem(line);
-      QPen pen(Qt::black,0);
-      line->setPen(pen);
-      line->setBrush(Qt::black);
-     line->setPos(start,viewHeight - velocity);
-    // scene->update(0,0,MidiManager::TPQN*50,100);
+{
+    int OldRange = (127 - 0);
+    int NewRange = (height() - 0);
+    int NewValue = (((velocity - 0) * NewRange) / OldRange) + 0;
+
+    if (adding) {
+        VelocityViewItem *line = new VelocityViewItem;
 
 
- }
- else
- {
+        scene->addItem(line);
+        line->velocity = velocity;
+        line->note = note;
 
- }
+        line->setPos(start,height() - NewValue);
+      //  qDebug() << "ADD" << start << "AND" << height() - NewValue;
+        // resetTransform();
+        // scale((float)width() / (MidiManager::TPQN*50),.2);
+
+    }
+    else
+    {
+        foreach (auto item, scene->items()) {
+            if (item->x() == start) {
+                 VelocityViewItem *line = dynamic_cast<VelocityViewItem*>(item);
+                 if (line->note == note) {
+                     scene->removeItem(line);
+                     delete line;
+                     return;
+                 }
+            }
+        }
+
+
+
+
+    }
 }
 
 void VelocityView::updateTrackOfItems(TrackView *track)
@@ -67,7 +92,7 @@ void VelocityView::setScale(float x, bool needsReset, int wheelPos)
         resetMatrix();
     }
 
-     this->scale(x,1);
+    this->scale(x,1);
     QScrollBar *wheel;
     wheel = this->horizontalScrollBar();
     wheel->setValue(wheelPos);
@@ -76,15 +101,14 @@ void VelocityView::setScale(float x, bool needsReset, int wheelPos)
 
 void VelocityView::paintEvent(QPaintEvent *event)
 {
-      QPainter *painter = new QPainter(this->viewport());
-      QPen pen;
-      pen.setColor(Qt::lightGray);
-      painter->setBrush(Qt::lightGray);
+    QPainter *painter = new QPainter(this->viewport());
+    QPen pen;
+    pen.setColor(Qt::lightGray);
+    painter->setBrush(Qt::lightGray);
 
-      painter->setPen(pen);
-      painter->drawRect(viewport()->rect());
-       QGraphicsView::paintEvent(event);
-       delete painter;
+    painter->setPen(pen);
+    painter->drawRect(viewport()->rect());
+    QGraphicsView::paintEvent(event);
 }
 
 void VelocityView::onPianoRollResized(float x)

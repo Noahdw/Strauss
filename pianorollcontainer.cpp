@@ -25,9 +25,12 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     PianoRoll *roll = new PianoRoll;
     Keyboard *key = new Keyboard;
     VelocityView *velocity = new VelocityView;
-
     roll->track = view;
-    roll->convertTrackToItems();
+    if (view->track->totalDT != 0) {
+
+        roll->convertTrackToItems();
+    }
+
 
 
     QVBoxLayout *vlayout = new QVBoxLayout;

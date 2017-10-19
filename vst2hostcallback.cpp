@@ -125,7 +125,8 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     plugin = mainEntryPoint((audioMasterCallback)hostCallback);
     sRate = sampleRate;
 
-    samplesPerTick =(BPM / TPQN )/(1000000/sRate)/2;//Why do i need /2 to work????
+    samplesPerTick =(BPM / TPQN )/(1000000/sRate);//Why do i need /2 to work????
+    qDebug() << "SamplesperTick: " << samplesPerTick;
     return plugin;
 }
 

@@ -26,6 +26,7 @@ struct mTrack
     QString trackName;
     QString instrumentName;
     QVector<int> listOfNotes;
+    int totalDT = 0;
 };
 struct mSong
 {

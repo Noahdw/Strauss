@@ -103,6 +103,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 }
                 mEvent event = mEvent();
                 event.deltaTime = deltaTime *tpqnScale;
+                track->totalDT += event.deltaTime;
                 //Most of this is deprecated and should be removed
                 //Running status
                 if (((unsigned char)array.at(pos)  & 128) != 128) {

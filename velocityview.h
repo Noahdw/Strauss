@@ -1,11 +1,13 @@
 #ifndef VELOCITYVIEW_H
 #define VELOCITYVIEW_H
+class TrackView;
+
 #include <QWidget>
 #include <QPainter>
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <QMenu>
-#include <trackview.h>
+
 
 class VelocityView : public QGraphicsView{
     Q_OBJECT
@@ -23,6 +25,7 @@ protected:
 
 private:
     QGraphicsScene *scene;
+
 
 };
 

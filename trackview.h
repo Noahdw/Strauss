@@ -1,11 +1,13 @@
 #ifndef TRACKVIEW_H
 #define TRACKVIEW_H
+
+class TrackMidiView;
+
 #include <QWidget>
 #include <QPainter>
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <QMenu>
-
 #include <QLabel>
 #include <QBoxLayout>
 #include <QGraphicsRectItem>
@@ -23,6 +25,7 @@ public:
     int id;
     mTrack *track;
     pluginHolder plugin;
+    TrackMidiView *trackMidiView;
 private:
     QString instrumentName;
     QLabel *instrumentLabel;

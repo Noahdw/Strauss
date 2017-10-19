@@ -1,6 +1,8 @@
 #ifndef TRACKCONTAINER_H
 #define TRACKCONTAINER_H
 
+class TrackMidiView;
+
 #include <QObject>
 #include <QWidget>
 #include <midimanager.h>
@@ -8,6 +10,7 @@
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <pianorollcontainer.h>
+
 class TrackContainer : public QWidget
 {
     Q_OBJECT
