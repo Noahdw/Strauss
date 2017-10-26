@@ -1,15 +1,33 @@
 #include "keyboard.h"
+#include <pianoroll.h>
+
+/*This class represents the keyboard to the left of the Piano Roll.
+ *It emits MIDI data to the VST for playbck.
+ * */
 
 Keyboard::Keyboard(QWidget *parent) : QGraphicsView(parent)
 {
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-scene = new QGraphicsScene;
-scene->setSceneRect(0,0,noteWidth,PianoRollItem::keyHeight*128);
-this->setScene(scene);
-setFixedSize(noteWidth,400);
+    scene = new QGraphicsScene;
+    scene->setSceneRect(0,0,noteWidth,PianoRollItem::keyHeight*128);
+    this->setScene(scene);
+   // setFixedSize(noteWidth,400);
+    setMaximumWidth(noteWidth);
 
-addNotesToScene();
+    addNotesToScene();
+}
+
+void Keyboard::setPianoRoll(PianoRoll *proll)
+{
+    pianoroll = proll;
+}
+
+void Keyboard::setScrollWheelValue(int value)
+{
+    QScrollBar* wheelPos;
+    wheelPos=this->verticalScrollBar();
+    wheelPos->setValue(value);
 }
 
 
@@ -74,40 +92,43 @@ void Keyboard::addNotesToScene()
     }
 }
 
-void Keyboard::scrollWheelChanged(int value)
-{
-     QScrollBar* wheelPos;
-     wheelPos=this->verticalScrollBar();
-     wheelPos->setValue(value);
-}
 
 void Keyboard::mousePressEvent(QMouseEvent *event)
 {
     auto item = itemAt(event->pos());
-     QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
-     activeBrush =note->brush();
-     note->setBrush(Qt::red);
+    QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
+    activeBrush =note->brush();
+    note->setBrush(Qt::red);
     activeNote = note;
 
-   emit playSelectedNote(127 - note->y()/PianoRollItem::keyHeight, true);
+    pianoroll->playKeyboardNote(127 - note->y()/PianoRollItem::keyHeight, true);
 
 }
 
 void Keyboard::mouseDoubleClickEvent(QMouseEvent *event)
 {
     auto item = itemAt(event->pos());
-     QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
-     activeBrush =note->brush();
-     note->setBrush(Qt::red);
+    QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
+    activeBrush =note->brush();
+    note->setBrush(Qt::red);
     activeNote = note;
+    pianoroll->playKeyboardNote(127 - note->y()/PianoRollItem::keyHeight, true);
+}
 
-   emit playSelectedNote(127 - note->y()/PianoRollItem::keyHeight, true);
+void Keyboard::wheelEvent(QWheelEvent *event)
+{
+    int yscroller= 0;
+    yscroller=event->angleDelta().y() /120*14;
+    QScrollBar *wheelPos;
+    wheelPos=this->verticalScrollBar();
+    wheelPos->setValue(verticalScrollBar()->value()-yscroller);
+    pianoroll->setScrollWheelValue(wheelPos->value());
 }
 
 void Keyboard::mouseReleaseEvent(QMouseEvent *event)
 {
     activeNote->setBrush(activeBrush);
-  emit  playSelectedNote(127 - activeNote->y()/PianoRollItem::keyHeight, false);
+    pianoroll->playKeyboardNote(127 - activeNote->y()/PianoRollItem::keyHeight, false);
 
 }
 

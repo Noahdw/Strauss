@@ -3,29 +3,19 @@
 #include <qdebug.h>
 #include <SDK/audioeffectx.h>
 #include <qdatetime.h>
+#include <pianoroll.h>
 #pragma comment(lib,"user32.lib")
 
-Vst2HostCallback::Vst2HostCallback(MidiManager *mngr)
+Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
 {
-    manager = mngr;
+    track = mtrack;
+
 }
 dispatcherFuncPtr dispatcher;
-HMODULE hinst;
-float **outputs;
-float ** inputs;
-uint numChannels = 2;
-float sRate;
-int noteVecPos = 1;
-uint maxNotes = 256;
-int TPQN = 120;
-int BPM = 500000;
-float samplesPerTick = 0;
-uint framesTillBlock = 0;
-bool hasReachedEnd = false;
-int processLevel = kVstProcessLevelUser; //1
-double sPos = 0;
 VstTimeInfo time;
-
+float sRate;
+double sPos = 0;
+int processLevel = kVstProcessLevelUser; //1
 
 extern "C"{
 bool firstRun = true;
@@ -70,7 +60,7 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         time.flags |= kVstPpqPosValid;
         time.flags |= kVstTransportPlaying;
 
-        qDebug() << "audioMasterGetTime" << opcode;
+       // qDebug() << "audioMasterGetTime" << opcode;
         return (VstIntPtr)&time;
     }
     case 6:
@@ -134,7 +124,9 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     // Instantiate the plugin
     plugin = mainEntryPoint((audioMasterCallback)hostCallback);
     sRate = sampleRate;
-    samplesPerTick =(BPM / TPQN )/(1000000/sRate);
+
+    samplesPerTick =(BPM / TPQN )/(1000000/sRate);//Why do i need /2 to work????
+    qDebug() << "SamplesperTick: " << samplesPerTick;
     return plugin;
 }
 
@@ -216,6 +208,7 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
 
     initializeMidiEvents();
     qDebug() <<"This plugin has:" << plugin->numOutputs << " outputs";
+    canPlay = true;
 }
 
 
@@ -236,18 +229,45 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
     processLevel = kVstProcessLevelRealtime;
 
     events->numEvents =0;
-
+  //  qDebug() << track->listOfNotes.length();
     uint i = 0;
     int pos = 0;
     bool canSkip = false;
     int df =0;
+    int velocity;
+
+    if (eventToAdd.hasEventToAdd) {
+
+        (eventToAdd.eventOn) ? velocity = 70 : velocity = 0;
+        VstMidiEvent* evnt = new VstMidiEvent;
+        evnt->byteSize =24;
+        evnt->deltaFrames = 0;
+        evnt->type = kVstMidiType;
+        evnt->flags = 0;
+        evnt->detune = 0;
+        evnt->noteOffVelocity = 0;
+        evnt->reserved1 = 0;
+        evnt->reserved2 = 0;
+        evnt->midiData[0] =  0x90;
+        evnt->midiData[1] = (uchar)eventToAdd.note;
+        evnt->midiData[2] = (uchar)velocity;
+        evnt->midiData[3] = 0;
+        evnt->noteOffset = 0;
+        evnt->noteLength = 0;
+
+        events->events[pos] = (VstEvent*)evnt;
+        ++events->numEvents;
+        ++pos;
+
+        eventToAdd.hasEventToAdd = false;
+    }
     // If we are too many samples away from inputing an event, subtract blocksize and give empty vstevents
     if (!hasReachedEnd) {
 
         while(i < blocksize){
-            qDebug() << framesTillBlock;
-            if (noteVecPos >= manager->noteVec.length()) {
-                qDebug() << "notevec length :" << manager->noteVec.length();
+         //   qDebug() << framesTillBlock;
+            if (noteVecPos >= track->listOfNotes.length()) {
+                qDebug() << "notevec length :" << track->listOfNotes.length();
                 qDebug() << "Reached end of midi";
                 hasReachedEnd = true;
                 break;
@@ -265,7 +285,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
             if (!canSkip) {
                 //Deltaframes, bless its heart, is actually samples since the start of a block.
                 // A lot of sources claimed it was Microseconds since the start. Wrong.
-                df = manager->noteVec.at(noteVecPos) * samplesPerTick;
+                df = track->listOfNotes.at(noteVecPos) * samplesPerTick;
                 i+=df;
                 if (i > blocksize) {
                     framesTillBlock = df - (blocksize - i);
@@ -293,9 +313,9 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
             evnt->noteOffVelocity = 0;
             evnt->reserved1 = 0;
             evnt->reserved2 = 0;
-            evnt->midiData[0] =  (uchar)manager->noteVec.at(noteVecPos+2) & 0xFF;
-            evnt->midiData[1] = (uchar)(manager->noteVec.at(noteVecPos+2) >>8) & 0xFF;
-            evnt->midiData[2] = (uchar)(manager->noteVec.at(noteVecPos+2) >>16) & 0xFF;
+            evnt->midiData[0] =  (uchar)track->listOfNotes.at(noteVecPos+2) & 0xFF;
+            evnt->midiData[1] = (uchar)(track->listOfNotes.at(noteVecPos+2) >>8) & 0xFF;
+            evnt->midiData[2] = (uchar)(track->listOfNotes.at(noteVecPos+2) >>16) & 0xFF;
             evnt->midiData[3] = 0;
             evnt->noteOffset = 0;
             evnt->noteLength = 0;
@@ -324,8 +344,15 @@ void Vst2HostCallback::initializeMidiEvents()
 
 void Vst2HostCallback::restartPlayback()
 {
-    noteVecPos = 1;
+    noteVecPos = 0;
+    framesTillBlock = 0;
     hasReachedEnd = false;
+    pianoroll->updateSongTrackerPos();
+}
+
+void Vst2HostCallback::setPianoRollRef(PianoRoll * piano)
+{
+    pianoroll = piano;
 }
 
 

@@ -6,6 +6,7 @@
 #include <vst2hostcallback.h>
 #include <qdebug.h>
 #include <SDK/aeffect.h>
+#include <mainwindow.h>
 struct paTestData
 {
     float left_phase;
@@ -19,14 +20,14 @@ public:
     AudioManager();
     void startPortAudio();
     void openStream();
-    void startStream(Vst2HostCallback *plugin,AEffect*effect);
-    void silenceChannel(float **channelData, int numChannels, long numFrames);
+    void startStream();
+    static void silenceChannel(float **channelData, int numChannels, long numFrames);
     void initializeIO();
     void requestPlaybackRestart();
     bool isRunning = false;
-    uint blocksize =0;
-    float sampleRate =0;
-
+    uint blocksize =256;
+    float sampleRate =44100;
+    QVector<pluginHolder*> *plugins;
 
 };
 int patestCallback( const void *inputBuffer, void *outputBuffer,

@@ -6,8 +6,11 @@
 #include <keyboard.h>
 #include <pianoroll.h>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <midimanager.h>
+#include <trackview.h>
 #include <QStackedLayout>
+#include <velocityview.h>
 class PianoRollContainer : public QWidget
 {
     Q_OBJECT
@@ -18,8 +21,6 @@ public:
 public slots:
    void switchPianoRoll(int id);
    void addPianoRolls(TrackView *view);
-signals:
-   void connectSignals(PianoRoll *proll,Keyboard *key);
 private:
     QHBoxLayout *layout;
     QStackedLayout *stackedLayout;

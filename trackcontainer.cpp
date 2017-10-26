@@ -1,24 +1,33 @@
 #include "trackcontainer.h"
+#include <QWidget>
+#include <trackmidiview.h>
+int ID = 0;
 
 TrackContainer::TrackContainer()
 {
 vLayout = new QVBoxLayout;
 vLayout->setSpacing(0);
 vLayout->setContentsMargins(0,0,0,0);
+vLayout->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
 setLayout(vLayout);
 }
 
 void TrackContainer::addTrackView(mSong *song)
 {
-    int i = 0;
+
     foreach (auto track, song->tracks) {
-        TrackView *view = new TrackView(song->tracks.at(i));
+
+        TrackView *view = new TrackView(track);
         vLayout->addWidget(view,Qt::AlignTop|Qt::AlignLeft);
-        view->id = i;
+        view->id = ID;
         emit addPianoRoll(view);
-        i++;
-         QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
+        ID++;
+
+        QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
+
+        TrackMidiView *midiView = new TrackMidiView;
+        view->trackMidiView = midiView;
     }
     adjustSize();
 }
@@ -28,6 +37,29 @@ void TrackContainer::setPianoRollReference(PianoRollContainer *prc)
     prcontainer = prc;
      QObject::connect(this,&TrackContainer::addPianoRoll,prcontainer,&PianoRollContainer::addPianoRolls);
 
+}
+
+void TrackContainer::addSingleView(TrackView *view)
+{
+    QWidget *widget = new QWidget;
+    QHBoxLayout *hlayout = new QHBoxLayout;
+    widget->setLayout(hlayout);
+    hlayout->setAlignment(Qt::AlignTop);
+    hlayout->setSpacing(0);
+    hlayout->setContentsMargins(0,0,0,0);
+    hlayout->addWidget(view);
+
+
+     view->id = ID;
+     ID++;
+     emit addPianoRoll(view);
+     QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
+     adjustSize();
+     TrackMidiView *midiView = new TrackMidiView;
+     view->trackMidiView = midiView;
+
+     hlayout->addWidget(midiView);
+     vLayout->addWidget(widget,Qt::AlignTop|Qt::AlignLeft);
 }
 void TrackContainer::mousePressEvent(QMouseEvent *event)
 {

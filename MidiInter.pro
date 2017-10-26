@@ -34,7 +34,10 @@ SOURCES += main.cpp\
     pianorollcontainer.cpp \
     trackcontainer.cpp \
     vst2hostcallback.cpp \
-    audiomanager.cpp
+    audiomanager.cpp \
+    velocityview.cpp \
+    trackmidiview.cpp \
+    velocityviewitem.cpp
 
 HEADERS  += mainwindow.h\
             midiplayer.h\
@@ -46,7 +49,10 @@ HEADERS  += mainwindow.h\
     pianorollcontainer.h \
     trackcontainer.h \
     vst2hostcallback.h \
-    audiomanager.h
+    audiomanager.h \
+    velocityview.h \
+    trackmidiview.h \
+    velocityviewitem.h
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm

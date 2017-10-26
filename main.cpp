@@ -8,11 +8,11 @@
 #include <pianoroll.h>
 #include <pianorollitem.h>
 int main(int argc, char *argv[])
-{  
+{
     QApplication app(argc, argv);
 
-    MidiManager *manager = new MidiManager;
-    MainWindow window(manager);
+
+    MainWindow window;
     window.show();
 
     return app.exec();
