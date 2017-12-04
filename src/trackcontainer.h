@@ -5,11 +5,11 @@ class TrackMidiView;
 
 #include <QObject>
 #include <QWidget>
-#include <midimanager.h>
-#include <trackview.h>
+#include <src/midimanager.h>
+#include <src/trackview.h>
 #include <QVBoxLayout>
 #include <QScrollArea>
-#include <pianorollcontainer.h>
+#include <src/pianorollcontainer.h>
 
 class TrackContainer : public QWidget
 {

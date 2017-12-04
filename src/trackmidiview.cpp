@@ -1,6 +1,6 @@
 #include "trackmidiview.h"
-#include <trackview.h>
-#include <pianorollitem.h>
+#include <src/trackview.h>
+#include <src/pianorollitem.h>
 
 TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 {

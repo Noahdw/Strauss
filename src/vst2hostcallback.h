@@ -6,7 +6,7 @@ class PianoRoll;
 #include "SDK/aeffectx.h"
 #include <SDK/aeffect.h>
 #include <SDK/vstfxstore.h>
-#include <midimanager.h>
+#include <src/midimanager.h>
 #include <qvector.h>
 
 
@@ -52,7 +52,7 @@ private:
     uint numChannels = 2;
 
     int noteVecPos = 0;
-    uint maxNotes = 256;
+    const uint maxNotes = 256;
     int TPQN = MidiManager::TPQN;
     int BPM = 500000;
     float samplesPerTick = 0;

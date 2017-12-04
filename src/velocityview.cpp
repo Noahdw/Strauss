@@ -1,10 +1,10 @@
 #include "velocityview.h"
-#include <midimanager.h>
+#include <src/midimanager.h>
 #include <QGraphicsRectItem>
-#include <pianorollitem.h>
+#include <src/pianorollitem.h>
 #include <QScrollBar>
-#include <velocityviewitem.h>
-#include <trackview.h>
+#include <src/velocityviewitem.h>
+#include <src/trackview.h>
 int viewHeight = 70;
 VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
 {

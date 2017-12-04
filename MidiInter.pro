@@ -23,36 +23,36 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 
-SOURCES += main.cpp\
-        mainwindow.cpp\
-            midiplayer.cpp\
-            midimanager.cpp\
-    pianoroll.cpp \
-    pianorollitem.cpp \
-    trackview.cpp \
-    keyboard.cpp \
-    pianorollcontainer.cpp \
-    trackcontainer.cpp \
-    vst2hostcallback.cpp \
-    audiomanager.cpp \
-    velocityview.cpp \
-    trackmidiview.cpp \
-    velocityviewitem.cpp
+SOURCES += src/main.cpp\
+    src/mainwindow.cpp\
+    src/midiplayer.cpp\
+    src/midimanager.cpp\
+    src/pianoroll.cpp \
+    src/pianorollitem.cpp \
+    src/trackview.cpp \
+    src/keyboard.cpp \
+    src/pianorollcontainer.cpp \
+    src/trackcontainer.cpp \
+    src/vst2hostcallback.cpp \
+    src/audiomanager.cpp \
+    src/velocityview.cpp \
+    src/trackmidiview.cpp \
+    src/velocityviewitem.cpp
 
-HEADERS  += mainwindow.h\
-            midiplayer.h\
-            midimanager.h\
-    pianoroll.h \
-    pianorollitem.h \
-    trackview.h \
-    keyboard.h \
-    pianorollcontainer.h \
-    trackcontainer.h \
-    vst2hostcallback.h \
-    audiomanager.h \
-    velocityview.h \
-    trackmidiview.h \
-    velocityviewitem.h
+HEADERS  += src/mainwindow.h\
+    src/midiplayer.h\
+    src/midimanager.h\
+    src/pianoroll.h \
+    src/pianorollitem.h \
+    src/trackview.h \
+    src/keyboard.h \
+    src/pianorollcontainer.h \
+    src/trackcontainer.h \
+    src/vst2hostcallback.h \
+    src/audiomanager.h \
+    src/velocityview.h \
+    src/trackmidiview.h \
+    src/velocityviewitem.h
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm

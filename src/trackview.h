@@ -12,7 +12,7 @@ class TrackMidiView;
 #include <QBoxLayout>
 #include <QGraphicsRectItem>
 #include <QFrame>
-#include <vst2hostcallback.h>
+#include <src/vst2hostcallback.h>
 
 
 

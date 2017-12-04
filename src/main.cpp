@@ -1,12 +1,11 @@
 #include "mainwindow.h"
 #include <QApplication>
-#include <pianoroll.h>
+#include <src/pianoroll.h>
 #include <QQuickWidget>
-#include <midiplayer.h>
+#include <src/midiplayer.h>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <pianoroll.h>
-#include <pianorollitem.h>
+#include <src/pianorollitem.h>
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);

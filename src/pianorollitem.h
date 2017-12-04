@@ -8,7 +8,7 @@ class VelocityView;
 #include <QPainter>
 #include <QDrag>
 #include <QGraphicsSceneMouseEvent>
-#include <pianoroll.h>
+#include <src/pianoroll.h>
 #include <QScrollBar>
 #include <QTimer>
 class PianoRollItem : public QGraphicsItem
@@ -33,6 +33,8 @@ private:
     int width;
     int lastXPos;
     int lastYPos;
+    int initXPos;
+    int initYPos;
     int lastYWithSound;
 
 };

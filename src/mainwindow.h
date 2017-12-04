@@ -6,17 +6,17 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QDebug>
-#include <midiplayer.h>
+#include <src/midiplayer.h>
 #include<QtConcurrent/QtConcurrent>
-#include <pianoroll.h>
-#include <pianorollitem.h>
+#include <src/pianoroll.h>
+#include <src/pianorollitem.h>
 #include <QVBoxLayout>
 #include <QMenuBar>
 #include <QMainWindow>
-#include <MidiManager.h>
+#include <src/MidiManager.h>
 #include <QGraphicsScene>
-#include <pianorollcontainer.h>
-#include <trackcontainer.h>
+#include <src/pianorollcontainer.h>
+#include <src/trackcontainer.h>
 #include <QLibrary>
 #include <qvector.h>
 namespace Ui {

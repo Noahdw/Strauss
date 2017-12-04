@@ -7,7 +7,7 @@ class TrackView;
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
-#include <midimanager.h>
+#include <src/midimanager.h>
 
 class TrackMidiView: public QGraphicsView{
     Q_OBJECT

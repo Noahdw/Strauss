@@ -10,14 +10,14 @@ class VelocityView;
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <QMenu>
-#include <midimanager.h>
+#include <src/midimanager.h>
 #include <QHBoxLayout>
-#include <trackview.h>
+#include <src/trackview.h>
 #include <QTimeLine>
 #include <QGraphicsItemAnimation>
 #include <QTimer>
-#include <trackmidiview.h>
-
+#include <src/trackmidiview.h>
+#include <QRubberBand>
 class PianoRoll : public QGraphicsView{
 Q_OBJECT
 public:
@@ -28,7 +28,7 @@ public:
      QRectF *sceneRect;
     double colSpacing = 0;
     double scaleFactor = 1;
-    int cols = 50;
+    int cols = 60;
     int tPQN = 960;
     int totalDT = tPQN*cols;
 
@@ -39,6 +39,7 @@ public:
     void deleteAllNotes();
     void setScrollWheelValue(int value);
     void updateSongTrackerPos();
+    void notifyPianoRollItemMoved(int xMove, int yMove,QGraphicsItem *item);
 
 public slots:
       void ShowContextMenu(const QPoint &pos);
@@ -50,6 +51,8 @@ protected:
       void mouseDoubleClickEvent(QMouseEvent  *event);
       void paintEvent(QPaintEvent * event);
       void mousePressEvent(QMouseEvent *event);
+      void mouseMoveEvent(QMouseEvent *event);
+      void mouseReleaseEvent(QMouseEvent *event);
       void drawBackground(QPainter * painter, const QRectF & rect);
       void wheelEvent(QWheelEvent *event);
       void resizeEvent(QResizeEvent *event);
@@ -61,6 +64,8 @@ private:
       QTimeLine *timer;
       QGraphicsItemAnimation *animation;
       int lastYNote = 0;
+      QRubberBand *rubberBand;
+      QPoint origin;
 
 };
 

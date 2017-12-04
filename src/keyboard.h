@@ -7,7 +7,7 @@ class PianoRoll;
 #include <QPainter>
 #include <QGraphicsView>
 #include <QMouseEvent>
-#include <pianorollitem.h>
+#include <src/pianorollitem.h>
 #include "QGraphicsRectItem"
 #include <QGraphicsItem>
 #include <QGraphicsScene>
