@@ -3,7 +3,7 @@
 #include <qdebug.h>
 #include <SDK/audioeffectx.h>
 #include <qdatetime.h>
-#include <pianoroll.h>
+#include <src/pianoroll.h>
 #pragma comment(lib,"user32.lib")
 
 Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
@@ -124,8 +124,8 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     // Instantiate the plugin
     plugin = mainEntryPoint((audioMasterCallback)hostCallback);
     sRate = sampleRate;
-
-    samplesPerTick =(BPM / TPQN )/(1000000/sRate);//Why do i need /2 to work????
+ // samplesPerTick =(BPM / TPQN )/(1000000/sRate);/
+    samplesPerTick =(60.0/120.0 )*(1000000/sRate);//Why do i need /2 to work????
     qDebug() << "SamplesperTick: " << samplesPerTick;
     return plugin;
 }

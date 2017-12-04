@@ -37,8 +37,7 @@ SOURCES += src/main.cpp\
     src/audiomanager.cpp \
     src/velocityview.cpp \
     src/trackmidiview.cpp \
-    src/velocityviewitem.cpp \
-    src/test.cpp
+    src/velocityviewitem.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -53,8 +52,7 @@ HEADERS  += src/mainwindow.h\
     src/audiomanager.h \
     src/velocityview.h \
     src/trackmidiview.h \
-    src/velocityviewitem.h \
-    src/test.h
+    src/velocityviewitem.h
 
 FORMS    += mainwindow.ui
 LIBS += -lwinmm

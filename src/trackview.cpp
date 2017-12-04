@@ -1,11 +1,11 @@
 #include "trackview.h"
 #include "QGraphicsRectItem"
 #include <QGraphicsItem>
-#include <pianorollitem.h>
+#include <src/pianorollitem.h>
 #include <QDebug>
-#include <mainwindow.h>
+#include <src/mainwindow.h>
 #include <random>
-#include <trackmidiview.h>
+#include <src/trackmidiview.h>
 
 std::default_random_engine generator;
 std::uniform_int_distribution<int> distribution(1,255);

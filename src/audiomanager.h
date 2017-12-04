@@ -3,10 +3,10 @@
 
 #include <SDK/portaudio.h>
 #include <math.h>
-#include <vst2hostcallback.h>
+#include <src/vst2hostcallback.h>
 #include <qdebug.h>
 #include <SDK/aeffect.h>
-#include <mainwindow.h>
+#include <src/mainwindow.h>
 struct paTestData
 {
     float left_phase;

@@ -4,7 +4,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <QDebug>
-#include<midimanager.h>
+#include<src/midimanager.h>
 #include<QtConcurrent/QtConcurrent>
 #pragma comment (lib, "winmm.lib")
 

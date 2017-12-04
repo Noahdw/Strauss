@@ -1,6 +1,6 @@
 #include "trackcontainer.h"
 #include <QWidget>
-#include <trackmidiview.h>
+#include <src/trackmidiview.h>
 int ID = 0;
 
 TrackContainer::TrackContainer()
@@ -9,6 +9,7 @@ vLayout = new QVBoxLayout;
 vLayout->setSpacing(0);
 vLayout->setContentsMargins(0,0,0,0);
 vLayout->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+
 
 setLayout(vLayout);
 }
@@ -41,12 +42,13 @@ void TrackContainer::setPianoRollReference(PianoRollContainer *prc)
 
 void TrackContainer::addSingleView(TrackView *view)
 {
+
     QWidget *widget = new QWidget;
     QHBoxLayout *hlayout = new QHBoxLayout;
-    widget->setLayout(hlayout);
     hlayout->setAlignment(Qt::AlignTop);
     hlayout->setSpacing(0);
     hlayout->setContentsMargins(0,0,0,0);
+    widget->setLayout(hlayout);
     hlayout->addWidget(view);
 
 
@@ -60,6 +62,9 @@ void TrackContainer::addSingleView(TrackView *view)
 
      hlayout->addWidget(midiView);
      vLayout->addWidget(widget,Qt::AlignTop|Qt::AlignLeft);
+     adjustSize();
+
+
 }
 void TrackContainer::mousePressEvent(QMouseEvent *event)
 {

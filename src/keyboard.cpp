@@ -1,5 +1,5 @@
 #include "keyboard.h"
-#include <pianoroll.h>
+#include <src/pianoroll.h>
 
 /*This class represents the keyboard to the left of the Piano Roll.
  *It emits MIDI data to the VST for playbck.
@@ -29,8 +29,6 @@ void Keyboard::setScrollWheelValue(int value)
     wheelPos=this->verticalScrollBar();
     wheelPos->setValue(value);
 }
-
-
 
 void Keyboard::addNotesToScene()
 {
@@ -79,8 +77,6 @@ void Keyboard::addNotesToScene()
             break;
         }
         notepos++;
-
-
         QPen pen(Qt::black,0);
         note->setPen(pen);
         scene->addItem(note);
@@ -91,7 +87,6 @@ void Keyboard::addNotesToScene()
         }
     }
 }
-
 
 void Keyboard::mousePressEvent(QMouseEvent *event)
 {
@@ -129,6 +124,5 @@ void Keyboard::mouseReleaseEvent(QMouseEvent *event)
 {
     activeNote->setBrush(activeBrush);
     pianoroll->playKeyboardNote(127 - activeNote->y()/PianoRollItem::keyHeight, false);
-
 }
 

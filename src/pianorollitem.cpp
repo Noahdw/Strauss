@@ -1,5 +1,5 @@
 #include "pianorollitem.h"
-#include <velocityview.h>
+#include <src/velocityview.h>
 #include <QDebug>
 
 
@@ -8,6 +8,7 @@ PianoRollItem::PianoRollItem()
     brush = (QColor(102, 179, 255));
     setCacheMode(QGraphicsItem::NoCache);
     setFlag(QGraphicsItem::ItemIsMovable, true);
+    setFlag(QGraphicsItem::ItemIsSelectable,true);
 }
 
 QRectF PianoRollItem::boundingRect() const
@@ -39,12 +40,25 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     int yPos = event->lastScenePos().y()/keyHeight;
     this->setY(yPos*keyHeight);
-
+    int xMove = 0;
+    int yMove = 0;
 
     double colSpacing =pianoroll->tPQN *pianoroll->scaleFactor;
     int xPos = event->lastScenePos().x()/colSpacing;
-    qDebug() << this->x();
-    qDebug() << pianoroll->totalDT;
+
+    if(initXPos != this->x()){
+           qDebug() << this->x();
+           xMove = x() - initXPos;
+           initXPos = x();
+    }
+    if(initYPos != this->y()){
+           qDebug() << this->y();
+           yMove = y() - initYPos;
+           initYPos = y();
+    }
+    if(yMove != 0 || xMove != 0){
+        pianoroll->notifyPianoRollItemMoved(xMove,yMove,this);
+    }
 
     if (xPos < 0) {
         xPos = 0;
@@ -72,8 +86,9 @@ void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     int xPos = event->lastScenePos().x()/colSpacing;
     lastXPos = xPos*colSpacing;
     lastYPos = yPos*keyHeight;
+    initXPos = lastXPos;
+    initYPos = lastYPos;
     lastYWithSound = lastYPos;
-    qDebug() << "PRESSED";
 }
 
 void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -86,6 +101,7 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         int note = 127 - (lastYPos/keyHeight);
        MidiManager::updateMidiDelete(noteStart,noteEnd,note,pianoroll->track->track);
        pianoroll->velocityView->updateItems(noteStart,70,note,false);
+       pianoroll->velocityView->updateItems(x(),70,127 - yPos,true);
        MidiManager::updateMidiAdd(127 - yPos,70,this->x(),noteEnd,pianoroll->track->track);
        noteStart = this->x();
     }

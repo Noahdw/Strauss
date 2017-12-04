@@ -3,14 +3,14 @@
 
 #include <QObject>
 #include <QWidget>
-#include <keyboard.h>
-#include <pianoroll.h>
+#include <src/keyboard.h>
+#include <src/pianoroll.h>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <midimanager.h>
-#include <trackview.h>
+#include <src/midimanager.h>
+#include <src/trackview.h>
 #include <QStackedLayout>
-#include <velocityview.h>
+#include <src/velocityview.h>
 class PianoRollContainer : public QWidget
 {
     Q_OBJECT

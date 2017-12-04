@@ -1,8 +1,8 @@
 #include "mainwindow.h"
-#include <keyboard.h>
+#include <src/keyboard.h>
 #include <windows.h>
-#include <vst2hostcallback.h>
-#include <audiomanager.h>
+#include <src/vst2hostcallback.h>
+#include <src/audiomanager.h>
 MidiPlayer player;
 MidiManager *manager;
 
