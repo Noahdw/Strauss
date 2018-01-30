@@ -13,6 +13,12 @@ PianoRollContainer::PianoRollContainer()
 
 }
 
+void PianoRollContainer::propogateFolderViewDoubleClicked(QString filepath, QString path)
+{
+  PianoRoll*roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(2));
+  roll->track->folderViewItemDoubleClicked(path + filepath,filepath);
+}
+
 void PianoRollContainer::switchPianoRoll(int id)
 {
     if (stackedLayout->currentIndex() != id) {

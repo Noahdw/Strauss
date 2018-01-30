@@ -8,14 +8,11 @@
 int viewHeight = 70;
 VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
 {
-    // setFixedSize(1400,viewHeight);
     //  setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Minimum );
-
     //setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setViewportUpdateMode(MinimalViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
     //setContextMenuPolicy(Qt::CustomContextMenu);
     setMinimumWidth(1000);
     setMinimumHeight(70);
@@ -25,8 +22,6 @@ VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
     scene->setSceneRect(0,0,MidiManager::TPQN*50,height());
     this->setScene(scene);
     this->scale(((float)width() / (MidiManager::TPQN*50)),1);
-
-
 }
 
 void VelocityView::updateItems(int start, int velocity, int note, bool adding)
@@ -38,7 +33,6 @@ void VelocityView::updateItems(int start, int velocity, int note, bool adding)
     if (adding) {
         VelocityViewItem *line = new VelocityViewItem;
 
-
         scene->addItem(line);
         line->velocity = velocity;
         line->note = note;
@@ -47,7 +41,6 @@ void VelocityView::updateItems(int start, int velocity, int note, bool adding)
       //  qDebug() << "ADD" << start << "AND" << height() - NewValue;
         // resetTransform();
         // scale((float)width() / (MidiManager::TPQN*50),.2);
-
     }
     else
     {
@@ -61,10 +54,6 @@ void VelocityView::updateItems(int start, int velocity, int note, bool adding)
                  }
             }
         }
-
-
-
-
     }
 }
 
@@ -84,14 +73,11 @@ void VelocityView::updateTrackOfItems(TrackView *track)
     }
 }
 
-
-
 void VelocityView::setScale(float x, bool needsReset, int wheelPos)
 {
     if (needsReset) {
         resetMatrix();
     }
-
     this->scale(x,1);
     QScrollBar *wheel;
     wheel = this->horizontalScrollBar();

@@ -24,6 +24,7 @@ public:
     static void silenceChannel(float **channelData, int numChannels, long numFrames);
     void initializeIO();
     void requestPlaybackRestart();
+    void requestPauseOrResume(bool isResume);
     bool isRunning = false;
     uint blocksize =256;
     float sampleRate =44100;

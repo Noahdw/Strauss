@@ -20,10 +20,13 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     }
     instrumentLabel = new QLabel(instrumentName);
     instrumentLabel->setMaximumWidth(widgetWidth-10);
+    muteBox = new QCheckBox("Mute",this);
 
     vlayout = new QVBoxLayout;
     vlayout->setAlignment(Qt::AlignTop);
     vlayout->addWidget(instrumentLabel,0,Qt::AlignTop|Qt::AlignLeft);
+    vlayout->addSpacing(5);
+    vlayout->addWidget(muteBox);
     setLayout(vlayout);
     // setLineWidth(0);
 
@@ -36,7 +39,43 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     randomGreen = distribution(generator);
     randomBlue = distribution(generator);
 
+    QObject::connect(muteBox,&QCheckBox::stateChanged,this,&TrackView::notifyMuteChange);
 
+}
+
+void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
+{
+    if (plugin.effect ==NULL) {
+         qDebug() << "No plugin is currently set";
+
+             QByteArray array = filepath.toLocal8Bit();
+             char* file = array.data();
+
+             plugin.effect = plugin.host->loadPlugin(file);
+             if (plugin.effect == NULL) {
+                 qDebug() << "NULLPTR PLUGIN: in loadPlugin";
+                 return;
+             }
+             int state = plugin.host->configurePluginCallbacks(plugin.effect);
+             if (state == -1) {
+                 qDebug() << "Failed to configurePluginCallbacks. abort startPlugin";
+                 return;
+             }
+             instrumentLabel->setText(name);
+             plugin.host->startPlugin(plugin.effect);
+             MainWindow::pluginHolderVec.append(&plugin);
+    }
+
+}
+
+void TrackView::notifyMuteChange(int state)
+{
+    if(state){
+       plugin.host->isMuted = true;
+    }
+    else{
+         plugin.host->isMuted = false;
+    }
 }
 
 void TrackView::paintEvent(QPaintEvent *event)
@@ -63,6 +102,7 @@ void TrackView::mousePressEvent(QMouseEvent *event)
          QString fileName  = dialog.getOpenFileName(this, tr("Open File"), QString(),
                                                     tr("dll Files (*.dll)"));
 
+         qDebug() << fileName;
          if (!fileName.isEmpty()) {
              QByteArray array = fileName.toLocal8Bit();
              char* file = array.data();
