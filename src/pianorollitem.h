@@ -23,6 +23,7 @@ public:
     void setBoundingRect(int _width);
     int noteStart;
     int noteEnd;
+    bool canMove = true;
     PianoRoll *pianoroll;
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);

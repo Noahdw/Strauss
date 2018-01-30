@@ -32,12 +32,14 @@ public:
     void processMidi(AEffect *plugin);
     void initializeMidiEvents();
     void restartPlayback();
+    void pauseOrResumePlayback(bool isResume);
     void setPianoRollRef(PianoRoll *piano);
     
     EventToAdd eventToAdd;
     unsigned int blocksize = 256;
     float sampleRate = 44100.0f;
     bool canPlay = false;
+    bool isMuted = false;
 
 
 private:

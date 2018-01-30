@@ -38,7 +38,7 @@ public:
     void clearActiveNotes();
     void deleteAllNotes();
     void setScrollWheelValue(int value);
-    void updateSongTrackerPos();
+    void updateSongTrackerPos(bool isPauseOrResume, bool isResume);
     void notifyPianoRollItemMoved(int xMove, int yMove,QGraphicsItem *item);
 
 public slots:
@@ -58,6 +58,7 @@ protected:
       void resizeEvent(QResizeEvent *event);
 private:
       double xscale = 1.1;
+      int currentTimer = 0;
       const double minimumColSpacing = 3;
       QGraphicsScene *scene;
       Keyboard *keyboard;

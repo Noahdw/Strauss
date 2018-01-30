@@ -135,7 +135,7 @@ int Vst2HostCallback::configurePluginCallbacks(AEffect *plugin) {
     // If incorrect, then the file either was not loaded properly, is not a
     // real VST plugin, or is otherwise corrupt.
     if(plugin->magic != kEffectMagic) {
-        printf("Plugin's magic number is bad\n");
+        qDebug() << "Plugin's magic number is bad";
         return -1;
     }
 
@@ -207,7 +207,6 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
     UpdateWindow(editor);
 
     initializeMidiEvents();
-    qDebug() <<"This plugin has:" << plugin->numOutputs << " outputs";
     canPlay = true;
 }
 
@@ -347,7 +346,16 @@ void Vst2HostCallback::restartPlayback()
     noteVecPos = 0;
     framesTillBlock = 0;
     hasReachedEnd = false;
-    pianoroll->updateSongTrackerPos();
+    pianoroll->updateSongTrackerPos(false,false);
+}
+
+void Vst2HostCallback::pauseOrResumePlayback(bool isResume)
+{
+    if (isResume) {
+       pianoroll->updateSongTrackerPos(true,true);
+    }else{
+       pianoroll->updateSongTrackerPos(true,false);
+    }
 }
 
 void Vst2HostCallback::setPianoRollRef(PianoRoll * piano)

@@ -13,6 +13,7 @@ class TrackMidiView;
 #include <QGraphicsRectItem>
 #include <QFrame>
 #include <src/vst2hostcallback.h>
+#include <QCheckBox>
 
 
 
@@ -26,16 +27,20 @@ public:
     mTrack *track;
     pluginHolder plugin;
     TrackMidiView *trackMidiView;
+    void folderViewItemDoubleClicked(QString filepath, QString name);
 private:
     QString instrumentName;
     QLabel *instrumentLabel;
     QVBoxLayout *vlayout;
+    QCheckBox *muteBox;
     const int widgetWidth = 70;
     int randomRed = 0;
     int randomGreen = 0;
     int randomBlue = 0;
 signals:
     void trackClickedOn(int id);
+private slots:
+    void notifyMuteChange(int state);
 protected:
     void paintEvent(QPaintEvent * event);
     void mousePressEvent(QMouseEvent *event);

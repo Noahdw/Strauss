@@ -16,6 +16,7 @@ class PianoRollContainer : public QWidget
     Q_OBJECT
 public:
     PianoRollContainer();
+    void propogateFolderViewDoubleClicked(QString filepath,QString path);
     PianoRoll *pianoRoll;
     Keyboard *keyboard;
 public slots:

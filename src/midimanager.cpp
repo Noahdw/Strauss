@@ -237,15 +237,13 @@ mSong MidiManager::Deserialize(QByteArray &array)
 void MidiManager::updateMidiAdd(int note,int veloc, int start, int length,mTrack *track){
 
     int vLen = track->listOfNotes.length();
-    //qDebug() << vLen;
-    int vPos = 0;
+    qDebug() << vLen;
+    int vPos  = 0;
+    int newDT = 0;
+    int runs = 0;
     uchar status = 0x90;
     uchar velocity = veloc;
     int elapsedDT = 0;
-    bool pastTheMark = false;
-    bool beforeTheMark = false;
-    bool hitTheMark = false;
-    bool zeroDT = false;
     bool lastNote = false;
     QVector<int> newVec;
     if ( vLen > 0) {
@@ -255,141 +253,113 @@ void MidiManager::updateMidiAdd(int note,int veloc, int start, int length,mTrack
                 //Housekeeping to get ready for next iteration
                 start = start + length;
                 velocity= 0;
-                vLen = track->listOfNotes.length();
-                pastTheMark = false;
-                beforeTheMark = false;
-                zeroDT = false;
                 lastNote = false;
-                newVec.clear();
-                elapsedDT = 0;
             }
 
             //Start by getting the DT that elapsed before the Start value is hit
             //If I go over Start value, Determine whether Start is before or after current DT.
             //If I never go over, that means I placed value far right of all other notes.
-            for (int i = 0; i < vLen; i+=3) {
+            for (int i = vPos; i <= vLen; i+=3) {
+                if(i == vLen){
+                    lastNote = true;
+                    newDT = std::abs(elapsedDT - start);
+                    break;
+                }
                 elapsedDT += track->listOfNotes.at(i);
                 if (elapsedDT  >= start) {
-                    if (elapsedDT == start) {
-                        zeroDT = true;
-                        vPos = i;
-                        break;
-                    }
-                    elapsedDT -= track->listOfNotes.at(i);
-                    if (elapsedDT < start) {
-                        pastTheMark = true;
-                        vPos = i-3;
-                        if (vPos < 0) {
-                            vPos = 0;
-                        }
-                        elapsedDT = start - elapsedDT;
-
-                    }
-                    else{
-                        beforeTheMark = true;
-                        vPos = i-3;
-                        if (vPos < 0) {
-                            vPos = 0;
-                        }
-                        elapsedDT = elapsedDT - start;
-                    }
+                    vPos = i;
+                    newDT = std::abs(elapsedDT - start);
                     break;
-
                 }
                 else if(i+ 3 == vLen ){
                     lastNote = true;
                     vPos = i+3;
-                    elapsedDT = start - elapsedDT;
+                    newDT = std::abs(elapsedDT - start);
+                    break;
                 }
-
             }
             //Now reconstruct the original Vector one by one, putting in the new note start and end
             //where appropriate. Must determine whether new value comes before or after the current 'i' pos.
             // Also must adjust the DT of the next event if I put a new value BEFORE an existing one.
 
-            for (int i = 0; i <= vLen; i+=3) {
+            if(runs > vLen){
+                runs = vLen;
+            }
+            for (int i = runs; i <= vLen; i+=3) {
+                //   qDebug() << "VPOS " << vPos;
                 if (!lastNote && i == vLen) {
                     break; //gtfo
-
                 }
+
                 if (vPos == i) {
+                    runs = i+3;
                     DWORD nvnt =( velocity << 16 |
-                                  note << 8 |
-                                  status);
-                    //Only add the new note as vector will be maxed
+                                      note << 8  |
+                                          status);
                     if (lastNote) {
                         qDebug() << "LastNote Hit";
-                        newVec.append(elapsedDT);
+                        newVec.append(newDT);
                         newVec.append(0);
                         newVec.append(nvnt);
-                        break;
+                        if(rep == 0){
+                            break;
+                        }
                     }
-                    else if(zeroDT){
-                        qDebug() << "zero DT - chord ";
-                        newVec.append(track->listOfNotes.at(i));
-                        newVec.append(track->listOfNotes.at(i+1));
-                        newVec.append(track->listOfNotes.at(i+2));
-                        newVec.append(0);
-                        newVec.append(0);
-                        newVec.append(nvnt);
-
+                    else{
+                        if(newDT == 0){
+                            // Notice that a note on needs to be after, and vise versa.
+                            if(rep == 0){
+                                newVec.append(track->listOfNotes.at(i));
+                                newVec.append(track->listOfNotes.at(i+1));
+                                newVec.append(track->listOfNotes.at(i+2));
+                                newVec.append(0);
+                                newVec.append(0);
+                                newVec.append(nvnt);
+                            }
+                            else{
+                                newVec.append(track->listOfNotes.at(i));
+                                newVec.append(0);
+                                newVec.append(nvnt);
+                                newVec.append(0);
+                                newVec.append(track->listOfNotes.at(i+1));
+                                newVec.append(track->listOfNotes.at(i+2));
+                            }
+                        }
+                        else{
+                            newVec.append(track->listOfNotes.at(i)-newDT);
+                            newVec.append(0);
+                            newVec.append(nvnt);
+                            newVec.append(newDT);
+                            newVec.append(track->listOfNotes.at(i+1));
+                            newVec.append(track->listOfNotes.at(i+2));
+                        }
+                        if(rep == 0){
+                            vPos +=3;
+                            break;
+                        }
                     }
-                    //Add new note after existing event
-                    else if (pastTheMark) {
-                        qDebug() << "pastTheMark true Hit";
-                        newVec.append(track->listOfNotes.at(i));
-                        newVec.append(track->listOfNotes.at(i+1));
-                        newVec.append(track->listOfNotes.at(i+2));
-                        newVec.append(elapsedDT);
-                        newVec.append(0);
-                        newVec.append(nvnt);
-                        hitTheMark = true;
-
-                    }
-                    //Add new event before existing, adjust the DT of existing
-                    else if(beforeTheMark){
-                        qDebug() << "pastTheMark false Hit";
-                        newVec.append(elapsedDT);
-                        newVec.append(0);
-                        newVec.append(nvnt);
-                        newVec.append(track->listOfNotes.at(i)-start);
-                        newVec.append(track->listOfNotes.at(i+1));
-                        newVec.append(track->listOfNotes.at(i+2));
-
-                    }
-
                 }
                 // Add existing events as normal
                 else{
-                    //Seems this is needed for events that come inbetween longer notes
-                    int PTMvar =0;
-                    if (hitTheMark) {
-                        PTMvar = elapsedDT;
-                        hitTheMark =false;
-                    }
-                    newVec.append(track->listOfNotes.at(i)-PTMvar);
+                    newVec.append(track->listOfNotes.at(i));
                     newVec.append(track->listOfNotes.at(i+1));
                     newVec.append(track->listOfNotes.at(i+2));
-
                 }
             }
-            if (rep == 0) {
-                track->listOfNotes = newVec;
-            }
-        }
 
+        }
     }
     else
     {
         DWORD nvnt =( velocity << 16 |
-                      note << 8 |
-                      status);
+                          note << 8  |
+                              status);
         newVec.append(start);
         newVec.append(0);
         newVec.append(nvnt);
-        nvnt =( 0 << 16 |
-                note << 8 |
-                0x90);
+        nvnt =(0 << 16 |
+            note << 8  |
+                  0x90);
         newVec.append(length);
         newVec.append(0);
         newVec.append(nvnt);
@@ -401,7 +371,7 @@ void MidiManager::updateMidiAdd(int note,int veloc, int start, int length,mTrack
 DWORD MidiManager::statusDWORD(uchar db1, uchar db2, uchar status)
 {
     DWORD nvnt =( db2 << 16 |
-                  db1 << 8 |
+                  db1 << 8  |
                   status);
     return nvnt;
 
@@ -427,9 +397,9 @@ void MidiManager::updateMidiDelete(int start, int length, int note, mTrack *trac
             if (rep == 0) {
                 start = start + length;
             }
+
             rep++;
             continue;
-
         }
         else
         {

@@ -13,7 +13,6 @@ int defaultCols = 50;
 
 PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
 {
-    // setFixedSize(1400,400);
     setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setViewportUpdateMode(MinimalViewportUpdate);
@@ -27,7 +26,6 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     scene->setSceneRect(0,0,tPQN*cols,PianoRollItem::keyHeight*128);
     scene->setItemIndexMethod(QGraphicsScene::NoIndex);
     this->setScene(scene);
-
 
     colSpacing = width()/cols;
     sceneRect = new QRectF(0,0,tPQN*cols,PianoRollItem::keyHeight*128);
@@ -54,22 +52,23 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     animation->setTimeLine(timer);
     rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
 
-
     for (int i = 0; i < sceneRect->width(); ++i) {
         animation->setPosAt(i / (double)sceneRect->width(), QPointF(i, 0));
     }
 }
-
+/*Double clicking an empty part of the Pianoroll adds a note
+ *Double clicking an existing note will remove it from the PianoRoll
+ */
 void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
 {
     if(event->button()==Qt::LeftButton)
     {
         QGraphicsItem *item = itemAt(event->pos());
-        PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
+
         if (item!=0) {
             //deletes an existing note from song
-
-            int note =127 - (pItem->y()/PianoRollItem::keyHeight);
+            PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
+            int note = 127 - (pItem->y()/PianoRollItem::keyHeight);
 
             velocityView->updateItems(pItem->noteStart,0,note,false);
             MidiManager::updateMidiDelete(pItem->noteStart,pItem->noteEnd,note,track->track);
@@ -78,7 +77,6 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
             delete item;
             item=nullptr;
             activeNotes.clear();
-
         }
         else{
             //Adds a new note to song
@@ -113,7 +111,10 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
         }
     }
 }
-
+/*A click will select the item under the mouse
+ * Clicking empty space will clear the selected items
+ * A rightclick will open an option menu
+ */
 
 void PianoRoll::mousePressEvent(QMouseEvent *event)
 {
@@ -189,7 +190,7 @@ void PianoRoll::clearActiveNotes()
     activeNotes.clear();
 }
 
-
+//Takes midi data and converts to notes on a Pianoroll
 void PianoRoll::convertTrackToItems()
 {
 
@@ -219,7 +220,6 @@ void PianoRoll::convertTrackToItems()
     int noteEnd = 0;
 
     for(int i = 0; i < track->track->listOfNotes.length(); i+=3){
-
         elapsedDW += track->track->listOfNotes.at(i);
         //indicates a note. ignore other junk for now
         if((track->track->listOfNotes.at(i+2)& 0xF0) ==0x90){
@@ -266,10 +266,22 @@ void PianoRoll::turnNoteOff(int note)
     playKeyboardNote(note,false);
 }
 
-void PianoRoll::updateSongTrackerPos()
+void PianoRoll::updateSongTrackerPos(bool isPauseOrResume, bool isResume)
 {
-    timer->setCurrentTime(0);
-    timer->start();
+    if (isPauseOrResume) {
+        if(isResume){
+            timer->setPaused(false);
+        }
+        else{
+            currentTimer = timer->currentTime();
+            timer->setPaused(true);
+        }
+
+    }else{
+        timer->setCurrentTime(0);
+        timer->start();
+    }
+
 }
 
 void PianoRoll::notifyPianoRollItemMoved(int xMove, int yMove, QGraphicsItem *item)
@@ -376,7 +388,6 @@ void PianoRoll::drawBackground(QPainter * painter, const QRectF & rect)
         painter->drawLine(0,var*PianoRollItem::keyHeight-verticalScrollBar()->value(),
                           width()+horizontalScrollBar()->value(),var*PianoRollItem::keyHeight-verticalScrollBar()->value());
     }
-
     //Draws the vertical lines
     for (double var = 0; var < cols/scaleFactor; var+=1)
     {
@@ -388,7 +399,6 @@ void PianoRoll::drawBackground(QPainter * painter, const QRectF & rect)
         }
         painter->drawLine(var*tPQN*scaleFactor*transform().m11()-horizontalScrollBar()->value(),0,
                           var*tPQN*scaleFactor*transform().m11()-horizontalScrollBar()->value(),verticalScrollBar()->value()+height());
-
 
         pen.setColor(Qt::lightGray);
         painter->setPen(pen);
@@ -404,7 +414,6 @@ void PianoRoll::scaleFactorChanged(double scale)
     }
     this->viewport()->update();
 }
-
 
 void PianoRoll::wheelEvent(QWheelEvent *event)
 {
@@ -433,7 +442,6 @@ void PianoRoll::wheelEvent(QWheelEvent *event)
             scale(0.8/xscale,1);
             velocityView->setScale(0.8/xscale,false,wheelPos->value());
         }
-
         //  this->scale(xscale,1);
         if (transform().m11() < (float)width() / (tPQN*cols)) {
             resetMatrix();
@@ -442,19 +450,15 @@ void PianoRoll::wheelEvent(QWheelEvent *event)
 
         }
         colSpacing*=transform().m11();
-
         wheelPos=this->verticalScrollBar();
         wheelPos->setValue(previousMousePos);
-
     }
     else
     {
         yscroller=event->angleDelta().y() /120*14;
-
         wheelPos=this->verticalScrollBar();
         wheelPos->setValue(verticalScrollBar()->value()-yscroller);
         keyboard->setScrollWheelValue(wheelPos->value());
-
     }
 
 }

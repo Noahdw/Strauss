@@ -73,15 +73,24 @@ void AudioManager::initializeIO() {
 
 void AudioManager::requestPlaybackRestart()
 {
-
-
     for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
     {
         pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
         plugs->host->restartPlayback();
-
     }
+}
 
+void AudioManager::requestPauseOrResume(bool isResume)
+{
+    for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
+    {
+        pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
+        if(isResume){
+            plugs->host->pauseOrResumePlayback(true);
+        }else{
+            plugs->host->pauseOrResumePlayback(false);
+        }
+    }
 }
 void AudioManager::silenceChannel(float **channelData, int numChannels, long numFrames) {
     for(int channel = 0; channel < numChannels; ++channel) {
@@ -125,15 +134,23 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         if (!plugs->host->canPlay) {
             continue;
         }
-        plugs->host->processMidi(plugs->effect);
-        plugs->host->processAudio(plugs->effect,inputss,outputss,256);
+        if(plugs->host->isMuted){
+            plugs->host->processMidi(plugs->effect);
+            plugs->host->processAudio(plugs->effect,inputss,outputss,256);
 
-        for (int i = 0; i < 256; ++i) {
-            outputStorage[0][i] += outputss[0][i];
-            outputStorage[1][i] += outputss[1][i];
-
+             AudioManager::silenceChannel(outputss,numOutputs,256);
         }
-        AudioManager::silenceChannel(outputss,numOutputs,256);
+        else{
+            plugs->host->processMidi(plugs->effect);
+            plugs->host->processAudio(plugs->effect,inputss,outputss,256);
+
+            for (int i = 0; i < 256; ++i) {
+                outputStorage[0][i] += outputss[0][i];
+                outputStorage[1][i] += outputss[1][i];
+
+            }
+            AudioManager::silenceChannel(outputss,numOutputs,256);
+        }
     }
 
 

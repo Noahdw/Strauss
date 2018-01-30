@@ -3,6 +3,8 @@
 #include <windows.h>
 #include <src/vst2hostcallback.h>
 #include <src/audiomanager.h>
+
+
 MidiPlayer player;
 MidiManager *manager;
 
@@ -34,12 +36,23 @@ MainWindow::MainWindow(QWidget *parent) :
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
-    trackContainer = new TrackContainer;
-    prollContainer = new PianoRollContainer;
+    folderView      = new FolderView;
+    headerContainer = new HeaderContainer;
+    trackContainer  = new TrackContainer;
+    prollContainer  = new PianoRollContainer;
     trackContainer->setPianoRollReference(prollContainer);
+    folderView->pRollContainer = prollContainer;
+    headerContainer->audioManager = audioManager;
     trackScrollArea->setWidget(trackContainer);
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(trackScrollArea);
+    QHBoxLayout *hLayout = new QHBoxLayout;
+
+    hLayout->addWidget(folderView);
+    mainLayout->addWidget(headerContainer);
+    mainLayout->addLayout(hLayout);
+    hLayout->addWidget(trackScrollArea);
+
     mainLayout->addWidget(prollContainer);
     centralWidget->setLayout(mainLayout);
 
@@ -48,7 +61,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
     addNewTrack();
     setUpMenuBar();
-
 
     audioManager->startPortAudio();
     audioManager->openStream();

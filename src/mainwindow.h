@@ -17,6 +17,8 @@
 #include <QGraphicsScene>
 #include <src/pianorollcontainer.h>
 #include <src/trackcontainer.h>
+#include <src/folderview.h>
+#include <src/headercontainer.h>
 #include <QLibrary>
 #include <qvector.h>
 namespace Ui {
@@ -59,6 +61,8 @@ private slots:
 private:
    PianoRollContainer *prollContainer;
    TrackContainer *trackContainer;
+   FolderView * folderView;
+   HeaderContainer * headerContainer;
 
     QMenu *fileMenu;
     QMenu *editMenu;
