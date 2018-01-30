@@ -5,7 +5,9 @@
 MidiInter is the beginning of what will hopefully one day be a Digital Audio Workstation that focuses
 on composer workflow through the integration of both notation software as well as traditional DAWS.
 
-![capturemidi](https://user-images.githubusercontent.com/1783601/31596854-f7f7509e-b1f9-11e7-8269-0555de6e7653.PNG)
+![midiinter_2018-01-29_17-05-06](https://user-images.githubusercontent.com/1783601/35542779-be31dcc4-0516-11e8-944b-044557acd43c.png)
+
+
 
 ### Some insights for those looking to create a piano roll with Qt.
 The naive approach to creating the structure behind most piano rolls will not work. That is to say, the manual 
