@@ -13,7 +13,6 @@ PianoRollItem::PianoRollItem()
 
 QRectF PianoRollItem::boundingRect() const
 {
-
     return QRectF(0,0,width,keyHeight);
 }
 void PianoRollItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
@@ -25,19 +24,15 @@ void PianoRollItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * o
 
     painter->fillRect(rect,brush);
     painter->drawRect(rect);
-
 }
 
 void PianoRollItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-
     QGraphicsItem::mouseDoubleClickEvent(event);
-
 }
 
 void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-
     int yPos = event->lastScenePos().y()/keyHeight;
     this->setY(yPos*keyHeight);
     int xMove = 0;
@@ -107,9 +102,8 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void PianoRollItem::setBoundingRect(int _width){
-
+void PianoRollItem::setBoundingRect(int _width)
+{
     prepareGeometryChange();
     this->width = _width;
-
 }
