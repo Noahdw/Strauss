@@ -12,7 +12,7 @@ Keyboard::Keyboard(QWidget *parent) : QGraphicsView(parent)
     scene = new QGraphicsScene;
     scene->setSceneRect(0,0,noteWidth,PianoRollItem::keyHeight*128);
     this->setScene(scene);
-   // setFixedSize(noteWidth,400);
+    // setFixedSize(noteWidth,400);
     setMaximumWidth(noteWidth);
 
     addNotesToScene();

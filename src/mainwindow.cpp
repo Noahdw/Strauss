@@ -18,7 +18,7 @@ AEffect *plugin = NULL;
 QVector<pluginHolder*> MainWindow::pluginHolderVec;
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent)
+        QMainWindow(parent)
 {
     centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
@@ -109,7 +109,7 @@ void MainWindow::openFile()
         }
 
         manager->song = manager->Deserialize(array);
-       // prollContainer->pianoRoll->convertFileToItems(*manager);
+        // prollContainer->pianoRoll->convertFileToItems(*manager);
 
         file.close();
     }
@@ -144,7 +144,7 @@ bool stopped = false;
 // restarts a song if pressed while playing
 void MainWindow::playSong(){
 
-   audioManager->requestPlaybackRestart();
+    audioManager->requestPlaybackRestart();
 
 }
 
@@ -158,32 +158,32 @@ void MainWindow::openVST()
 
 
 
-//    QFileDialog dialog;
-//    QString fileName  = dialog.getOpenFileName(this, tr("Open File"), QString(),
-//                                               tr("dll Files (*.dll)"));
+    //    QFileDialog dialog;
+    //    QString fileName  = dialog.getOpenFileName(this, tr("Open File"), QString(),
+    //                                               tr("dll Files (*.dll)"));
 
-//    if (!fileName.isEmpty()) {
-//        QByteArray array = fileName.toLocal8Bit();
-//        char* file = array.data();
-
-
-
-//        plugin = host->loadPlugin(file);
-//        if (plugin == NULL) {
-//            qDebug() << "NULLPTR PLUGIN";
-//            return;
-//        }
-//        int state = host->configurePluginCallbacks(plugin);
-//        if (state == -1) {
-//            qDebug() << "Failed to configure button. abort startPlugin";
-//            return;
-//        }
-//        host->startPlugin(plugin);
+    //    if (!fileName.isEmpty()) {
+    //        QByteArray array = fileName.toLocal8Bit();
+    //        char* file = array.data();
 
 
 
+    //        plugin = host->loadPlugin(file);
+    //        if (plugin == NULL) {
+    //            qDebug() << "NULLPTR PLUGIN";
+    //            return;
+    //        }
+    //        int state = host->configurePluginCallbacks(plugin);
+    //        if (state == -1) {
+    //            qDebug() << "Failed to configure button. abort startPlugin";
+    //            return;
+    //        }
+    //        host->startPlugin(plugin);
 
-//    }
+
+
+
+    //    }
 }
 
 void MainWindow::deleteAllNotes()

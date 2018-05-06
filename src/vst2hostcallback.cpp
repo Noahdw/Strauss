@@ -12,7 +12,7 @@ Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
 
 }
 dispatcherFuncPtr dispatcher;
-VstTimeInfo time;
+VstTimeInfo vtime;
 float sRate;
 double sPos = 0;
 int processLevel = kVstProcessLevelUser; //1
@@ -40,28 +40,28 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
     {
         // some help from https://github.com/elieserdejesus/JamTaba/blob/master/src/Common/vst/VstHost.cpp
 
-        time.samplePos = sPos;
-        time.sampleRate = sRate;
-        time.nanoSeconds = QDateTime::currentDateTime().currentMSecsSinceEpoch() * 1000000.0;
-        time.tempo = 120;
-        time.ppqPos = ((time.samplePos)/((60.0 / time.tempo) * sRate)) + 1;
+        vtime.samplePos = sPos;
+        vtime.sampleRate = sRate;
+        vtime.nanoSeconds = QDateTime::currentDateTime().currentMSecsSinceEpoch() * 1000000.0;
+        vtime.tempo = 120;
+        vtime.ppqPos = ((vtime.samplePos)/((60.0 / vtime.tempo) * sRate)) + 1;
         // qDebug() << time.ppqPos;
-        time.barStartPos = 0;
-        time.cycleStartPos = 0.0;
-        time.cycleEndPos = 0.0;
-        time.timeSigDenominator = 4;
-        time.timeSigNumerator = 4;
-        time.smpteOffset  = 0;
-        time.smpteFrameRate  = 1;
-        time.samplesToNextClock = 0;
-        time.flags = 0;
-        time.flags |= kVstTempoValid;
-        time.flags |= kVstTimeSigValid;
-        time.flags |= kVstPpqPosValid;
-        time.flags |= kVstTransportPlaying;
+        vtime.barStartPos = 0;
+        vtime.cycleStartPos = 0.0;
+        vtime.cycleEndPos = 0.0;
+        vtime.timeSigDenominator = 4;
+        vtime.timeSigNumerator = 4;
+        vtime.smpteOffset  = 0;
+        vtime.smpteFrameRate  = 1;
+        vtime.samplesToNextClock = 0;
+        vtime.flags = 0;
+        vtime.flags |= kVstTempoValid;
+        vtime.flags |= kVstTimeSigValid;
+        vtime.flags |= kVstPpqPosValid;
+        vtime.flags |= kVstTransportPlaying;
 
        // qDebug() << "audioMasterGetTime" << opcode;
-        return (VstIntPtr)&time;
+        return (VstIntPtr)&vtime;
     }
     case 6:
         qDebug() << "audioMasterWantMidi" << opcode;

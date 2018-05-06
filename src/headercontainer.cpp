@@ -39,10 +39,10 @@ void HeaderContainer::play()
 {
 
     if(isPaused){
-         audioManager->requestPauseOrResume(true);
+        audioManager->requestPauseOrResume(true);
     }
     else{
-         audioManager->requestPlaybackRestart();
+        audioManager->requestPlaybackRestart();
     }
     isPaused = false;
 
@@ -51,7 +51,7 @@ void HeaderContainer::play()
 void HeaderContainer::restart()
 {
     isPaused = false;
-     audioManager->requestPlaybackRestart();
+    audioManager->requestPlaybackRestart();
 }
 
 void HeaderContainer::pause()
