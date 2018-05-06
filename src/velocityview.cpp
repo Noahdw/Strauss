@@ -22,6 +22,7 @@ VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
     scene->setSceneRect(0,0,MidiManager::TPQN*50,height());
     this->setScene(scene);
     this->scale(((float)width() / (MidiManager::TPQN*50)),1);
+     setMouseTracking(true);
 }
 
 void VelocityView::updateItems(int start, int velocity, int note, bool adding)
@@ -95,6 +96,27 @@ void VelocityView::paintEvent(QPaintEvent *event)
     painter->setPen(pen);
     painter->drawRect(viewport()->rect());
     QGraphicsView::paintEvent(event);
+}
+
+void VelocityView::mousePressEvent(QMouseEvent *event)
+{
+
+}
+
+void VelocityView::mouseMoveEvent(QMouseEvent *event)
+{
+
+}
+
+void VelocityView::mouseReleaseEvent(QMouseEvent *event)
+{
+   // QGraphicsItem *vBar = itemAt(event->pos());
+
+    //If a bar was clicked on
+   // if(vBar!=0) {
+    //     VelocityViewItem *castBar = dynamic_cast<VelocityViewItem*>(vBar);
+   //      castBar->setPos(this->m);
+  //  }
 }
 
 void VelocityView::onPianoRollResized(float x)

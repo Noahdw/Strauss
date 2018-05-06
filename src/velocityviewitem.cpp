@@ -1,10 +1,13 @@
 #include "velocityviewitem.h"
-
+#include <QDebug>
 VelocityViewItem::VelocityViewItem()
 {
-    prepareGeometryChange();
-    setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+   // prepareGeometryChange();
+    setCacheMode(QGraphicsItem::NoCache);
     setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
+    setFlag(QGraphicsItem::ItemIsMovable, true);
+    setFlag(QGraphicsItem::ItemIsSelectable,true);
+
 }
 
 void VelocityViewItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -24,5 +27,26 @@ void VelocityViewItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 QRectF VelocityViewItem::boundingRect() const
 {
     return QRectF(0,0,1,velocity);
+}
+
+void VelocityViewItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+     qDebug() << "WEF" << endl;
+}
+
+void VelocityViewItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    setY(event->lastScenePos().y());
+    qDebug() << "fdfd" << endl;
+}
+
+void VelocityViewItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+
+}
+
+void VelocityViewItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsItem::mouseDoubleClickEvent(event);
 }
 

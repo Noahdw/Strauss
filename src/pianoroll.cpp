@@ -10,7 +10,25 @@
 #include <src/velocityview.h>
 QList<QGraphicsItem*> activeNotes;
 int defaultCols = 50;
+/*!
+    \class PianoRoll
+        \brief A widget which represents the graphical view of a piano roll.
 
+        A piano roll is a two-dimensional representation of time vs. pitch.
+        This class is a QGraphicsView which handles general user interation
+        with the view. It is dependent on the PianoRollItem class which is
+        the actual pitches and length, being stored in a QGraphicsScene.
+
+        \note Neither this class nor its items are responsible for storing any
+        information about the notes. Those are stored in the MidiManager class
+        as an array.
+
+*/
+
+// ./qdoc C:/Users/Puter/Documents/MidiInter/midiinter.qdocconf
+// Use this from a cmd line within the dir of qdoc.exe to create an html
+//./qhelpgenerator C:/Users/Puter/Documents/MidiInter/doc/midiinter.qph -o midiinter.qch
+//  use this to create a qch from our qph
 PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
 {
     setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
@@ -177,6 +195,7 @@ void PianoRoll::mouseReleaseEvent(QMouseEvent *event)
     rubberBand->hide();
     QGraphicsView::mouseReleaseEvent(event);
 }
+/*! test */
 void PianoRoll::clearActiveNotes()
 {
     foreach (auto note, activeNotes) {
@@ -193,7 +212,6 @@ void PianoRoll::clearActiveNotes()
 //Takes midi data and converts to notes on a Pianoroll
 void PianoRoll::convertTrackToItems()
 {
-
     int dw =track->track->totalDT;
     totalDT = dw;
     //update the playback animation
@@ -212,8 +230,6 @@ void PianoRoll::convertTrackToItems()
     for (int i = 0; i < dw; ++i) {
         animation->setPosAt(i / (double)dw, QPointF(i, 0));
     }
-
-
     //  velocityView->setSceneRect(0,0,dw,128*velocityView->height());
     int curNote = 0;
     int elapsedDW = 0;
@@ -293,7 +309,11 @@ void PianoRoll::notifyPianoRollItemMoved(int xMove, int yMove, QGraphicsItem *it
         note->setY(note->y() + yMove);
     }
 }
-
+/*!
+  \fn PianoRoll::playKeyboardNote(int note, bool active)
+  Given a piano note, either queue for the note to be played
+  or to be turned off. Request is sent to active plugins for playback.
+*/
 void PianoRoll::playKeyboardNote(int note, bool active)
 {
     track->plugin.host->eventToAdd.hasEventToAdd = true;
