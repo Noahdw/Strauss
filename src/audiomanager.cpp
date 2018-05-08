@@ -3,6 +3,8 @@
 
 PaStream *stream;
 paTestData data;
+bool isPaused = false;
+
 //temp
 
 
@@ -47,7 +49,7 @@ void AudioManager::openStream()
 
                                          &patestCallback, /* this is your callback function */
                                          &data ); /*This is a pointer that will be passed to
-                                                   your callback*/
+               your callback*/
     if( err != paNoError ) {
         qDebug() << (  "PortAudio error: %s\n", Pa_GetErrorText( err ) );
     }
@@ -87,8 +89,12 @@ void AudioManager::requestPauseOrResume(bool isResume)
         pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
         if(isResume){
             plugs->host->pauseOrResumePlayback(true);
-        }else{
+            isPaused = false;
+        }
+        else
+        {
             plugs->host->pauseOrResumePlayback(false);
+            isPaused = true;
         }
     }
 }
@@ -121,8 +127,18 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
     unsigned int i;
-    int numPlugs =MainWindow::pluginHolderVec.length();
+    int numPlugs = MainWindow::pluginHolderVec.length();
     (void) inputBuffer; /* Prevent unused variable warning. */
+    if (isPaused) {
+        AudioManager::silenceChannel(outputss,numOutputs,256);
+        for( i=0; i<framesPerBuffer; i++ )
+        {
+            *out++ =outputStorage[0][0] ;  /* left */
+            *out++ =outputStorage[1][0]; /* right */
+        }
+        return 0;
+
+    }
     for (int var = 0; var < numPlugs ; ++var)
     {
 
@@ -134,32 +150,28 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         if (!plugs->host->canPlay) {
             continue;
         }
-        if(plugs->host->isMuted){
-            plugs->host->processMidi(plugs->effect);
-            plugs->host->processAudio(plugs->effect,inputss,outputss,256);
-
-             AudioManager::silenceChannel(outputss,numOutputs,256);
+        plugs->host->processMidi(plugs->effect);
+        plugs->host->processAudio(plugs->effect,inputss,outputss,256);
+        if(plugs->host->isMuted)
+        {
+            AudioManager::silenceChannel(outputss,numOutputs,256);
         }
-        else{
-            plugs->host->processMidi(plugs->effect);
-            plugs->host->processAudio(plugs->effect,inputss,outputss,256);
-
-            for (int i = 0; i < 256; ++i) {
+        else
+        {
+            for (int i = 0; i < 256; ++i)
+            {
                 outputStorage[0][i] += outputss[0][i];
                 outputStorage[1][i] += outputss[1][i];
-
             }
             AudioManager::silenceChannel(outputss,numOutputs,256);
         }
     }
-
 
     for( i=0; i<framesPerBuffer; i++ )
     {
         //  qDebug() << outputss[0][i];
         *out++ =outputStorage[0][i] ;  /* left */
         *out++ =outputStorage[1][i]; /* right */
-
     }
 
     AudioManager::silenceChannel(outputStorage,numOutputs,256);

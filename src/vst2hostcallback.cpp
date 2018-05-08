@@ -334,7 +334,6 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 void Vst2HostCallback::initializeMidiEvents()
 {
     int numEventsRequired = maxNotes;
-
     events = (VstEvents*)malloc(sizeof(VstEvents) + sizeof(VstEvents*)*(numEventsRequired));
     events->numEvents = numEventsRequired;
     events->reserved = 0;
