@@ -94,6 +94,7 @@ void AudioManager::requestPauseOrResume(bool isResume)
         else
         {
             plugs->host->pauseOrResumePlayback(false);
+            //plugs->host->turnOffAllNotes(plugs->effect);
             isPaused = true;
         }
     }
@@ -129,16 +130,6 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     unsigned int i;
     int numPlugs = MainWindow::pluginHolderVec.length();
     (void) inputBuffer; /* Prevent unused variable warning. */
-    if (isPaused) {
-        AudioManager::silenceChannel(outputss,numOutputs,256);
-        for( i=0; i<framesPerBuffer; i++ )
-        {
-            *out++ =outputStorage[0][0] ;  /* left */
-            *out++ =outputStorage[1][0]; /* right */
-        }
-        return 0;
-
-    }
     for (int var = 0; var < numPlugs ; ++var)
     {
 
@@ -150,8 +141,15 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         if (!plugs->host->canPlay) {
             continue;
         }
+        if (isPaused)
+        {
+            plugs->host->turnOffAllNotes(plugs->effect);
+        plugs->host->processAudio(plugs->effect,inputss,outputss,256);
+        }
+        else{
         plugs->host->processMidi(plugs->effect);
         plugs->host->processAudio(plugs->effect,inputss,outputss,256);
+    }
         if(plugs->host->isMuted)
         {
             AudioManager::silenceChannel(outputss,numOutputs,256);
@@ -166,7 +164,7 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
             AudioManager::silenceChannel(outputss,numOutputs,256);
         }
     }
-
+isPaused = false;
     for( i=0; i<framesPerBuffer; i++ )
     {
         //  qDebug() << outputss[0][i];

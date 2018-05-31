@@ -89,8 +89,8 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
             int note = 127 - (pItem->y()/PianoRollItem::keyHeight);
 
             velocityView->updateItems(pItem->noteStart,0,note,false);
-            MidiManager::updateMidiDelete(pItem->noteStart,pItem->noteEnd,note,track->track);
-
+            MidiManager::removeMidiNote(pItem->noteStart,pItem->noteEnd,note,track->track);
+            track->trackMidiView->deleteViewItem(pItem->noteStart,pItem->y());
             scene->removeItem(item);
             delete item;
             item=nullptr;
@@ -115,14 +115,14 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
 
             pNote->setPos(quadrant,newY);
             pNote->setBoundingRect(length);
-            track->trackMidiView->updateViewItems(quadrant,length,newY);
+            track->trackMidiView->addViewItem(quadrant,length,newY);
             scene->update(0,0,tPQN*cols,PianoRollItem::keyHeight*128);
             pNote->noteStart = quadrant;
             pNote->noteEnd = length;
             int note =127-newY/PianoRollItem::keyHeight;
             velocityView->updateItems(quadrant,70,note,true);
 
-            MidiManager::updateMidiAdd(note,70,quadrant,length,track->track);
+            MidiManager::addMidiNote(note,70,quadrant,length,track->track);
 
             qDebug() << track->track->listOfNotes.length();
             QGraphicsView::mouseDoubleClickEvent(event);

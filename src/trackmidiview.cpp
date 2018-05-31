@@ -22,12 +22,12 @@ TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 
 }
 
-void TrackMidiView::updateViewItems(int start, int length, int note)
+void TrackMidiView::addViewItem(int start, int length, int note)
 {
-    QGraphicsRectItem *rect = new QGraphicsRectItem(0,0,length,12);
+    QGraphicsRectItem *rect = new QGraphicsRectItem(0,0,length,50);
     scene->addItem(rect);
-
-  //  QPen pen(Qt::black,0);
+    qDebug() << start << "    " << note;
+   //  QPen pen(Qt::black,0);
    // rect->setPen(pen);
     rect->setBrush(Qt::darkGray);
     rect->setX(start);
@@ -51,4 +51,13 @@ void TrackMidiView::onPianoRollResized(float x)
 {
     resetMatrix();
     scale(x,(float)height()/1536);
+}
+
+void TrackMidiView::deleteViewItem(int start, int note)
+{
+    QGraphicsItem * item = scene->itemAt(QPointF(start,note),QGraphicsView::transform());
+    QGraphicsRectItem * ritem = static_cast<QGraphicsRectItem*>(item);
+    qDebug() << start << "    " << note;
+    scene->removeItem(ritem);
+    delete(ritem);
 }

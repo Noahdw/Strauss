@@ -234,7 +234,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
 }
 //There are a few cases where this fails, no idea why
 //Can be made way simpler
-void MidiManager::updateMidiAdd(int note,int veloc, int start, int length,mTrack *track){
+void MidiManager::addMidiNote(int note,int veloc, int start, int length,mTrack *track){
 
     int vLen = track->listOfNotes.length();
     qDebug() << vLen;
@@ -294,8 +294,8 @@ void MidiManager::updateMidiAdd(int note,int veloc, int start, int length,mTrack
                 if (vPos == i) {
                     runs = i+3;
                     DWORD nvnt =( velocity << 16 |
-                                      note << 8  |
-                                          status);
+                                  note << 8  |
+                                  status);
                     if (lastNote) {
                         qDebug() << "LastNote Hit";
                         newVec.append(newDT);
@@ -352,14 +352,14 @@ void MidiManager::updateMidiAdd(int note,int veloc, int start, int length,mTrack
     else
     {
         DWORD nvnt =( velocity << 16 |
-                          note << 8  |
-                              status);
+                      note << 8  |
+                      status);
         newVec.append(start);
         newVec.append(0);
         newVec.append(nvnt);
         nvnt =(0 << 16 |
-            note << 8  |
-                  0x90);
+               note << 8  |
+               0x90);
         newVec.append(length);
         newVec.append(0);
         newVec.append(nvnt);
@@ -377,7 +377,7 @@ DWORD MidiManager::statusDWORD(uchar db1, uchar db2, uchar status)
 
 }
 
-void MidiManager::updateMidiDelete(int start, int length, int note, mTrack *track)
+void MidiManager::removeMidiNote(int start, int length, int note, mTrack *track)
 {
     QVector<int> newVec;
     int vLen = track->listOfNotes.length();
@@ -410,6 +410,39 @@ void MidiManager::updateMidiDelete(int start, int length, int note, mTrack *trac
     }
 
     track->listOfNotes = newVec;
+}
+
+void MidiManager::changeMidiVelocity(int start, int note, int velocity, mTrack *track)
+{
+    int vLen = track->listOfNotes.length();
+    int DT = 0;
+    for (int pos = 0; pos < vLen; pos+=3)
+    {
+        uchar nte = track->listOfNotes.at(pos+2) >> 8;
+        DT += track->listOfNotes.at(pos);
+        if (DT == start && note == nte)
+        {
+            track->listOfNotes[pos+2]  = (track->listOfNotes[pos+2] << 16) >> 16;
+            int v = velocity << 16;
+            track->listOfNotes[pos+2] |= v;
+            return;
+        }
+    }
+}
+
+int MidiManager::getVelocityFromNote(int start, int note, mTrack *track)
+{
+    int vLen = track->listOfNotes.length();
+    int DT = 0;
+    for (int pos = 0; pos < vLen; pos+=3)
+    {
+        uchar nte = track->listOfNotes.at(pos+2) >> 8;
+        DT += track->listOfNotes.at(pos);
+        if (DT == start && note == nte)
+        {
+            return track->listOfNotes.at(pos+2) >> 16;
+        }
+    }
 }
 
 //Great resource http://cs.fit.edu/~ryan/cse4051/projects/midi/midi.html#mff0

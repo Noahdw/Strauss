@@ -13,10 +13,12 @@ VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
     setViewportUpdateMode(MinimalViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setRenderHint(QPainter::Antialiasing);
     //setContextMenuPolicy(Qt::CustomContextMenu);
     setMinimumWidth(1000);
     setMinimumHeight(70);
     setMaximumHeight(70);
+    setMouseTracking(true);
     scene = new QGraphicsScene;
     qDebug() << "Height:" << height();
     scene->setSceneRect(0,0,MidiManager::TPQN*50,height());
@@ -33,11 +35,11 @@ void VelocityView::updateItems(int start, int velocity, int note, bool adding)
 
     if (adding) {
         VelocityViewItem *line = new VelocityViewItem;
-
         scene->addItem(line);
         line->velocity = velocity;
         line->note = note;
-
+        line->velocityView = this;
+        line->viewHeight = height();
         line->setPos(start,height() - NewValue);
       //  qDebug() << "ADD" << start << "AND" << height() - NewValue;
         // resetTransform();
@@ -54,6 +56,21 @@ void VelocityView::updateItems(int start, int velocity, int note, bool adding)
                      return;
                  }
             }
+        }
+    }
+}
+
+void VelocityView::updateItemMove(int oldPos, int newPos, int oldNote, int newNote)
+{
+    foreach (auto item, scene->items()) {
+        if (item->x() == oldPos) {
+             VelocityViewItem *line = dynamic_cast<VelocityViewItem*>(item);
+             if (line->note == oldNote) {
+                 line->note = newNote;
+                 line->setX(newPos);
+
+                 return;
+             }
         }
     }
 }
@@ -96,27 +113,6 @@ void VelocityView::paintEvent(QPaintEvent *event)
     painter->setPen(pen);
     painter->drawRect(viewport()->rect());
     QGraphicsView::paintEvent(event);
-}
-
-void VelocityView::mousePressEvent(QMouseEvent *event)
-{
-
-}
-
-void VelocityView::mouseMoveEvent(QMouseEvent *event)
-{
-
-}
-
-void VelocityView::mouseReleaseEvent(QMouseEvent *event)
-{
-   // QGraphicsItem *vBar = itemAt(event->pos());
-
-    //If a bar was clicked on
-   // if(vBar!=0) {
-    //     VelocityViewItem *castBar = dynamic_cast<VelocityViewItem*>(vBar);
-   //      castBar->setPos(this->m);
-  //  }
 }
 
 void VelocityView::onPianoRollResized(float x)

@@ -40,7 +40,8 @@ public:
     float sampleRate = 44100.0f;
     bool canPlay = false;
     bool isMuted = false;
-
+    bool isPaused = false;
+    void turnOffAllNotes(AEffect *plugin);
 
 private:
     QVector<int> *noteList;

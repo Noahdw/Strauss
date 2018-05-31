@@ -92,12 +92,15 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     double colSpacing =pianoroll->tPQN *pianoroll->scaleFactor;
     int xPos = event->lastScenePos().x()/colSpacing;
 
-    if (((yPos*keyHeight) != lastYPos) || ((xPos*colSpacing) != lastXPos)) {
+    if (((yPos*keyHeight) != lastYPos) || ((xPos*colSpacing) != lastXPos))
+    {
         int note = 127 - (lastYPos/keyHeight);
-       MidiManager::updateMidiDelete(noteStart,noteEnd,note,pianoroll->track->track);
-       pianoroll->velocityView->updateItems(noteStart,70,note,false);
-       pianoroll->velocityView->updateItems(x(),70,127 - yPos,true);
-       MidiManager::updateMidiAdd(127 - yPos,70,this->x(),noteEnd,pianoroll->track->track);
+        int velocity = MidiManager::getVelocityFromNote(noteStart,note,pianoroll->track->track);
+       MidiManager::removeMidiNote(noteStart,noteEnd,note,pianoroll->track->track);
+       pianoroll->velocityView->updateItemMove(noteStart,x(),note,127-yPos);
+       pianoroll->track->trackMidiView->deleteViewItem(noteStart,lastYPos);
+       pianoroll->track->trackMidiView->addViewItem(x(),width,yPos*keyHeight);
+       MidiManager::addMidiNote(127 - yPos,velocity,this->x(),noteEnd,pianoroll->track->track);
        noteStart = this->x();
     }
 }
