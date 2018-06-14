@@ -22,7 +22,7 @@ bool firstRun = true;
 VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
                                    VstInt32 index, VstInt32 value, void *ptr, float opt)
 {
-   // qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
+    // qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
     //http://jdmcox.com/PianoRollComposer.cpp for opcodes
     switch (opcode) {
     case audioMasterVersion:
@@ -60,7 +60,7 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         vtime.flags |= kVstPpqPosValid;
         vtime.flags |= kVstTransportPlaying;
 
-       // qDebug() << "audioMasterGetTime" << opcode;
+        // qDebug() << "audioMasterGetTime" << opcode;
         return (VstIntPtr)&vtime;
     }
     case 6:
@@ -110,7 +110,7 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     }
 
     vstPluginFuncPtr mainEntryPoint =
-            (vstPluginFuncPtr)GetProcAddress(modulePtr, "VSTPluginMain");
+                    (vstPluginFuncPtr)GetProcAddress(modulePtr, "VSTPluginMain");
 
     if(mainEntryPoint == NULL)
     {
@@ -124,7 +124,7 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     // Instantiate the plugin
     plugin = mainEntryPoint((audioMasterCallback)hostCallback);
     sRate = sampleRate;
- // samplesPerTick =(BPM / TPQN )/(1000000/sRate);/
+    // samplesPerTick =(BPM / TPQN )/(1000000/sRate);/
     samplesPerTick =(60.0/120.0 )*(1000000/sRate);//Why do i need /2 to work????
     qDebug() << "SamplesperTick: " << samplesPerTick;
     return plugin;
@@ -210,9 +210,6 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
     canPlay = true;
 }
 
-
-
-
 void Vst2HostCallback::silenceChannel(float **channelData, int numChannels, long numFrames) {
     for(int channel = 0; channel < numChannels; ++channel) {
         for(long frame = 0; frame < numFrames; ++frame) {
@@ -228,7 +225,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
     processLevel = kVstProcessLevelRealtime;
 
     events->numEvents =0;
-  //  qDebug() << track->listOfNotes.length();
+    //  qDebug() << track->listOfNotes.length();
     uint i = 0;
     int pos = 0;
     bool canSkip = false;
@@ -260,11 +257,17 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 
         eventToAdd.hasEventToAdd = false;
     }
+
+    if (isPaused)
+    {
+        dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
+        return;
+    }
     // If we are too many samples away from inputing an event, subtract blocksize and give empty vstevents
     if (!hasReachedEnd) {
 
         while(i < blocksize){
-         //   qDebug() << framesTillBlock;
+            //   qDebug() << framesTillBlock;
             if (noteVecPos >= track->listOfNotes.length()) {
                 qDebug() << "notevec length :" << track->listOfNotes.length();
                 qDebug() << "Reached end of midi";
@@ -345,21 +348,69 @@ void Vst2HostCallback::restartPlayback()
     noteVecPos = 0;
     framesTillBlock = 0;
     hasReachedEnd = false;
-    pianoroll->updateSongTrackerPos(false,false);
+    isPaused = false;
+    pianoroll->updateSongTrackerPos(false,false,-1);
 }
 
 void Vst2HostCallback::pauseOrResumePlayback(bool isResume)
 {
-    if (isResume) {
-       pianoroll->updateSongTrackerPos(true,true);
-    }else{
-       pianoroll->updateSongTrackerPos(true,false);
+    if (isResume)
+    {
+        pianoroll->updateSongTrackerPos(true,true,-1);
+        isPaused = false;
+    }else
+    {
+        isPaused = true;
+        pianoroll->updateSongTrackerPos(true,false,-1);
+    }
+}
+
+void Vst2HostCallback::setCustomPlackbackPos(int playbackPos)
+{
+    pianoroll->updateSongTrackerPos(false,false,playbackPos);
+    int total = 0;
+    for (int var = 0; var < track->listOfNotes.length(); var+= 3)
+    {
+        total += track->listOfNotes.at(var);
+        if (total >= playbackPos)
+        {
+            noteVecPos = var;
+            framesTillBlock = 0;
+            hasReachedEnd = false;
+            isPaused = false;
+            return;
+        }
     }
 }
 
 void Vst2HostCallback::setPianoRollRef(PianoRoll * piano)
 {
     pianoroll = piano;
+}
+
+void Vst2HostCallback::turnOffAllNotes(AEffect *plugin)
+{
+    for (int i = 0; i < 128; ++i)
+    {
+        VstMidiEvent* evnt = new VstMidiEvent;
+        evnt->byteSize =24;
+        evnt->deltaFrames = 0;
+        evnt->type = kVstMidiType;
+        evnt->flags = 0;
+        evnt->detune = 0;
+        evnt->noteOffVelocity = 0;
+        evnt->reserved1 = 0;
+        evnt->reserved2 = 0;
+        evnt->midiData[0] =  0x90;
+        evnt->midiData[1] = (uchar)i;
+        evnt->midiData[2] = 0;
+        evnt->midiData[3] = 0;
+        evnt->noteOffset = 0;
+        evnt->noteLength = 0;
+        events->events[i] = (VstEvent*)evnt;
+        ++events->numEvents;
+    }
+    dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
 }
 
 

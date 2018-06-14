@@ -48,8 +48,6 @@ private slots:
 
     void playSong();
 
-    void updatePROLL(int x,int y,int width,int start, int length);
-
     void on_actionPlay_triggered();
 
     void openVST();

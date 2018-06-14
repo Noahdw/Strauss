@@ -47,21 +47,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *hLayout = new QHBoxLayout;
-
+    hLayout->addWidget(trackScrollArea);
     hLayout->addWidget(folderView);
     mainLayout->addWidget(headerContainer);
     mainLayout->addLayout(hLayout);
-    hLayout->addWidget(trackScrollArea);
-
     mainLayout->addWidget(prollContainer);
     centralWidget->setLayout(mainLayout);
-
-
 
     QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
     addNewTrack();
     setUpMenuBar();
-
+    AudioManager::requestedPlaybackPos = -1;
     audioManager->startPortAudio();
     audioManager->openStream();
     audioManager->startStream();
@@ -70,13 +66,6 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
 
-}
-
-
-//remove later
-void MainWindow::updatePROLL(int x,int y, int width,int start, int length)
-{
-    //manager->updateMidi(127 - y/PianoRollItem::keyHeight,70,start,length);
 }
 
 
@@ -235,13 +224,8 @@ void MainWindow::addNewTrack()
 {
     mTrack *track = new mTrack;
     track->instrumentName = "New Track";
-
-
     TrackView *view = new TrackView(track);
     trackContainer->addSingleView(view);
-
-
-
 }
 
 

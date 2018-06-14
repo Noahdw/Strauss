@@ -19,7 +19,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager){
 
 
     MIDIPROPTIMEDIV prop;
-    unsigned long result;
+    uint32_t result;
 
     hEvent = CreateEvent(0, FALSE, FALSE, 0);
     if (hEvent==NULL) {
@@ -179,8 +179,8 @@ void MidiPlayer::Midiman(int note,bool active){
     v1.push_back(0);
     v1.push_back(inote);
 
-    hEvent = CreateEvent(0, FALSE, FALSE, 0);
-    if (hEvent==NULL) {
+    hEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (hEvent==nullptr) {
         qDebug() << "CCould not creat event";
     }
     if (!streamOpen) {
@@ -225,7 +225,7 @@ void MidiPlayer::resumePlayBack(){
     }
 }
 
-//Simpy calls Midiman for playback - perhaps not needed but seems to be for threading
+//Simply calls Midiman for playback - perhaps not needed but seems to be for threading
 void MidiPlayer::playNote(int note,bool active){
     QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,active);
 

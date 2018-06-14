@@ -41,6 +41,7 @@ signals:
     void trackClickedOn(int id);
 private slots:
     void notifyMuteChange(int state);
+    void ShowContextMenu(const QPoint &pos);
 protected:
     void paintEvent(QPaintEvent * event);
     void mousePressEvent(QMouseEvent *event);

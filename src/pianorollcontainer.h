@@ -11,6 +11,8 @@
 #include <src/trackview.h>
 #include <QStackedLayout>
 #include <src/velocityview.h>
+#include <src/tracklengthview.h>
+
 class PianoRollContainer : public QWidget
 {
     Q_OBJECT

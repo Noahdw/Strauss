@@ -11,13 +11,14 @@ class VelocityView;
 #include <src/pianoroll.h>
 #include <QScrollBar>
 #include <QTimer>
+
 class PianoRollItem : public QGraphicsItem
 {
 
 public:
     PianoRollItem();
     QBrush brush;
-    static  const int keyHeight = 12;
+
     QRectF boundingRect() const;
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
     void setBoundingRect(int _width);
@@ -40,5 +41,5 @@ private:
 
 };
 
-
+ static  const double keyHeight = 12;
 #endif // PIANOROLLNOTE_H
