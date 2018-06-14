@@ -349,19 +349,37 @@ void Vst2HostCallback::restartPlayback()
     framesTillBlock = 0;
     hasReachedEnd = false;
     isPaused = false;
-    pianoroll->updateSongTrackerPos(false,false);
+    pianoroll->updateSongTrackerPos(false,false,-1);
 }
 
 void Vst2HostCallback::pauseOrResumePlayback(bool isResume)
 {
     if (isResume)
     {
-        pianoroll->updateSongTrackerPos(true,true);
+        pianoroll->updateSongTrackerPos(true,true,-1);
         isPaused = false;
     }else
     {
         isPaused = true;
-        pianoroll->updateSongTrackerPos(true,false);
+        pianoroll->updateSongTrackerPos(true,false,-1);
+    }
+}
+
+void Vst2HostCallback::setCustomPlackbackPos(int playbackPos)
+{
+    pianoroll->updateSongTrackerPos(false,false,playbackPos);
+    int total = 0;
+    for (int var = 0; var < track->listOfNotes.length(); var+= 3)
+    {
+        total += track->listOfNotes.at(var);
+        if (total >= playbackPos)
+        {
+            noteVecPos = var;
+            framesTillBlock = 0;
+            hasReachedEnd = false;
+            isPaused = false;
+            return;
+        }
     }
 }
 

@@ -18,9 +18,10 @@ public:
     int totalDT = MidiManager::TPQN * 50;
     void onPianoRollResized(float x);
     void deleteViewItem(int start, int note);
+    void shareScene(QGraphicsScene * scene);
 
 private:
-    QGraphicsScene *scene;
+QGraphicsScene *scene;
     int highestNote = 0;
     int lowestNote = 127;
 

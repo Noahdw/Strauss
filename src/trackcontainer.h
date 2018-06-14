@@ -10,6 +10,7 @@ class TrackMidiView;
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <src/pianorollcontainer.h>
+#include <QSpacerItem>
 
 class TrackContainer : public QWidget
 {

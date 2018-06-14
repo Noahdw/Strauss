@@ -32,7 +32,7 @@ void VelocityViewItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     //painter->drawRect(rect);
     painter->drawEllipse(0,0,8,8);
     painter->setBrush(brush);
-    painter->drawRect(3,0,1,velocity);
+    painter->drawRect(3,8,1,velocity);
     //painter->f
 }
 

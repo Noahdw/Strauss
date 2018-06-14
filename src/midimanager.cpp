@@ -30,7 +30,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
 {
     //One extra byte at pos 0 of array for some reason, 0 based indexing cancels it out
     int ticksPerQuarterNote,framesPerSecondSMTPE,deltaTimeSMTPE;
-    int format = array.at(10);
+    //int format = array.at(10);
     int trackChunks = array.at(12); // no one needs more than 127 tracks anyways, technically this is var length
 
     bool divistionFormat = (array.at(13) >> 7);
@@ -62,7 +62,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                              (uchar)(array.at(currentPos+3)));
             currentPos += 4; //should put on first byte after length
 
-            uchar lastStatus,lastChannel;
+            uchar lastStatus = 0,lastChannel = 0;
             //Runs for amount of bytes in a track, each iteration is a new event
             for (int pos = currentPos; pos < track->length + currentPos; ++pos) {
                 bool  eventCanAdd = false;
@@ -71,7 +71,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 //Because of variable length, bit 7(last MSB) is used to denote that it is last byte
                 //in the series if it is 0.
                 //NOTE* bit 7n must be 1 if it is not last byte, does not signify a larger value though
-                int deltaTime;
+                int deltaTime = 1;
                 if (array.at(pos) >> 7 == 0)
                 {
                     deltaTime =array.at(pos);
@@ -443,6 +443,7 @@ int MidiManager::getVelocityFromNote(int start, int note, mTrack *track)
             return track->listOfNotes.at(pos+2) >> 16;
         }
     }
+    return -1;
 }
 
 //Great resource http://cs.fit.edu/~ryan/cse4051/projects/midi/midi.html#mff0

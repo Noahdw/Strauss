@@ -17,6 +17,7 @@ class VelocityView;
 #include <QGraphicsItemAnimation>
 #include <QTimer>
 #include <src/trackmidiview.h>
+#include "src/tracklengthview.h"
 #include <QRubberBand>
 class PianoRoll : public QGraphicsView{
 Q_OBJECT
@@ -26,6 +27,7 @@ public:
     Keyboard *getKeyboard();
     VelocityView *velocityView;
      QRectF *sceneRect;
+     TrackLengthView * trackLengthView;
     double colSpacing = 0;
     double scaleFactor = 1;
     int cols = 60;
@@ -38,9 +40,9 @@ public:
     void clearActiveNotes();
     void deleteAllNotes();
     void setScrollWheelValue(int value);
-    void updateSongTrackerPos(bool isPauseOrResume, bool isResume);
+    void updateSongTrackerPos(bool isPauseOrResume, bool isResume, int custom);
     void notifyPianoRollItemMoved(int xMove, int yMove,QGraphicsItem *item);
-
+  QGraphicsScene *scene;
 public slots:
       void ShowContextMenu(const QPoint &pos);
       void scaleFactorChanged(double scale);
@@ -60,7 +62,7 @@ private:
       double xscale = 1.1;
       int currentTimer = 0;
       const double minimumColSpacing = 3;
-      QGraphicsScene *scene;
+
       Keyboard *keyboard;
       QTimeLine *timer;
       QGraphicsItemAnimation *animation;

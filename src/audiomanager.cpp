@@ -1,8 +1,9 @@
-#include "audiomanager.h"
+#include "src/audiomanager.h"
 #include "SDK/portaudio.h"
 
 PaStream *stream;
 paTestData data;
+int AudioManager::requestedPlaybackPos;
 bool isPaused = false;
 
 //temp
@@ -16,7 +17,7 @@ float** outputStorage = 0;
 int numOutputs = 64;
 AudioManager::AudioManager()
 {
-
+//QObject::connect(this,&AudioManager::requestCustomPlayback,this,&AudioManager::changePlayback);
 }
 
 void AudioManager::startPortAudio()
@@ -48,7 +49,7 @@ void AudioManager::openStream()
                                          blocksize,        // frames per buffer
 
                                          &patestCallback, /* this is your callback function */
-                                         &data ); /*This is a pointer that will be passed to
+                                         this ); /*This is a pointer that will be passed to
                your callback*/
     if( err != paNoError ) {
         qDebug() << (  "PortAudio error: %s\n", Pa_GetErrorText( err ) );
@@ -99,6 +100,23 @@ void AudioManager::requestPauseOrResume(bool isResume)
         }
     }
 }
+
+void AudioManager::changePlaybackPos()
+{
+       int numPlugs = MainWindow::pluginHolderVec.length();
+    for (int var = 0; var < numPlugs ; ++var)
+    {
+
+        pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
+        if (plugs->effect ==NULL) {
+            //   qDebug() <<"Plugin not set in Audiomanager";
+            continue;
+        }
+        QObject::connect(this,&AudioManager::changePlaybackPosSignal,plugs->host,&Vst2HostCallback::setCustomPlackbackPos);
+        emit changePlaybackPosSignal(requestedPlaybackPos);
+    }
+}
+
 void AudioManager::silenceChannel(float **channelData, int numChannels, long numFrames) {
     for(int channel = 0; channel < numChannels; ++channel) {
         for(long frame = 0; frame < numFrames; ++frame) {
@@ -124,12 +142,19 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
                     void *userData )
 {
     //hey lazy bum make blocksize static var
-
+    bool customPlayback = false;
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
     unsigned int i;
     int numPlugs = MainWindow::pluginHolderVec.length();
     (void) inputBuffer; /* Prevent unused variable warning. */
+    if (AudioManager::requestedPlaybackPos != -1)
+    {
+        AudioManager * audio = (AudioManager*)userData;
+        audio->changePlaybackPos();
+        customPlayback = true;
+      //  AudioManager::requestCustomPlayback();
+    }
     for (int var = 0; var < numPlugs ; ++var)
     {
 
@@ -147,6 +172,10 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         plugs->host->processAudio(plugs->effect,inputss,outputss,256);
         }
         else{
+            if (customPlayback)
+            {
+                //plugs->host->setCustomPlackbackPos(AudioManager::requestedPlaybackPos);
+            }
         plugs->host->processMidi(plugs->effect);
         plugs->host->processAudio(plugs->effect,inputss,outputss,256);
     }
@@ -164,7 +193,11 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
             AudioManager::silenceChannel(outputss,numOutputs,256);
         }
     }
-isPaused = false;
+    if (customPlayback)
+    {
+       AudioManager::requestedPlaybackPos = -1;
+    }
+    isPaused = false;
     for( i=0; i<framesPerBuffer; i++ )
     {
         //  qDebug() << outputss[0][i];

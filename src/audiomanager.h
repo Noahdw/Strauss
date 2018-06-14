@@ -1,6 +1,7 @@
 #ifndef AUDIOMANAGER_H
 #define AUDIOMANAGER_H
 
+#include <QObject>
 #include <SDK/portaudio.h>
 #include <math.h>
 #include <src/vst2hostcallback.h>
@@ -14,8 +15,9 @@ struct paTestData
 };
 
 
-class AudioManager
+class AudioManager : public QObject
 {
+    Q_OBJECT
 public:
     AudioManager();
     void startPortAudio();
@@ -29,6 +31,11 @@ public:
     uint blocksize =256;
     float sampleRate =44100;
     QVector<pluginHolder*> *plugins;
+    void changePlaybackPos();
+    static int requestedPlaybackPos;
+
+signals:
+  void changePlaybackPosSignal( int pos);
 
 };
 int patestCallback( const void *inputBuffer, void *outputBuffer,
@@ -36,4 +43,6 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
                     const PaStreamCallbackTimeInfo* timeInfo,
                     PaStreamCallbackFlags statusFlags,
                     void *userData );
+
+
 #endif // AUDIOMANAGER_H

@@ -8,7 +8,7 @@ class PianoRoll;
 #include <SDK/vstfxstore.h>
 #include <src/midimanager.h>
 #include <qvector.h>
-
+#include <QObject>
 
 struct EventToAdd
 {
@@ -17,9 +17,9 @@ struct EventToAdd
     bool hasEventToAdd = false;
 };
 
-class Vst2HostCallback
+class Vst2HostCallback : public QObject
 {
-
+Q_OBJECT
 public:
     Vst2HostCallback(mTrack *track);
     AEffect* loadPlugin(char* fileName);
@@ -33,6 +33,7 @@ public:
     void initializeMidiEvents();
     void restartPlayback();
     void pauseOrResumePlayback(bool isResume);
+
     void setPianoRollRef(PianoRoll *piano);
     
     EventToAdd eventToAdd;
@@ -62,8 +63,8 @@ private:
     uint framesTillBlock = 0;
     bool hasReachedEnd = false;
     PianoRoll *pianoroll;
-
-
+public slots:
+ void setCustomPlackbackPos(int playbackPos);
 
 };
 

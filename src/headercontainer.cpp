@@ -9,11 +9,11 @@ HeaderContainer::HeaderContainer()
     //buttonGroup = new QButtonGroup;
     groupBox    = new QGroupBox;
 
-    QPushButton *playButton    = new QPushButton("Play",this);
-    QPushButton *pauseButton   = new QPushButton("Pause",this);
-    QPushButton *restartButton = new QPushButton("restart",this);
-    QHBoxLayout *hbox          = new QHBoxLayout;
-    QHBoxLayout *mainbox       = new QHBoxLayout;
+    auto *playButton    = new QPushButton("Play",this);
+    auto *pauseButton   = new QPushButton("Pause",this);
+    auto *restartButton = new QPushButton("restart",this);
+    auto *hbox          = new QHBoxLayout;
+    auto *mainbox       = new QHBoxLayout;
 
     hbox->addWidget(playButton);
     hbox->addWidget(pauseButton);

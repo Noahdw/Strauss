@@ -4,7 +4,7 @@
 
 #include <QDebug>
 #include <QQmlListProperty>
-
+#include <string>
 #include <windows.h>
 struct mEvent
 {

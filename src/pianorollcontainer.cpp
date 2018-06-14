@@ -15,7 +15,7 @@ PianoRollContainer::PianoRollContainer()
 
 void PianoRollContainer::propogateFolderViewDoubleClicked(QString filepath, QString path)
 {
-  PianoRoll*roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
+  PianoRoll *roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
   roll->track->folderViewItemDoubleClicked(path + filepath,filepath);
 }
 
@@ -28,10 +28,10 @@ void PianoRollContainer::switchPianoRoll(int id)
 
 void PianoRollContainer::addPianoRolls(TrackView *view)
 {
-    PianoRoll *roll = new PianoRoll;
-    Keyboard *key = new Keyboard;
-    VelocityView *velocity = new VelocityView;
-    TrackLengthView *trackLength = new TrackLengthView;
+    auto *roll        = new PianoRoll;
+    auto *key         = new Keyboard;
+    auto *velocity    = new VelocityView;
+    auto *trackLength = new TrackLengthView;
 
     roll->track = view;
     if (view->track->totalDT != 0) {
@@ -39,10 +39,10 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
         roll->convertTrackToItems();
     }
 
-    QVBoxLayout *vlayout = new QVBoxLayout;
-    QHBoxLayout *hlayout = new QHBoxLayout;
-    QHBoxLayout *hlayout2 = new QHBoxLayout;
-    QHBoxLayout *hlayout3 = new QHBoxLayout;
+    auto *vlayout  = new QVBoxLayout;
+    auto *hlayout  = new QHBoxLayout;
+    auto *hlayout2 = new QHBoxLayout;
+    auto *hlayout3 = new QHBoxLayout;
     hlayout3->addSpacing(key->width());
     hlayout3->addWidget(trackLength);
 
@@ -68,10 +68,11 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
 
     roll->setKeyboard(key);
     roll->setVelocityView(velocity);
+    roll->trackLengthView = trackLength;
     key->setPianoRoll(roll);
     view->plugin.host->setPianoRollRef(roll);
     velocity->setSceneRect(0,0,roll->totalDT,velocity->height());
-    velocity->updateTrackOfItems(view);
+    velocity->populateVelocityViewFromTrack(view);
     velocity->trackView = view;
-
+    velocity->trackView->trackMidiView->shareScene(roll->scene);
 }

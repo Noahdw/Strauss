@@ -7,6 +7,7 @@
 #include <QPainter>
 #include <QDebug>
 #include <QMouseEvent>
+#include <QScrollBar>
 
 class TrackLengthView : public QGraphicsView
 {
@@ -14,6 +15,8 @@ class TrackLengthView : public QGraphicsView
 public:
     explicit TrackLengthView(QWidget *parent = nullptr);
     QGraphicsScene * scene;
+    void setScale(float x, bool needsReset, int wheelPos);
+
 signals:
 
 public slots:

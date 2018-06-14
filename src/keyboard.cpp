@@ -10,7 +10,7 @@ Keyboard::Keyboard(QWidget *parent) : QGraphicsView(parent)
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scene = new QGraphicsScene;
-    scene->setSceneRect(0,0,noteWidth,PianoRollItem::keyHeight*128);
+    scene->setSceneRect(0,0,noteWidth,keyHeight*128);
     this->setScene(scene);
     // setFixedSize(noteWidth,400);
     setMaximumWidth(noteWidth);
@@ -35,7 +35,7 @@ void Keyboard::addNotesToScene()
     int notepos = 1;
     for (int var = 0; var <= 128; ++var)
     {
-        QGraphicsRectItem *note = new QGraphicsRectItem(0,0,noteWidth,PianoRollItem::keyHeight);
+        QGraphicsRectItem *note = new QGraphicsRectItem(0,0,noteWidth,keyHeight);
         switch (notepos) {
         case 1:
             note->setBrush(Qt::white);
@@ -81,7 +81,7 @@ void Keyboard::addNotesToScene()
         note->setPen(pen);
         scene->addItem(note);
         note->setX(0);
-        note->setY(var*PianoRollItem::keyHeight);
+        note->setY(var*keyHeight);
         if (notepos>12) {
             notepos = 1;
         }
@@ -96,7 +96,7 @@ void Keyboard::mousePressEvent(QMouseEvent *event)
     note->setBrush(Qt::red);
     activeNote = note;
 
-    pianoroll->playKeyboardNote(127 - note->y()/PianoRollItem::keyHeight, true);
+    pianoroll->playKeyboardNote(127 - note->y()/keyHeight, true);
 
 }
 
@@ -107,7 +107,7 @@ void Keyboard::mouseDoubleClickEvent(QMouseEvent *event)
     activeBrush =note->brush();
     note->setBrush(Qt::red);
     activeNote = note;
-    pianoroll->playKeyboardNote(127 - note->y()/PianoRollItem::keyHeight, true);
+    pianoroll->playKeyboardNote(127 - note->y()/keyHeight, true);
 }
 
 void Keyboard::wheelEvent(QWheelEvent *event)
@@ -123,6 +123,6 @@ void Keyboard::wheelEvent(QWheelEvent *event)
 void Keyboard::mouseReleaseEvent(QMouseEvent *event)
 {
     activeNote->setBrush(activeBrush);
-    pianoroll->playKeyboardNote(127 - activeNote->y()/PianoRollItem::keyHeight, false);
+    pianoroll->playKeyboardNote(127 - activeNote->y()/keyHeight, false);
 }
 

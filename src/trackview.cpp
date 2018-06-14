@@ -30,7 +30,7 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     setLayout(vlayout);
     // setLineWidth(0);
 
-    setFixedSize(widgetWidth+lineWidth()*2,70);
+   // setFixedSize(widgetWidth+lineWidth()*2,90);
    // setFrameStyle(QFrame::Box | QFrame::Plain);
     setFrameShape(QFrame::Box);
     //setMidLineWidth(0);
@@ -40,7 +40,8 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     randomBlue = distribution(generator);
 
     QObject::connect(muteBox,&QCheckBox::stateChanged,this,&TrackView::notifyMuteChange);
-
+    QObject::connect(this, &QWidget::customContextMenuRequested,
+            this,&TrackView::ShowContextMenu);
 }
 
 void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
@@ -78,22 +79,38 @@ void TrackView::notifyMuteChange(int state)
     }
 }
 
+void TrackView::ShowContextMenu(const QPoint &pos)
+{
+    QMenu contextMenu(("Context menu"), this);
+
+    QAction renameAction("Rename", this);
+
+
+   // connect(&renameAction,&QAction::triggered,this, [this]{scaleFactorChanged(8);});
+
+
+    contextMenu.addAction(&renameAction);
+    contextMenu.exec(mapToGlobal(pos));
+}
+
 void TrackView::paintEvent(QPaintEvent *event)
 {
-    QPainter *painter = new QPainter(this);
+    QPainter painter(this);
 
     QBrush brush(Qt::lightGray);
-    painter->setBrush(brush);
-    painter->drawRect(0,0,widgetWidth,70-1);
+    painter.setBrush(brush);
+    painter.drawRect(0,0,widgetWidth,90-1);
     brush.setColor((QColor(randomRed, randomGreen, randomBlue)));
-    painter->setBrush(brush);
-    painter->drawRect(0,0,widgetWidth,30);
+    painter.setBrush(brush);
+    painter.drawRect(0,0,widgetWidth,30);
+
 
 }
 
 void TrackView::mousePressEvent(QMouseEvent *event)
 {
     //
+    ShowContextMenu(event->pos());
    emit trackClickedOn(id);
 //    if (plugin.effect ==NULL) {
 //         qDebug() << "No plugin is currently set";
