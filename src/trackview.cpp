@@ -18,15 +18,21 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     if (instrumentName == "") {
         instrumentName = "new track";
     }
-    instrumentLabel = new QLabel(instrumentName);
+    instrumentLabel = new QLineEdit(instrumentName);
+    instrumentLabel->setReadOnly(true);
     instrumentLabel->setMaximumWidth(widgetWidth-10);
-    muteBox = new QCheckBox("Mute",this);
-
-    vlayout = new QVBoxLayout;
+    instrumentLabel->setStyleSheet("* { background-color: rgba(0, 0, 0, 0); }");
+    instrumentLabel->setFrame(false);
+    instrumentLabel->installEventFilter(this);
+   // instrumentLabel->setAttribute(Qt::Wa_ws,0);
+    muteBox   = new QCheckBox("Mute",this);
+    recordBox = new QCheckBox("Record",this);
+    vlayout   = new QVBoxLayout;
     vlayout->setAlignment(Qt::AlignTop);
     vlayout->addWidget(instrumentLabel,0,Qt::AlignTop|Qt::AlignLeft);
     vlayout->addSpacing(5);
     vlayout->addWidget(muteBox);
+    vlayout->addWidget(recordBox);
     setLayout(vlayout);
     // setLineWidth(0);
 
@@ -39,11 +45,30 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     randomGreen = distribution(generator);
     randomBlue = distribution(generator);
 
-    QObject::connect(muteBox,&QCheckBox::stateChanged,this,&TrackView::notifyMuteChange);
+    QObject::connect(recordBox,&QCheckBox::stateChanged,this,&TrackView::notifyRecordingChange);
+    QObject::connect(muteBox,  &QCheckBox::stateChanged,this,&TrackView::notifyMuteChange);
     QObject::connect(this, &QWidget::customContextMenuRequested,
             this,&TrackView::ShowContextMenu);
-}
 
+}
+bool TrackView::eventFilter(QObject *target, QEvent *event)
+{
+    if(target == instrumentLabel && event->type() == QEvent::MouseButtonPress )
+    {
+        if (canEditLine)
+        {
+            return true;
+        }
+        else
+        {
+           // event->ignore();
+             emit trackClickedOn(id);
+            return false;
+        }
+    }
+    return false;
+   // return TrackView::eventFilter(target,event);
+}
 void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
 {
     if (plugin.effect ==NULL) {
@@ -79,18 +104,33 @@ void TrackView::notifyMuteChange(int state)
     }
 }
 
+void TrackView::notifyRecordingChange(int state)
+{
+    if (state)
+    {
+        plugin.host->setCanRecord(true);
+    }else
+    {
+        plugin.host->setCanRecord(false);
+    }
+}
+
 void TrackView::ShowContextMenu(const QPoint &pos)
 {
     QMenu contextMenu(("Context menu"), this);
-
     QAction renameAction("Rename", this);
 
-
-   // connect(&renameAction,&QAction::triggered,this, [this]{scaleFactorChanged(8);});
-
+    connect(&renameAction,&QAction::triggered,this,&TrackView::renameTrack);
 
     contextMenu.addAction(&renameAction);
     contextMenu.exec(mapToGlobal(pos));
+}
+
+void TrackView::renameTrack()
+{
+instrumentLabel->setReadOnly(false);
+canEditLine = true;
+instrumentLabel->setStyleSheet("* { background-color: rgba(randomRed, 50, 50, 255); }");//?? works though
 }
 
 void TrackView::paintEvent(QPaintEvent *event)
@@ -109,8 +149,17 @@ void TrackView::paintEvent(QPaintEvent *event)
 
 void TrackView::mousePressEvent(QMouseEvent *event)
 {
-    //
-    ShowContextMenu(event->pos());
+    if (event->button() == Qt::RightButton)
+    {
+           ShowContextMenu(event->pos());
+    }
+    else
+    {
+        instrumentLabel->setReadOnly(true);
+         instrumentLabel->setStyleSheet("* { background-color: rgba(0, 0, 0, 0); }");
+         canEditLine = false;
+    }
+
    emit trackClickedOn(id);
 //    if (plugin.effect ==NULL) {
 //         qDebug() << "No plugin is currently set";

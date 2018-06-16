@@ -14,6 +14,7 @@ class TrackMidiView;
 #include <QFrame>
 #include <src/vst2hostcallback.h>
 #include <QCheckBox>
+#include <QLineEdit>
 
 
 
@@ -30,9 +31,11 @@ public:
     void folderViewItemDoubleClicked(QString filepath, QString name);
 private:
     QString instrumentName;
-    QLabel *instrumentLabel;
+    QLineEdit *instrumentLabel;
     QVBoxLayout *vlayout;
     QCheckBox *muteBox;
+    QCheckBox *recordBox;
+    bool canEditLine = false;
     const int widgetWidth = 70;
     int randomRed = 0;
     int randomGreen = 0;
@@ -41,10 +44,13 @@ signals:
     void trackClickedOn(int id);
 private slots:
     void notifyMuteChange(int state);
+    void notifyRecordingChange(int state);
     void ShowContextMenu(const QPoint &pos);
+    void renameTrack();
 protected:
     void paintEvent(QPaintEvent * event);
     void mousePressEvent(QMouseEvent *event);
+    bool eventFilter(QObject *target, QEvent *event);
 };
 
 #endif // TRACKVIEW_H

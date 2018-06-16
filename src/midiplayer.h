@@ -18,6 +18,8 @@ public:
     void pausePlayBack();
     void resumePlayBack();
     void Midiman(int note,bool active);
+    void openDevice(uint deviceNumber);
+     void getDevices();
     QVector<int> noteVecInit;
    // HANDLE hEvent;
     HMIDISTRM outHandle;

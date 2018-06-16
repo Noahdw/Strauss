@@ -9,6 +9,7 @@ VelocityViewItem::VelocityViewItem()
     setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable,true);
+
 }
 
 void VelocityViewItem::notifyVelocityChanged(int velocity)
@@ -27,7 +28,7 @@ void VelocityViewItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     QBrush brush(Qt::black,style);
     QBrush brush2(Qt::blue,style);
     painter->setBrush(brush2);
-   // painter->setClipRect(option->exposedRect);
+    // painter->setClipRect(option->exposedRect);
     // painter->fillRect(rect,brush);
     //painter->drawRect(rect);
     painter->drawEllipse(0,0,8,8);
@@ -56,17 +57,22 @@ void VelocityViewItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void VelocityViewItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    qDebug() << event->lastScenePos().y();
     if (event->lastScenePos().y() < 0)
     {
         setY(0);
     }else if(event->lastScenePos().y() > viewHeight - 6)
     {
-    setY(viewHeight-6);
+        setY(viewHeight-6);
     }
     else
     {
         setY(event->lastScenePos().y());
         velocityView->viewport()->update();
+        int OldRange = (viewHeight - 0);
+        int NewRange = (127 - 1);
+        int NewValue =127 - (((this->y() - 0) * NewRange) / OldRange);
+        velocity = NewValue;
     }
 }
 
@@ -76,9 +82,9 @@ void VelocityViewItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     int NewRange = (127 - 1);
     int NewValue =127 - (((this->y() - 0) * NewRange) / OldRange);
     velocity = NewValue;
-    qDebug() << velocity;
-     MidiManager::changeMidiVelocity(x(),note,velocity,velocityView->trackView->track);
-     velocityView->viewport()->update();
+    qDebug() << "New velocity: " << velocity;
+    MidiManager::changeMidiVelocity(x(),note,velocity,velocityView->trackView->track);
+    velocityView->viewport()->update();
 }
 
 void VelocityViewItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)

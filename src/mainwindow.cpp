@@ -3,11 +3,10 @@
 #include <windows.h>
 #include <src/vst2hostcallback.h>
 #include <src/audiomanager.h>
-
+#include <src/midiplayer.h>
 
 MidiPlayer player;
 MidiManager *manager;
-
 
 AudioManager* audioManager;
 
@@ -61,6 +60,8 @@ MainWindow::MainWindow(QWidget *parent) :
     audioManager->startPortAudio();
     audioManager->openStream();
     audioManager->startStream();
+    player.getDevices();
+    player.openDevice(3);
 }
 
 MainWindow::~MainWindow()

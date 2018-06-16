@@ -257,6 +257,31 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 
         eventToAdd.hasEventToAdd = false;
     }
+    while (!midiEventQueue.empty())
+    {
+        EventToAdd eventStruct = midiEventQueue.front();
+
+        VstMidiEvent* evnt = new VstMidiEvent;
+        evnt->byteSize =24;
+        evnt->deltaFrames = 0;
+        evnt->type = kVstMidiType;
+        evnt->flags = 0;
+        evnt->detune = 0;
+        evnt->noteOffVelocity = 0;
+        evnt->reserved1 = 0;
+        evnt->reserved2 = 0;
+        evnt->midiData[0] =  0x90;
+        evnt->midiData[1] = (uchar)eventStruct.note;
+        evnt->midiData[2] = eventStruct.velocity;
+        evnt->midiData[3] = 0;
+        evnt->noteOffset = 0;
+        evnt->noteLength = 0;
+
+        events->events[pos] = (VstEvent*)evnt;
+        ++events->numEvents;
+        ++pos;
+         midiEventQueue.pop();
+    }
 
     if (isPaused)
     {
@@ -365,6 +390,12 @@ void Vst2HostCallback::pauseOrResumePlayback(bool isResume)
     }
 }
 
+void Vst2HostCallback::addMidiEvent(uchar note, uchar velocity)
+{
+    EventToAdd evnt{note,false,false,velocity};
+    midiEventQueue.push(evnt);
+}
+
 void Vst2HostCallback::setCustomPlackbackPos(int playbackPos)
 {
     pianoroll->updateSongTrackerPos(false,false,playbackPos);
@@ -386,6 +417,16 @@ void Vst2HostCallback::setCustomPlackbackPos(int playbackPos)
 void Vst2HostCallback::setPianoRollRef(PianoRoll * piano)
 {
     pianoroll = piano;
+}
+
+void Vst2HostCallback::setCanRecord(bool canRec)
+{
+    canRecording = canRec;
+}
+
+bool Vst2HostCallback::canRecord()
+{
+    return canRecording;
 }
 
 void Vst2HostCallback::turnOffAllNotes(AEffect *plugin)

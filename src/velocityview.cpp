@@ -23,6 +23,7 @@ VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
     scene->setSceneRect(0,0,MidiManager::TPQN*50,height());
     this->setScene(scene);
     this->scale(((float)width() / (MidiManager::TPQN*50)),1);
+
 }
 
 void VelocityView::addOrRemoveVelocityViewItem(int start, int velocity, int note, bool adding)
@@ -113,10 +114,6 @@ void VelocityView::paintEvent(QPaintEvent *event)
     QGraphicsView::paintEvent(event);
 }
 
-void VelocityView::mouseMoveEvent(QMouseEvent *event)
-{
-
-}
 
 void VelocityView::onPianoRollResized(float x)
 {

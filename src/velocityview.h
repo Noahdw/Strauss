@@ -23,7 +23,7 @@ public:
     TrackView * trackView;
 protected:
     void paintEvent(QPaintEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
+
 private:
     QGraphicsScene *scene;
 

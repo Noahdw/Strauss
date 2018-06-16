@@ -9,12 +9,13 @@ class PianoRoll;
 #include <src/midimanager.h>
 #include <qvector.h>
 #include <QObject>
-
+#include <queue>
 struct EventToAdd
 {
     int note = 0;
     bool eventOn = false;
     bool hasEventToAdd = false;
+    uchar velocity;
 };
 
 class Vst2HostCallback : public QObject
@@ -33,9 +34,10 @@ public:
     void initializeMidiEvents();
     void restartPlayback();
     void pauseOrResumePlayback(bool isResume);
-
+    void addMidiEvent(uchar note, uchar velocity);
     void setPianoRollRef(PianoRoll *piano);
-    
+    void setCanRecord(bool canRec);
+    bool canRecord();
     EventToAdd eventToAdd;
     unsigned int blocksize = 256;
     float sampleRate = 44100.0f;
@@ -43,13 +45,13 @@ public:
     bool isMuted = false;
     bool isPaused = false;
     void turnOffAllNotes(AEffect *plugin);
-
+    std::queue<EventToAdd> midiEventQueue;
 private:
     QVector<int> *noteList;
     VstEvents *events;
     mTrack *track;
     LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
-
+    bool canRecording = false;
     HMODULE hinst;
     float **outputs;
     float ** inputs;
