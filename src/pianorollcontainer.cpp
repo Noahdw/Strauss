@@ -15,7 +15,7 @@ PianoRollContainer::PianoRollContainer()
 
 void PianoRollContainer::propogateFolderViewDoubleClicked(QString filepath, QString path)
 {
-  PianoRoll*roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(2));
+  PianoRoll *roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
   roll->track->folderViewItemDoubleClicked(path + filepath,filepath);
 }
 
@@ -28,28 +28,36 @@ void PianoRollContainer::switchPianoRoll(int id)
 
 void PianoRollContainer::addPianoRolls(TrackView *view)
 {
-    PianoRoll *roll = new PianoRoll;
-    Keyboard *key = new Keyboard;
-    VelocityView *velocity = new VelocityView;
+    auto *roll        = new PianoRoll;
+    auto *key         = new Keyboard;
+    auto *velocity    = new VelocityView;
+    auto *trackLength = new TrackLengthView;
+
     roll->track = view;
     if (view->track->totalDT != 0) {
 
         roll->convertTrackToItems();
     }
 
+    auto *vlayout  = new QVBoxLayout;
+    auto *hlayout  = new QHBoxLayout;
+    auto *hlayout2 = new QHBoxLayout;
+    auto *hlayout3 = new QHBoxLayout;
+    hlayout3->addSpacing(key->width());
+    hlayout3->addWidget(trackLength);
 
-
-    QVBoxLayout *vlayout = new QVBoxLayout;
-    QHBoxLayout *hlayout = new QHBoxLayout;
+    vlayout->addLayout(hlayout3);
     vlayout->addLayout(hlayout,0);
+
     hlayout->addWidget(key);
     hlayout->addWidget(roll);
     hlayout->setSpacing(0);
     hlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
 
-    QHBoxLayout *hlayout2 = new QHBoxLayout;
+
     hlayout2->addSpacing(key->width());
+
     hlayout2->addWidget(velocity);
     vlayout->addLayout(hlayout2);
 
@@ -60,9 +68,11 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
 
     roll->setKeyboard(key);
     roll->setVelocityView(velocity);
+    roll->trackLengthView = trackLength;
     key->setPianoRoll(roll);
     view->plugin.host->setPianoRollRef(roll);
     velocity->setSceneRect(0,0,roll->totalDT,velocity->height());
-    velocity->updateTrackOfItems(view);
-
+    velocity->populateVelocityViewFromTrack(view);
+    velocity->trackView = view;
+    velocity->trackView->trackMidiView->shareScene(roll->scene);
 }

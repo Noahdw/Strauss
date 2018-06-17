@@ -1,18 +1,18 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2017-07-11T17:20:01
+# Project created by QtCreator 2018-06-17T13:31:53
 #
 #-------------------------------------------------
 
-QT       += core gui\
-            quickwidgets
+QT       += core gui
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = MidiInter
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
-# any feature of Qt which as been marked as deprecated (the exact warnings
+# any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
@@ -39,7 +39,8 @@ SOURCES += src/main.cpp\
     src/trackmidiview.cpp \
     src/velocityviewitem.cpp \
     src/folderview.cpp \
-    src/headercontainer.cpp
+    src/headercontainer.cpp \
+    src/tracklengthview.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -56,16 +57,10 @@ HEADERS  += src/mainwindow.h\
     src/trackmidiview.h \
     src/velocityviewitem.h \
     src/folderview.h \
-    src/headercontainer.h
+    src/headercontainer.h \
+    src/tracklengthview.h
 
-FORMS    += mainwindow.ui
 LIBS += -lwinmm
-
-
-DISTFILES +=
-QML +=
-
-
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lportaudio_x64
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lportaudio_x64

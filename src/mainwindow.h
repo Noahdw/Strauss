@@ -36,33 +36,24 @@ public:
     static QVector<pluginHolder*> pluginHolderVec;
 
 private slots:
-    void on_quitButton_clicked();
-
-    void openFile();
-
-    void on_actionSave_triggered();
-
     void on_PauseButton_clicked(int type);
-
-    void on_StartButton_clicked();
-
-    void playSong();
-
-    void updatePROLL(int x,int y,int width,int start, int length);
-
+    void on_quitButton_clicked();
+    void on_actionSave_triggered();
     void on_actionPlay_triggered();
-
+    void on_StartButton_clicked();
+    void openFile();
     void openVST();
-
+    void playSong();
     void deleteAllNotes();
-
     void addNewTrack();
 
 private:
-   PianoRollContainer *prollContainer;
-   TrackContainer *trackContainer;
-   FolderView * folderView;
-   HeaderContainer * headerContainer;
+    void setUpMenuBar();
+
+    PianoRollContainer *prollContainer;
+    TrackContainer *trackContainer;
+    FolderView * folderView;
+    HeaderContainer * headerContainer;
 
     QMenu *fileMenu;
     QMenu *editMenu;
@@ -74,7 +65,6 @@ private:
     QAction *openVSTAction;
     QAction *addNewTrackAction;
 
-    void setUpMenuBar();
 };
 
 #endif // MAINWINDOW_H

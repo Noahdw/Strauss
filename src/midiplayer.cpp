@@ -1,5 +1,6 @@
 #include "midiplayer.h"
-
+#include "src/mainwindow.h"
+#include "src/vst2hostcallback.h"
 //This class is no longer needed
 
 MidiPlayer::MidiPlayer()
@@ -7,148 +8,191 @@ MidiPlayer::MidiPlayer()
 
 }
 uint DeviceID = 1;
-void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
+void CALLBACK midiCallback(HMIDIIN handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
 
 
 HANDLE hEvent;
+HMIDIIN hMidiDevice = NULL;
 //HMIDISTRM outHandle;
 
 
-void MidiPlayer::playMidiFile(MidiManager *manager){
-
-
-
-    MIDIPROPTIMEDIV prop;
-    unsigned long result;
-
-    hEvent = CreateEvent(0, FALSE, FALSE, 0);
-    if (hEvent==NULL) {
-        qDebug() << "Could not creat event";
-    }
-
-    result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
-    if (result!=MMSYSERR_NOERROR){
-        qDebug() << "COULD NOT OPEN STREAM1";
-    }
-
-
-    prop.cbStruct = sizeof(MIDIPROPTIMEDIV);
-    prop.dwTimeDiv =manager->song.ticksPerQuarterNote;
-
-    midiStreamProperty(outHandle, (LPBYTE)&prop, MIDIPROP_SET|MIDIPROP_TIMEDIV);
-
-    MIDIHDR buffer;
-    MIDIHDR buffer1;
-
-    const int tpqn = manager->song.ticksPerQuarterNote;
-    int totalTicks = 0;
-
-    std::vector<int> v1;
-    for (int var = 1; var < manager->noteVec.length()-2; var+=3) {
-        //Used to put song back at beginning and continue playing
-        if (shouldBreak) {
-            qDebug() << "breaking";
-            shouldBreak = false;
-            needBreak = true;
-            var = 1;
-            totalTicks = 0;
-            v1.clear();
-        }
-
-
-        totalTicks +=  manager->noteVec.at(var);
-        if (totalTicks < tpqn) {
-            v1.push_back(manager->noteVec.at(var));
-            v1.push_back(manager->noteVec.at(var + 1));
-            v1.push_back(manager->noteVec.at(var + 2));
-        }
-        else {
-            buffer1.lpData =(LPSTR)&v1[0];
-            buffer1.dwBufferLength = sizeof(v1[0]) * v1.size();
-            buffer1.dwBytesRecorded = sizeof(v1[0]) * v1.size();
-            buffer1.dwFlags = 0;
-
-
-            buffer = buffer1;
-            result = midiOutPrepareHeader((HMIDIOUT)outHandle,&buffer,sizeof(buffer));
-            if (result) {
-                qDebug() << "midiOutPrepareHeader error:" << result;
-            }
-
-            result = midiStreamOut(outHandle,&buffer,sizeof(buffer));
-            if (result) {
-                qDebug() << "midiStreamOut error:" << result;
-            }
-            result = midiStreamRestart(outHandle);
-            if (result) {
-                qDebug() << "midiStreamRestart error";
-
-            }
-
-
-            WaitForSingleObject(hEvent, INFINITE);
-            v1.clear();
-            if ((var + 3) >= manager->noteVec.length()) {
-                break;
-            }
-            v1.push_back(manager->noteVec.at(var));
-            v1.push_back(manager->noteVec.at(var + 1));
-            v1.push_back(manager->noteVec.at(var + 2));
-            totalTicks = 0;
-        }
-
-
-
-
-        midiOutUnprepareHeader((HMIDIOUT)outHandle, &buffer, sizeof(buffer));
-    }
-    midiStreamClose(outHandle);
-    CloseHandle(hEvent);
-    needBreak = false;
-}
-//taken from somewhere, idk.
-void CALLBACK midiCallback(HMIDIOUT handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
+void MidiPlayer::playMidiFile(MidiManager *manager)
 {
-    LPMIDIHDR   lpMIDIHeader;
-    MIDIEVENT * lpMIDIEvent;
+//    MIDIPROPTIMEDIV prop;
+//    uint32_t result;
 
-    /* Determine why Windows called me */
-    switch (uMsg)
+//    hEvent = CreateEvent(0, FALSE, FALSE, 0);
+//    if (hEvent==NULL) {
+//        qDebug() << "Could not creat event";
+//    }
+
+//    result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
+//    if (result!=MMSYSERR_NOERROR){
+//        qDebug() << "COULD NOT OPEN STREAM1";
+//    }
+
+
+//    prop.cbStruct = sizeof(MIDIPROPTIMEDIV);
+//    prop.dwTimeDiv =manager->song.ticksPerQuarterNote;
+
+//    midiStreamProperty(outHandle, (LPBYTE)&prop, MIDIPROP_SET|MIDIPROP_TIMEDIV);
+
+//    MIDIHDR buffer;
+//    MIDIHDR buffer1;
+
+//    const int tpqn = manager->song.ticksPerQuarterNote;
+//    int totalTicks = 0;
+
+//    std::vector<int> v1;
+//    for (int var = 1; var < manager->noteVec.length()-2; var+=3) {
+//        //Used to put song back at beginning and continue playing
+//        if (shouldBreak) {
+//            qDebug() << "breaking";
+//            shouldBreak = false;
+//            needBreak = true;
+//            var = 1;
+//            totalTicks = 0;
+//            v1.clear();
+//        }
+
+
+//        totalTicks +=  manager->noteVec.at(var);
+//        if (totalTicks < tpqn) {
+//            v1.push_back(manager->noteVec.at(var));
+//            v1.push_back(manager->noteVec.at(var + 1));
+//            v1.push_back(manager->noteVec.at(var + 2));
+//        }
+//        else {
+//            buffer1.lpData =(LPSTR)&v1[0];
+//            buffer1.dwBufferLength = sizeof(v1[0]) * v1.size();
+//            buffer1.dwBytesRecorded = sizeof(v1[0]) * v1.size();
+//            buffer1.dwFlags = 0;
+
+
+//            buffer = buffer1;
+//            result = midiOutPrepareHeader((HMIDIOUT)outHandle,&buffer,sizeof(buffer));
+//            if (result) {
+//                qDebug() << "midiOutPrepareHeader error:" << result;
+//            }
+
+//            result = midiStreamOut(outHandle,&buffer,sizeof(buffer));
+//            if (result) {
+//                qDebug() << "midiStreamOut error:" << result;
+//            }
+//            result = midiStreamRestart(outHandle);
+//            if (result) {
+//                qDebug() << "midiStreamRestart error";
+
+//            }
+
+
+//            WaitForSingleObject(hEvent, INFINITE);
+//            v1.clear();
+//            if ((var + 3) >= manager->noteVec.length()) {
+//                break;
+//            }
+//            v1.push_back(manager->noteVec.at(var));
+//            v1.push_back(manager->noteVec.at(var + 1));
+//            v1.push_back(manager->noteVec.at(var + 2));
+//            totalTicks = 0;
+//        }
+
+
+
+
+//        midiOutUnprepareHeader((HMIDIOUT)outHandle, &buffer, sizeof(buffer));
+//    }
+//    midiStreamClose(outHandle);
+//    CloseHandle(hEvent);
+//    needBreak = false;
+}
+
+void MidiPlayer::openDevice(uint deviceNumber)
+{
+    MMRESULT res;
+    if ((res = midiInOpen(&hMidiDevice,deviceNumber,(DWORD_PTR)midiCallback,0,CALLBACK_FUNCTION )) != MMSYSERR_NOERROR )
     {
-    /* Got some event with its MEVT_F_CALLBACK flag set */
-
-    case MOM_POSITIONCB:
-
-        /* Assign address of MIDIHDR to a LPMIDIHDR variable. Makes it easier to access the
-               field that contains the pointer to our block of MIDI events */
-        lpMIDIHeader = (LPMIDIHDR)dwParam1;
-
-        /* Get address of the MIDI event that caused this call */
-        lpMIDIEvent = (MIDIEVENT *)&(lpMIDIHeader->lpData[lpMIDIHeader->dwOffset]);
-
-        /* Normally, if you had several different types of events with the
-               MEVT_F_CALLBACK flag set, you'd likely now do a switch on the highest
-               byte of the dwEvent field, assuming that you need to do different
-               things for different types of events.
-            */
-
-        break;
-
-        /* The last event in the MIDIHDR has played */
-    case MOM_DONE:
-
-        /* Wake up main() */
-        SetEvent(hEvent);
-
-        break;
-
-
-        /* Process these messages if you desire */
-    case MOM_OPEN:
-    case MOM_CLOSE:
-
-        break;
+        qDebug() << "Error opening device: " << res;
+        return;
     }
+    midiInStart(hMidiDevice);
+}
+
+void MidiPlayer::getDevices()
+{
+    MIDIINCAPSA cap;
+    UINT_PTR numDevs = midiInGetNumDevs();
+    qDebug() << "Number of devs: " << numDevs;
+    for (uint i = 0; i < numDevs; i++)
+    {
+        MMRESULT  res;
+        if(!midiInGetDevCapsA(i, &cap,sizeof(cap)))
+        {
+            qDebug() << i << " " << cap.szPname;
+        }
+
+    }
+
+}
+
+//taken from somewhere, idk.
+void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
+{
+    uchar status = dwParam1 & 0xFF;
+    uchar note = dwParam1 >> 8;
+    uchar velocity = dwParam1 >> 16;
+    if (status == 0x90)
+    {
+        for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
+        {
+            pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
+            if(plugs->host->canRecord()){
+                plugs->host->addMidiEvent(note,velocity);
+            }
+        }
+ qDebug() << "status: " << status << " Note: " << note << " Velocity: " << velocity;
+    }
+
+//    LPMIDIHDR   lpMIDIHeader;
+//    MIDIEVENT * lpMIDIEvent;
+
+//    /* Determine why Windows called me */
+//    switch (uMsg)
+//    {
+//    /* Got some event with its MEVT_F_CALLBACK flag set */
+
+//    case MOM_POSITIONCB:
+
+//        /* Assign address of MIDIHDR to a LPMIDIHDR variable. Makes it easier to access the
+//               field that contains the pointer to our block of MIDI events */
+//        lpMIDIHeader = (LPMIDIHDR)dwParam1;
+
+//        /* Get address of the MIDI event that caused this call */
+//        lpMIDIEvent = (MIDIEVENT *)&(lpMIDIHeader->lpData[lpMIDIHeader->dwOffset]);
+
+//        /* Normally, if you had several different types of events with the
+//               MEVT_F_CALLBACK flag set, you'd likely now do a switch on the highest
+//               byte of the dwEvent field, assuming that you need to do different
+//               things for different types of events.
+//            */
+
+//        break;
+
+//        /* The last event in the MIDIHDR has played */
+//    case MOM_DONE:
+
+//        /* Wake up main() */
+//        SetEvent(hEvent);
+
+//        break;
+
+
+//        /* Process these messages if you desire */
+//    case MOM_OPEN:
+//    case MOM_CLOSE:
+
+//        break;
+//    }
 }
 bool streamOpen = false;
 void MidiPlayer::pausePlayBack(){
@@ -158,58 +202,58 @@ void MidiPlayer::pausePlayBack(){
 void MidiPlayer::Midiman(int note,bool active){
 
 
-    uchar noteTT = note;
-    uchar velocity = 80;
-    DWORD inote;
-    uchar status = 0x90;
-    if (!active) {
+//    uchar noteTT = note;
+//    uchar velocity = 80;
+//    DWORD inote;
+//    uchar status = 0x90;
+//    if (!active) {
 
-        velocity = 0;
-        status = 0x80;
+//        velocity = 0;
+//        status = 0x80;
 
-    }
-    inote =( velocity << 16 |
-             noteTT << 8 |
-             status);
-    int result;
-    std::vector<int> v1;
-    qDebug() << "PLAYNOTE(): " <<  inote;
-    //int notes[] = {0, 0, 0x007F3C90};
-    v1.push_back(0);
-    v1.push_back(0);
-    v1.push_back(inote);
+//    }
+//    inote =( velocity << 16 |
+//             noteTT << 8 |
+//             status);
+//    int result;
+//    std::vector<int> v1;
+//    qDebug() << "PLAYNOTE(): " <<  inote;
+//    //int notes[] = {0, 0, 0x007F3C90};
+//    v1.push_back(0);
+//    v1.push_back(0);
+//    v1.push_back(inote);
 
-    hEvent = CreateEvent(0, FALSE, FALSE, 0);
-    if (hEvent==NULL) {
-        qDebug() << "CCould not creat event";
-    }
-    if (!streamOpen) {
+//    hEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+//    if (hEvent==nullptr) {
+//        qDebug() << "CCould not creat event";
+//    }
+//    if (!streamOpen) {
 
 
-        result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
-        if (result!=MMSYSERR_NOERROR){
-            qDebug() << "CCOULD NOT OPEN STREAM?";
-        }
-        else{streamOpen = true;}
-    }
-    MIDIHDR buffer;
-    buffer.lpData =(LPSTR)&v1[0];
-    buffer.dwBufferLength = sizeof(v1[0]) * v1.size();
-    buffer.dwBytesRecorded = sizeof(v1[0]) * v1.size();
-    buffer.dwFlags = 0;
-    result = midiOutPrepareHeader((HMIDIOUT)outHandle,&buffer,sizeof(buffer));
-    result = midiStreamOut(outHandle,&buffer,sizeof(buffer));
-    if (result) {
-        qDebug() << "midiStreamOut playNote() error:" << result;
-    }
-    result = midiStreamRestart(outHandle);
-    if (result) {
-        qDebug() << "midiStreamRestart playNote() error";
+//        result = midiStreamOpen(&outHandle, &DeviceID, 1,(DWORD)midiCallback, 0, CALLBACK_FUNCTION );
+//        if (result!=MMSYSERR_NOERROR){
+//            qDebug() << "CCOULD NOT OPEN STREAM?";
+//        }
+//        else{streamOpen = true;}
+//    }
+//    MIDIHDR buffer;
+//    buffer.lpData =(LPSTR)&v1[0];
+//    buffer.dwBufferLength = sizeof(v1[0]) * v1.size();
+//    buffer.dwBytesRecorded = sizeof(v1[0]) * v1.size();
+//    buffer.dwFlags = 0;
+//    result = midiOutPrepareHeader((HMIDIOUT)outHandle,&buffer,sizeof(buffer));
+//    result = midiStreamOut(outHandle,&buffer,sizeof(buffer));
+//    if (result) {
+//        qDebug() << "midiStreamOut playNote() error:" << result;
+//    }
+//    result = midiStreamRestart(outHandle);
+//    if (result) {
+//        qDebug() << "midiStreamRestart playNote() error";
 
-    }
+//    }
 
-    WaitForSingleObject(hEvent, INFINITE);
-    midiOutUnprepareHeader((HMIDIOUT)outHandle, &buffer, sizeof(buffer));
+//    WaitForSingleObject(hEvent, INFINITE);
+//    midiOutUnprepareHeader((HMIDIOUT)outHandle, &buffer, sizeof(buffer));
 
     //midiStreamClose(outHandle);
     //streamOpen = false;
@@ -225,7 +269,7 @@ void MidiPlayer::resumePlayBack(){
     }
 }
 
-//Simpy calls Midiman for playback - perhaps not needed but seems to be for threading
+//Simply calls Midiman for playback - perhaps not needed but seems to be for threading
 void MidiPlayer::playNote(int note,bool active){
     QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,active);
 

@@ -5,6 +5,7 @@
 #include <mmsystem.h>
 #include <QDebug>
 #include<src/midimanager.h>
+#include <cstdint>
 #include<QtConcurrent/QtConcurrent>
 #pragma comment (lib, "winmm.lib")
 
@@ -17,6 +18,8 @@ public:
     void pausePlayBack();
     void resumePlayBack();
     void Midiman(int note,bool active);
+    void openDevice(uint deviceNumber);
+     void getDevices();
     QVector<int> noteVecInit;
    // HANDLE hEvent;
     HMIDISTRM outHandle;

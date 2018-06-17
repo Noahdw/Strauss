@@ -3,8 +3,8 @@
 #include <QFileDialog>
 
 #include <QDebug>
-#include <QQmlListProperty>
 
+#include <string>
 #include <windows.h>
 struct mEvent
 {
@@ -35,7 +35,6 @@ struct mSong
     int trackChunks;
     bool divisionFormat;
     int ticksPerQuarterNote;
-
     int deltaTimeSMTPE;
     int framesPerSecondSMTPE;
 };
@@ -45,27 +44,29 @@ class MidiManager : public QObject
     Q_OBJECT
 
 public:
-    QQmlListProperty<int> notes();
+
     MidiManager();
     mSong Deserialize(QByteArray &array);
     QByteArray ReadMidi(QFile &file);
-    mTrack track;
-    QVector<int> noteVec;
-    mSong song;
-    static int TPQN;
     QVector<int>* getNoteVecPointer()
     {
         return &noteVec;
     }
+
+    mTrack track;
+    mSong song;
+    QVector<int> noteVec;
+
     static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
-  static  void updateMidiAdd(int note, int veloc, int start, int length, mTrack *track);
-   static  void updateMidiDelete(int start, int length, int note, mTrack *track);
+    static  void addMidiNote(int note, int veloc, int start, int length, mTrack *track);
+    static  void removeMidiNote(int start, int length, int note, mTrack *track);
+    static  void changeMidiVelocity(int start, int note, int velocity, mTrack *track);
+    static  int  getVelocityFromNote(int start, int note, mTrack *track);
+
+    static int TPQN;
 
 signals:
     void notifyTrackViewChanged(mSong *song);
-
-public slots:
-
 
 };
 
