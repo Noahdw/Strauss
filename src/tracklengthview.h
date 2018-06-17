@@ -17,10 +17,6 @@ public:
     QGraphicsScene * scene;
     void setScale(float x, bool needsReset, int wheelPos);
 
-signals:
-
-public slots:
-
 protected:
     void paintEvent(QPaintEvent * event);
     void mouseDoubleClickEvent(QMouseEvent  *event);

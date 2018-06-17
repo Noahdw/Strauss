@@ -20,6 +20,7 @@ public:
     void changeVelocityViewItemPosition(int oldPos,int newPos, int oldNote,int newNote);
     void populateVelocityViewFromTrack(TrackView *track);
     void onPianoRollResized(float x);
+
     TrackView * trackView;
 protected:
     void paintEvent(QPaintEvent *event);

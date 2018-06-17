@@ -17,20 +17,22 @@ class PianoRollItem : public QGraphicsItem
 
 public:
     PianoRollItem();
-    QBrush brush;
-
     QRectF boundingRect() const;
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
     void setBoundingRect(int _width);
+    PianoRoll *pianoroll;
+    QBrush brush;
+
     int noteStart;
     int noteEnd;
     bool canMove = true;
-    PianoRoll *pianoroll;
+
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+
 private:
     int width;
     int lastXPos;
@@ -41,5 +43,5 @@ private:
 
 };
 
- static  const double keyHeight = 12;
+static  const double keyHeight = 12;
 #endif // PIANOROLLNOTE_H

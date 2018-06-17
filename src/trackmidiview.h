@@ -15,13 +15,14 @@ public:
     TrackMidiView(QWidget* parent = 0);
     TrackView * trackView;
     void addViewItem(int start, int length, int note);
-    int totalDT = MidiManager::TPQN * 50;
     void onPianoRollResized(float x);
     void deleteViewItem(int start, int note);
     void shareScene(QGraphicsScene * scene);
 
+    int totalDT = MidiManager::TPQN * 50;
+
 private:
-QGraphicsScene *scene;
+    QGraphicsScene *scene;
     int highestNote = 0;
     int lowestNote = 127;
 

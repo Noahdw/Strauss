@@ -20,10 +20,11 @@ struct EventToAdd
 
 class Vst2HostCallback : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     Vst2HostCallback(mTrack *track);
     AEffect* loadPlugin(char* fileName);
+    bool canRecord();
     int configurePluginCallbacks(AEffect *plugin);
     void startPlugin(AEffect *plugin);
     void initializeIO();
@@ -37,36 +38,37 @@ public:
     void addMidiEvent(uchar note, uchar velocity);
     void setPianoRollRef(PianoRoll *piano);
     void setCanRecord(bool canRec);
-    bool canRecord();
+    void turnOffAllNotes(AEffect *plugin);
+
     EventToAdd eventToAdd;
-    unsigned int blocksize = 256;
+    std::queue<EventToAdd> midiEventQueue;
+    uint blocksize = 256;
     float sampleRate = 44100.0f;
     bool canPlay = false;
     bool isMuted = false;
     bool isPaused = false;
-    void turnOffAllNotes(AEffect *plugin);
-    std::queue<EventToAdd> midiEventQueue;
+
 private:
-    QVector<int> *noteList;
+    PianoRoll *pianoroll;
     VstEvents *events;
     mTrack *track;
+    QVector<int> *noteList;
     LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
-    bool canRecording = false;
     HMODULE hinst;
-    float **outputs;
-    float ** inputs;
-    uint numChannels = 2;
-
-    int noteVecPos = 0;
-    const uint maxNotes = 256;
+    bool canRecording = false;
+    bool hasReachedEnd = false;
     int TPQN = MidiManager::TPQN;
     int BPM = 500000;
-    float samplesPerTick = 0;
+    int noteVecPos = 0;
+    const uint maxNotes = 256;
+    uint numChannels = 2;
     uint framesTillBlock = 0;
-    bool hasReachedEnd = false;
-    PianoRoll *pianoroll;
+    float **outputs;
+    float ** inputs;
+    float samplesPerTick = 0;
+
 public slots:
- void setCustomPlackbackPos(int playbackPos);
+    void setCustomPlackbackPos(int playbackPos);
 
 };
 
