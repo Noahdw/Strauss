@@ -10,7 +10,7 @@ VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
 {
     //  setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Minimum );
     //setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-    setViewportUpdateMode(MinimalViewportUpdate);
+    setViewportUpdateMode(FullViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setRenderHint(QPainter::Antialiasing);
@@ -47,7 +47,7 @@ void VelocityView::addOrRemoveVelocityViewItem(int start, int velocity, int note
     else
     {
         foreach (const auto& item, scene->items()) {
-            if (item->x() == start) {
+            if (floor(item->x()) == start) {
                  VelocityViewItem *line = dynamic_cast<VelocityViewItem*>(item);
                  if (line->note == note) {
                      scene->removeItem(line);
@@ -78,12 +78,12 @@ void VelocityView::populateVelocityViewFromTrack(TrackView *track)
 {
     int vLength = track->track->listOfNotes.length();
     int DT = 0;
-    for (int i = 0; i < vLength; i+=3) {
+    for (int i = 0; i < vLength; i+=2) {
         DT += track->track->listOfNotes.at(i);
-        if ((uchar)track->track->listOfNotes.at(i+2) == 0x90) {
-            uchar velocity = (track->track->listOfNotes.at(i+2) >> 16);
+        if ((uchar)track->track->listOfNotes.at(i+1) == 0x90) {
+            uchar velocity = (track->track->listOfNotes.at(i+1) >> 16);
             if (velocity > 0) {
-                uchar note = (track->track->listOfNotes.at(i+2) >> 8);
+                uchar note = (track->track->listOfNotes.at(i+1) >> 8);
                 addOrRemoveVelocityViewItem(DT,velocity,note,true);
             }
         }

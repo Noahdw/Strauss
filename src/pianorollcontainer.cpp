@@ -10,7 +10,6 @@ PianoRollContainer::PianoRollContainer()
 {      
     stackedLayout = new QStackedLayout;
     this->setLayout(stackedLayout);
-
 }
 
 void PianoRollContainer::propogateFolderViewDoubleClicked(QString filepath, QString path)
@@ -19,10 +18,16 @@ void PianoRollContainer::propogateFolderViewDoubleClicked(QString filepath, QStr
   roll->track->folderViewItemDoubleClicked(path + filepath,filepath);
 }
 
+PianoRoll *PianoRollContainer::getPianoRollRef()
+{
+    return dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
+}
+
 void PianoRollContainer::switchPianoRoll(int id)
 {
     if (stackedLayout->currentIndex() != id) {
         stackedLayout->setCurrentIndex(id);
+        ccContainer->sLayout2->setCurrentIndex(id);
     }
 }
 
@@ -75,4 +80,5 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     velocity->populateVelocityViewFromTrack(view);
     velocity->trackView = view;
     velocity->trackView->trackMidiView->shareScene(roll->scene);
+    ccContainer->addControlChangeView(roll);
 }

@@ -94,14 +94,17 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     if (((yPos*keyHeight) != lastYPos) || ((xPos*colSpacing) != lastXPos))
     {
-        int note = 127 - (lastYPos/keyHeight);
+        note = 127 - (lastYPos/keyHeight);
         int velocity = MidiManager::getVelocityFromNote(noteStart,note,pianoroll->track->track);
         MidiManager::removeMidiNote(noteStart,noteEnd,note,pianoroll->track->track);
         pianoroll->velocityView->changeVelocityViewItemPosition(noteStart,x(),note,127-yPos);
-        pianoroll->track->trackMidiView->deleteViewItem(noteStart,lastYPos);
-        pianoroll->track->trackMidiView->addViewItem(x(),width,yPos*keyHeight);
-        MidiManager::addMidiNote(127 - yPos,velocity,x(),noteEnd,pianoroll->track->track);
+        //pianoroll->track->trackMidiView->deleteViewItem(noteStart,lastYPos);
+       // pianoroll->track->trackMidiView->addViewItem(x(),width,yPos*keyHeight);
+        note = 127 - yPos;
+        MidiManager::addMidiNote(note,velocity,x(),noteEnd,pianoroll->track->track);
         noteStart = x();
+         MidiManager::recalculateNoteListDT(pianoroll->track->track);
+         pianoroll->changeNotesAfterMouseDrag(this);
     }
 }
 
@@ -109,4 +112,12 @@ void PianoRollItem::setBoundingRect(int _width)
 {
     prepareGeometryChange();
     width = _width;
+}
+
+void PianoRollItem::setInitalPosition(int start, int length, int note)
+{
+    setPos(start,(127 - note)*keyHeight);
+    noteStart = start;
+    noteEnd = length;
+    this->note = note;
 }

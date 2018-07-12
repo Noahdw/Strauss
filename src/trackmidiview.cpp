@@ -5,21 +5,14 @@
 TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 {
 
-    //scene = new QGraphicsScene;
-    // scene->setSceneRect(0,0,totalDT,12*128);
-    // setScene(scene);
-  //  setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
     setViewportUpdateMode(MinimalViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
-    setMinimumHeight(70);
+
   //  setMinimumWidth(400);
-setMinimumHeight(50);
-   setMaximumHeight(90);
+    setMinimumHeight(70);
+   setMaximumHeight(100);
  //   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    //scale(((float)width() / totalDT),(float)height()/1536);
-
 }
 
 void TrackMidiView::addViewItem(int start, int length, int note)
@@ -43,9 +36,14 @@ void TrackMidiView::paintEvent(QPaintEvent *event)
     painter.setBrush(Qt::lightGray);
 
     painter.setPen(pen);
-    painter.drawRect(viewport()->rect());
+    painter.fillRect(viewport()->rect(),painter.brush());
     QGraphicsView::paintEvent(event);
 
+}
+
+void TrackMidiView::resizeEvent(QResizeEvent *event)
+{
+    fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
 }
 void TrackMidiView::onPianoRollResized(float x)
 {
@@ -66,6 +64,6 @@ void TrackMidiView::shareScene(QGraphicsScene *scene)
     this->scene = scene;
     setScene(scene);
     totalDT = scene->width();
-fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
+    fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
 
 }

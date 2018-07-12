@@ -1,30 +1,31 @@
-#ifndef VELOCITYVIEWITEM_H
-#define VELOCITYVIEWITEM_H
+#ifndef CONTROLCHANGEITEM_H
+#define CONTROLCHANGEITEM_H
+
+class ControlChangeOverlay;
 
 #include <QGraphicsItem>
+#include <QWidget>
+#include <QDebug>
 #include <QPainter>
-#include <QStyleOptionGraphicsItem>
 #include <QGraphicsSceneMouseEvent>
-#include <QGraphicsEllipseItem>
-#include <src/velocityview.h>
+#include <QMap>
 
-class VelocityViewItem  : public QGraphicsItem
+class ControlChangeItem : public QGraphicsItem
 {
 public:
-    VelocityViewItem();
+    ControlChangeItem();
     QRectF boundingRect() const;
     QPainterPath shape() const;
-    void notifyVelocityChanged(int velocity);
+    void setInitalPos(QPointF pos);
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
-    void setBoundingRect(int _width);
-
-    int note;
-    int viewHeight;
-    int velocity;
-    VelocityView * velocityView;
-    QGraphicsEllipseItem *circle;
+    int value;
+    int oldX;
+    int oldY;
+    ControlChangeOverlay * overlay;
 private:
-    const int radius = 8;
+    const qreal radius = 6;
+    int leftValue;
+    int rightValue;
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -32,4 +33,4 @@ protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
 };
 
-#endif // VELOCITYVIEWITEM_H
+#endif // CONTROLCHANGEITEM_H

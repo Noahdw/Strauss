@@ -9,7 +9,6 @@
 Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
 {
     track = mtrack;
-
 }
 dispatcherFuncPtr dispatcher;
 VstTimeInfo vtime;
@@ -18,7 +17,7 @@ double sPos = 0;
 int processLevel = kVstProcessLevelUser; //1
 
 extern "C"{
-bool firstRun = true;
+bool firstRun = true;    int note = 0;
 VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
                                    VstInt32 index, VstInt32 value, void *ptr, float opt)
 {
@@ -100,8 +99,6 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
 AEffect *Vst2HostCallback::loadPlugin(char* fileName)
 {
     AEffect *plugin = NULL;
-
-
     HMODULE modulePtr = LoadLibraryA(fileName);
     hinst = modulePtr;
     if(modulePtr == NULL) {
@@ -340,9 +337,9 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
             evnt->noteOffVelocity = 0;
             evnt->reserved1 = 0;
             evnt->reserved2 = 0;
-            evnt->midiData[0] =  (uchar)track->listOfNotes.at(noteVecPos+2) & 0xFF;
-            evnt->midiData[1] = (uchar)(track->listOfNotes.at(noteVecPos+2) >>8) & 0xFF;
-            evnt->midiData[2] = (uchar)(track->listOfNotes.at(noteVecPos+2) >>16) & 0xFF;
+            evnt->midiData[0] =  (uchar)track->listOfNotes.at(noteVecPos+1) & 0xFF;
+            evnt->midiData[1] = (uchar)(track->listOfNotes.at(noteVecPos+1) >>8) & 0xFF;
+            evnt->midiData[2] = (uchar)(track->listOfNotes.at(noteVecPos+1) >>16) & 0xFF;
             evnt->midiData[3] = 0;
             evnt->noteOffset = 0;
             evnt->noteLength = 0;
@@ -351,7 +348,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 
             ++pos;
             ++events->numEvents;
-            noteVecPos +=3;
+            noteVecPos +=2;
         }
     }
     dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
@@ -392,7 +389,7 @@ void Vst2HostCallback::pauseOrResumePlayback(bool isResume)
 
 void Vst2HostCallback::addMidiEvent(uchar note, uchar velocity)
 {
-    EventToAdd evnt{note,false,false,velocity};
+    EventToAdd evnt{note,false,false,0,velocity};
     midiEventQueue.push(evnt);
 }
 
@@ -400,7 +397,7 @@ void Vst2HostCallback::setCustomPlackbackPos(int playbackPos)
 {
     pianoroll->updateSongTrackerPos(false,false,playbackPos);
     int total = 0;
-    for (int var = 0; var < track->listOfNotes.length(); var+= 3)
+    for (int var = 0; var < track->listOfNotes.length(); var+= 2)
     {
         total += track->listOfNotes.at(var);
         if (total >= playbackPos)

@@ -21,6 +21,10 @@
 #include <src/headercontainer.h>
 #include <QLibrary>
 #include <qvector.h>
+#include <QSplitter>
+#include <src/controlchangecontainer.h>
+#include "src/pianorollhelperview.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -54,6 +58,8 @@ private:
     TrackContainer *trackContainer;
     FolderView * folderView;
     HeaderContainer * headerContainer;
+    ControlChangeContainer * controlContainer;
+    PianoRollHelperView * prollHelper;
 
     QMenu *fileMenu;
     QMenu *editMenu;

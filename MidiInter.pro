@@ -40,7 +40,14 @@ SOURCES += src/main.cpp\
     src/velocityviewitem.cpp \
     src/folderview.cpp \
     src/headercontainer.cpp \
-    src/tracklengthview.cpp
+    src/tracklengthview.cpp \
+    src/controlchangeview.cpp \
+    src/controlchangecontainer.cpp \
+    src/controlchangeoverlay.cpp \
+    src/controlchangebridge.cpp \
+    src/controlchangeitem.cpp \
+    src/collisionitem.cpp \
+    src/pianorollhelperview.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -58,7 +65,14 @@ HEADERS  += src/mainwindow.h\
     src/velocityviewitem.h \
     src/folderview.h \
     src/headercontainer.h \
-    src/tracklengthview.h
+    src/tracklengthview.h \
+    src/controlchangeview.h \
+    src/controlchangecontainer.h \
+    src/controlchangeoverlay.h \
+    src/controlchangebridge.h \
+    src/controlchangeitem.h \
+    src/collisionitem.h \
+    src/pianorollhelperview.h
 
 LIBS += -lwinmm
 

@@ -7,6 +7,7 @@ FolderView::FolderView()
     vLayout->setSpacing(0);
     vLayout->setContentsMargins(0,0,0,0);
     vLayout->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+
     setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
     setLayout(vLayout);
     QFileSystemModel *model = new QFileSystemModel;

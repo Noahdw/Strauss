@@ -30,7 +30,7 @@ public:
 
     QVector<pluginHolder*> *plugins;
     bool isRunning = false;
-    float sampleRate =44100;
+    float sampleRate = 44100;
 
     static void silenceChannel(float **channelData, int numChannels, long numFrames);
     static uint blocksize;

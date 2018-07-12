@@ -8,6 +8,7 @@ class AudioManager;
 #include <QDebug>
 #include <QButtonGroup>
 #include <QGroupBox>
+#include <QCheckBox>
 
 class HeaderContainer : public QWidget
 {
@@ -18,11 +19,13 @@ public:
 private:
     QGroupBox * groupBox;
     QButtonGroup * buttonGroup;
+    QCheckBox * recordStyle;
     bool isPaused = true;
 private slots:
     void play();
     void restart();
     void pause();
+    void record();
 };
 
 #endif // HEADERCONTAINER_H

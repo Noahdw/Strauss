@@ -6,6 +6,7 @@
 
 #include <string>
 #include <windows.h>
+#include <map>
 struct mEvent
 {
 
@@ -26,6 +27,7 @@ struct mTrack
     QString trackName;
     QString instrumentName;
     QVector<int> listOfNotes;
+    std::map<int,std::vector<int>> noteMap;
     int totalDT = 0;
 };
 struct mSong
@@ -61,6 +63,7 @@ public:
     static  void addMidiNote(int note, int veloc, int start, int length, mTrack *track);
     static  void removeMidiNote(int start, int length, int note, mTrack *track);
     static  void changeMidiVelocity(int start, int note, int velocity, mTrack *track);
+    static  void recalculateNoteListDT(mTrack *track);
     static  int  getVelocityFromNote(int start, int note, mTrack *track);
 
     static int TPQN;

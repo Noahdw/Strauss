@@ -15,6 +15,7 @@ struct EventToAdd
     int note = 0;
     bool eventOn = false;
     bool hasEventToAdd = false;
+    qreal timeInTicks = 0;
     uchar velocity;
 };
 
@@ -42,16 +43,18 @@ public:
 
     EventToAdd eventToAdd;
     std::queue<EventToAdd> midiEventQueue;
-    uint blocksize = 256;
+    std::deque<EventToAdd> recordedMidiEventDeque;
+    mTrack *track;
+    PianoRoll *pianoroll;
+    uint blocksize = 512;
     float sampleRate = 44100.0f;
     bool canPlay = false;
     bool isMuted = false;
     bool isPaused = false;
+    int noteVecPos = 0;
 
 private:
-    PianoRoll *pianoroll;
     VstEvents *events;
-    mTrack *track;
     QVector<int> *noteList;
     LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
     HMODULE hinst;
@@ -59,7 +62,6 @@ private:
     bool hasReachedEnd = false;
     int TPQN = MidiManager::TPQN;
     int BPM = 500000;
-    int noteVecPos = 0;
     const uint maxNotes = 256;
     uint numChannels = 2;
     uint framesTillBlock = 0;

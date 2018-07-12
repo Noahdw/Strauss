@@ -5,9 +5,7 @@ PaStream *stream;
 paTestData data;
 int AudioManager::requestedPlaybackPos;
 bool isPaused = false;
-uint AudioManager::blocksize = 16;
-//temp
-
+uint AudioManager::blocksize = 512;
 
 float** inputss = 0;
 float** outputss = 0;
@@ -36,6 +34,7 @@ void AudioManager::startPortAudio()
 
 void AudioManager::openStream()
 {
+
     int numDevices;
     numDevices = Pa_GetDeviceCount();
     qDebug() << numDevices;
@@ -47,7 +46,6 @@ void AudioManager::openStream()
                                          paFloat32,  /* 32 bit floating point output */
                                          sampleRate,
                                          blocksize,        // frames per buffer
-
                                          &patestCallback, /* this is your callback function */
                                          this ); /*This is a pointer that will be passed to
                your callback*/

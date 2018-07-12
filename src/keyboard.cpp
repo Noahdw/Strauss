@@ -14,7 +14,6 @@ Keyboard::Keyboard(QWidget *parent) : QGraphicsView(parent)
     this->setScene(scene);
     // setFixedSize(noteWidth,400);
     setMaximumWidth(noteWidth);
-
     addNotesToScene();
 }
 

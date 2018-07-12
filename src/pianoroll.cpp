@@ -21,7 +21,7 @@ int defaultCols = 50;
 
         \note Neither this class nor its items are responsible for storing any
         information about the notes. Those are stored in the MidiManager class
-        as an array.
+        a both a map and vector.
 
 */
 
@@ -58,7 +58,7 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     timer->setCurveShape(QTimeLine::LinearCurve);
 
     animation = new QGraphicsItemAnimation;
-    QGraphicsRectItem *line = new QGraphicsRectItem(0,0,1,5000);
+    line = new QGraphicsRectItem(0,0,1,5000);
     scene->addItem(line);
     line->setZValue(1);
     QPen pen(Qt::red,0);
@@ -94,7 +94,8 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
             scene->removeItem(item);
             delete item;
             item=nullptr;
-            activeNotes.clear();
+            clearActiveNotes();
+
         }
         else{
             //Adds a new note to song
@@ -102,30 +103,22 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
 
             int length = tPQN*scaleFactor;
             int quadrant = (mousePos.x()/(tPQN * scaleFactor));
-
             quadrant *=scaleFactor*tPQN;;
-
-            int newY = mousePos.y() / keyHeight;
-            newY = newY*keyHeight;
+            int note = 128 - mousePos.y() / keyHeight;
 
             PianoRollItem *pNote = new PianoRollItem;
             scene->addItem(pNote);
             pNote->pianoroll = this;
-
-
-            pNote->setPos(quadrant,newY);
+            pNote->setInitalPosition(quadrant,length,note);
             pNote->setBoundingRect(length);
-            track->trackMidiView->addViewItem(quadrant,length,newY);
+         //   track->trackMidiView->addViewItem(quadrant,length,newY);
             scene->update(0,0,tPQN*cols,keyHeight*128);
-            pNote->noteStart = quadrant;
-            pNote->noteEnd = length;
-            int note =127-newY/keyHeight;
             velocityView->addOrRemoveVelocityViewItem(quadrant,70,note,true);
 
             MidiManager::addMidiNote(note,70,quadrant,length,track->track);
-
-            qDebug() << track->track->listOfNotes.length();
+            MidiManager::recalculateNoteListDT(track->track);
             QGraphicsView::mouseDoubleClickEvent(event);
+            clearActiveNotes();
         }
     }
 }
@@ -149,6 +142,7 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
         //Shift allows multiple selection of notes
         if (!event->modifiers().testFlag(Qt::ShiftModifier)) {
             clearActiveNotes();
+
         }
 
         PianoRollItem *castNote = dynamic_cast<PianoRollItem*>(pNote);
@@ -160,7 +154,11 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
         QTimer::singleShot(400,[=](){
             turnNoteOff(note);
         });
-        activeNotes.append(castNote);
+        if (!scene->selectedItems().contains(pNote))
+        {
+            pNote->setSelected(true);
+        }
+
     }
     //just the view/canvas clicked on
     else{
@@ -183,9 +181,6 @@ void PianoRoll::mouseMoveEvent(QMouseEvent *event)
 
 void PianoRoll::mouseReleaseEvent(QMouseEvent *event)
 {
-    foreach (const auto &var, scene->selectedItems()) {
-        activeNotes.append(var);
-    }
 
     foreach (auto var, scene->selectedItems()) {
         PianoRollItem *castNote = dynamic_cast<PianoRollItem*>(var);
@@ -198,7 +193,7 @@ void PianoRoll::mouseReleaseEvent(QMouseEvent *event)
 /*! test */
 void PianoRoll::clearActiveNotes()
 {
-    foreach (auto note, activeNotes) {
+    foreach (auto note, scene->selectedItems()) {
         PianoRollItem *castNote = dynamic_cast<PianoRollItem*>(note);
         if (castNote==0) {
             continue;
@@ -206,7 +201,7 @@ void PianoRoll::clearActiveNotes()
         castNote->brush = QBrush(QColor(102, 179, 255));
         castNote->update(castNote->boundingRect());
     }
-    activeNotes.clear();
+    scene->clearSelection();
 }
 
 //Takes midi data and converts to notes on a Pianoroll
@@ -234,15 +229,15 @@ void PianoRoll::convertTrackToItems()
     int elapsedDW = 0;
     int noteEnd = 0;
 
-    for(int i = 0; i < track->track->listOfNotes.length(); i+=3){
+    for(int i = 0; i < track->track->listOfNotes.length(); i+=2){
         elapsedDW += track->track->listOfNotes.at(i);
         //indicates a note. ignore other junk for now
-        if((track->track->listOfNotes.at(i+2)& 0xF0) ==0x90){
-            curNote = (track->track->listOfNotes.at(i+2) >> 8) & 127;
+        if((track->track->listOfNotes.at(i+1)& 0xF0) ==0x90){
+            curNote = (track->track->listOfNotes.at(i+1) >> 8) & 127;
             //now I need to find its note off
 
-            for(int j = i+5; j< track->track->listOfNotes.length(); j+=3){
-                noteEnd+= track->track->listOfNotes.at(j -2);
+            for(int j = i+5; j< track->track->listOfNotes.length(); j+=2){
+                noteEnd+= track->track->listOfNotes.at(j -1);
                 if(((track->track->listOfNotes.at(j) >> 8) & 127) == curNote ){
 
                     PianoRollItem *pNote = new PianoRollItem;
@@ -312,12 +307,49 @@ void PianoRoll::updateSongTrackerPos(bool isPauseOrResume, bool isResume, int cu
 
 void PianoRoll::notifyPianoRollItemMoved(int xMove, int yMove, QGraphicsItem *item)
 {
-    foreach (auto note, activeNotes) {
+    foreach (auto note, scene->selectedItems()) {
         if(item == note)
             continue;
         note->setX(note->x() + xMove);
         note->setY(note->y() + yMove);
     }
+}
+
+void PianoRoll::addNoteToScene(int note, int position, int length, int velocity)
+{
+    PianoRollItem *pNote = new PianoRollItem;
+    scene->addItem(pNote);
+    pNote->pianoroll = this;
+    pNote->setInitalPosition(position,length,note);
+    pNote->setBoundingRect(length);
+    //track->trackMidiView->addViewItem(position,length,note*keyHeight);
+    scene->update(0,0,tPQN*cols,keyHeight*128);
+    velocityView->addOrRemoveVelocityViewItem(position,velocity,note,true);
+}
+
+void PianoRoll::changeNotesAfterMouseDrag(QGraphicsItem *item)
+{
+     for(const auto& note : scene->selectedItems())
+     {
+         if (item == note)
+         {
+             continue;
+         }
+         PianoRollItem *pNote = dynamic_cast<PianoRollItem*>(note);
+         int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,track->track);
+            velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,false);
+         MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,track->track);
+         pNote->noteStart = pNote->x();
+         pNote->note = 127 - pNote->y()/keyHeight;
+         MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,track->track);
+         velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,true);
+     }
+     MidiManager::recalculateNoteListDT(track->track);
+}
+
+void PianoRoll::switchViewContainer()
+{
+
 }
 /*!
   \fn PianoRoll::playKeyboardNote(int note, bool active)
@@ -338,6 +370,22 @@ void PianoRoll::deleteAllNotes()
         delete item;
         item=nullptr;
     }
+}
+
+void PianoRoll::deleteSelectedNotes()
+{
+    for(const auto& var : scene->selectedItems())
+    {
+         PianoRollItem *item = dynamic_cast<PianoRollItem*>(var);
+         scene->removeItem(var);
+         int note = 127 - item->y()/keyHeight;
+         int velocity = MidiManager::getVelocityFromNote(item->x(),note,track->track);
+         MidiManager::removeMidiNote(item->x(),item->noteEnd,note,track->track);
+         velocityView->addOrRemoveVelocityViewItem(item->x(),velocity,note,false);
+         delete item;
+         item=nullptr;
+    }
+    scene->selectedItems().clear();
 }
 
 void PianoRoll::setScrollWheelValue(int value)
@@ -497,6 +545,19 @@ void PianoRoll::resizeEvent(QResizeEvent *event)
     velocityView->onPianoRollResized(x);
     track->trackMidiView->onPianoRollResized(x);
 
+}
+
+void PianoRoll::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key())
+    {
+    case Qt::Key_Delete:
+        deleteSelectedNotes();
+        break;
+    default:
+        break;
+    }
+    QGraphicsView::keyPressEvent(event);
 }
 
 
