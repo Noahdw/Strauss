@@ -2,8 +2,8 @@
 #include <QApplication>
 ControlChangeView::ControlChangeView(QWidget *parent) : QGraphicsView(parent)
 {
-    setMinimumWidth(1000);
-    setMinimumHeight(200);
+   // setMinimumWidth(1000);
+   // setMinimumHeight(200);
     setStyleSheet("background-color: transparent;");
     setViewportUpdateMode(MinimalViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
@@ -19,6 +19,11 @@ void ControlChangeView::paintEvent(QPaintEvent *event)
     painter.fillRect(viewport()->rect(),painter.brush());
     QGraphicsView::paintEvent(event);
 
+}
+
+void ControlChangeView::resizeEvent(QResizeEvent *event)
+{
+ fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
 }
 void ControlChangeView::mousePressEvent(QMouseEvent *event)
 {

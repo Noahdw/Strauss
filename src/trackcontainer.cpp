@@ -96,6 +96,14 @@ void TrackContainer::keyPressEvent(QKeyEvent *event)
     default:
         break;
     }
- QWidget::keyPressEvent(event);
+    QWidget::keyPressEvent(event);
+}
+
+void TrackContainer::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    QBrush brush(Qt::darkGray);
+    painter.setBrush(brush);
+    painter.drawRect(0,0,width(),height());
 }
 

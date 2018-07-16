@@ -4,17 +4,18 @@
 
 ControlChangeOverlay::ControlChangeOverlay(QWidget *parent) : QGraphicsView(parent)
 {
-    setMinimumWidth(1000);
-    setMinimumHeight(200);
+   // setMinimumWidth(1000);
+  //  setMinimumHeight(200);
     setStyleSheet("background-color: transparent;");
     setViewportUpdateMode(FullViewportUpdate);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setRenderHint(QPainter::Antialiasing);
     leftItem      = new ControlChangeItem;
     rightItem     = new ControlChangeItem;
-   // rectItem      = new QGraphicsRectItem(0,0,500,2000);
     collisionItem = new CollisionItem(this);
     rubberBand    = new QRubberBand(QRubberBand::Rectangle, this);
-  //  rectItem->hide();
+
 }
 
 void ControlChangeOverlay::createLineConnector()
@@ -77,10 +78,36 @@ void ControlChangeOverlay::removeCollidingItems(QList<QGraphicsItem *> &items)
     }
 }
 
-void ControlChangeOverlay::setCurrentOverlay(int index)
-{
+void ControlChangeOverlay::addPoint(int x, int value)
+{if (!activeItems.contains(x))
+    {
+        value = 127 - value;
+        ControlChangeItem *item = new ControlChangeItem();
+        item->setX(x);
+        int OldRange = (127 - 0);
+        int NewRange = (scene->height() - 0);
+        int NewValue = (((value - 0) * NewRange) / OldRange) + 0;
+        item->setY(NewValue);
+        item->overlay = this;
+        activeItems.insert(x,item);
 
+        scene->addItem(item);
+        createLineConnector();
+    }
 }
+
+//For some reason fitInView needs to be called twice manually to work,
+//this is some weird workaround.
+void ControlChangeOverlay::fitIntoView()
+{
+    setUpdatesEnabled(false);
+    fitInView(scene->sceneRect(), Qt::IgnoreAspectRatio);
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    fitInView(scene->sceneRect(), Qt::IgnoreAspectRatio);
+    setUpdatesEnabled(true);
+}
+
+
 
 bool ControlChangeOverlay::eventFilter(QObject *target, QEvent *event)
 {
@@ -126,15 +153,11 @@ void ControlChangeOverlay::showEvent(QShowEvent *event)
         firstShow  = false;
         leftItem->overlay = this;
         rightItem->overlay = this;
+        leftItem->hide();
+        rightItem->hide();
     }
-    //For some reason fitInView needs to be called twice manually to work,
-    //this is some weird workaround.
-    setUpdatesEnabled(false);
-    fitInView(scene->sceneRect(), Qt::IgnoreAspectRatio);
-    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    fitInView(scene->sceneRect(), Qt::IgnoreAspectRatio);
-    setUpdatesEnabled(true);
-    // createLineConnector();
+    fitIntoView();
+
     QGraphicsView::showEvent(event);
 
 }
@@ -180,27 +203,14 @@ void ControlChangeOverlay::mouseMoveEvent(QMouseEvent *event)
 
         auto newPos = mapToScene(event->pos());
 
-      //  rectItem->setPos(newPos.x(),0);
-           qDebug() << newPos.x();
-        //   rectItem->setRect(newPos.x(),0,);
-//       auto list = scene->collidingItems(rectItem);
-//       for (const auto& var : list)
-//       {
-//           auto ccItem = dynamic_cast<ControlChangeItem*>(var);
-//           if (ccItem)
-//           {
-//               scene->removeItem(ccItem);
-//               activeItems.remove(ccItem->x());
-//               delete ccItem;
-//           }
-
-//       }
-
         ControlChangeItem *item = new ControlChangeItem();
-       // item->setPos(newPos);
         item->setInitalPos(newPos);
         item->overlay = this;
-        activeItems.insert(newPos.x(),item);
+        if (item->x() == 0 && activeItems.contains(0))
+        {
+            return;
+        }
+        activeItems.insert(item->x(),item);
         scene->addItem(item);
         createLineConnector();
     }
@@ -231,4 +241,16 @@ void ControlChangeOverlay::keyPressEvent(QKeyEvent *event)
         break;
     }
     QGraphicsView::keyPressEvent(event);
+}
+
+void ControlChangeOverlay::resizeEvent(QResizeEvent *event)
+{
+   // viewport()->update();
+    if (!firstShow)
+    {
+        qDebug() << "ewrw";
+        fitIntoView();
+    }
+   // this->scale(2,1);
+    QGraphicsView::resizeEvent(event);
 }

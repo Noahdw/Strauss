@@ -24,6 +24,7 @@
 #include <QSplitter>
 #include <src/controlchangecontainer.h>
 #include "src/pianorollhelperview.h"
+#include <QPainter>
 
 namespace Ui {
 class MainWindow;
@@ -70,6 +71,8 @@ private:
     QAction *deleteAllNotesAction;
     QAction *openVSTAction;
     QAction *addNewTrackAction;
+protected:
+    void paintEvent(QPaintEvent * event);
 
 };
 

@@ -29,6 +29,10 @@ void ControlChangeItem::setInitalPos(QPointF pos)
     {
        setY(0);
     }
+    if(pos.x() < 0)
+    {
+        setX(0);
+    }
 }
 
 void ControlChangeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)

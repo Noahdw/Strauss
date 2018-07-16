@@ -13,6 +13,7 @@
 #include <src/velocityview.h>
 #include <src/tracklengthview.h>
 #include <src/controlchangecontainer.h>
+#include <QPainter>
 
 class PianoRollContainer : public QWidget
 {
@@ -31,6 +32,9 @@ public slots:
 
 private:
     QHBoxLayout *layout;
+
+protected:
+    void paintEvent(QPaintEvent * event);
 
 };
 

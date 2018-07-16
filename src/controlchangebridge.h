@@ -7,14 +7,23 @@ class ControlChangeOverlay;
 #include <QWidget>
 #include <QStackedLayout>
 #include <QStackedWidget>
+#include <QGraphicsScene>
+
 class ControlChangeBridge : public QWidget
 {
     Q_OBJECT
 public:
     ControlChangeBridge();
+    void setCurrentOverlay(int index);
+    void verifyOverlayExists(int value);
     QStackedLayout * sLayout;
-    ControlChangeOverlay * overlay;
+    std::vector<ControlChangeOverlay*> overlays;
+    //ControlChangeOverlay * overlay;
     ControlChangeView * view;
+    int currentIndex = 0;
+    QGraphicsScene *baseScene;
+private:
+
 };
 
 #endif // CONTROLCHANGEBRIDGE_H

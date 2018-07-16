@@ -14,9 +14,7 @@ class TrackMidiView: public QGraphicsView{
 public:
     TrackMidiView(QWidget* parent = 0);
     TrackView * trackView;
-    void addViewItem(int start, int length, int note);
     void onPianoRollResized(float x);
-    void deleteViewItem(int start, int note);
     void shareScene(QGraphicsScene * scene);
 
     int totalDT = MidiManager::TPQN * 50;

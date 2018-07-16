@@ -12,6 +12,7 @@ class PianoRoll;
 #include <queue>
 struct EventToAdd
 {
+    uchar status = 0x90;
     int note = 0;
     bool eventOn = false;
     bool hasEventToAdd = false;
@@ -36,17 +37,18 @@ public:
     void initializeMidiEvents();
     void restartPlayback();
     void pauseOrResumePlayback(bool isResume);
-    void addMidiEvent(uchar note, uchar velocity);
+    void addMidiEvent(uchar status, uchar note, uchar velocity);
     void setPianoRollRef(PianoRoll *piano);
     void setCanRecord(bool canRec);
     void turnOffAllNotes(AEffect *plugin);
+    void controlModeChange(int channel,int value);
 
     EventToAdd eventToAdd;
     std::queue<EventToAdd> midiEventQueue;
     std::deque<EventToAdd> recordedMidiEventDeque;
     mTrack *track;
     PianoRoll *pianoroll;
-    uint blocksize = 512;
+    uint blocksize = 256;
     float sampleRate = 44100.0f;
     bool canPlay = false;
     bool isMuted = false;

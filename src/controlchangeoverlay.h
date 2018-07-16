@@ -20,20 +20,14 @@ class CollisionItem;
 class ControlChangeOverlay  : public QGraphicsView{
     Q_OBJECT
 
-    struct ccDataStruct
-    {
-        ControlChangeItem *leftItem;
-        ControlChangeItem *rightItem;
-        std::vector<QGraphicsLineItem*> lineItems;
-         QMap<int,QGraphicsItem*> activeItems;
-    };
-
 public:
     ControlChangeOverlay(QWidget *parent = 0);
     void createLineConnector();
     void removeSelectedItems();
     void removeCollidingItems(QList<QGraphicsItem*> &items);
-    void setCurrentOverlay(int index);
+    void addPoint(int x, int value);
+    void fitIntoView();
+
     bool eventFilter(QObject *target, QEvent *event);
     QGraphicsScene * scene = nullptr;
     QMap<int,QGraphicsItem*> activeItems;
@@ -45,7 +39,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
-
+    void resizeEvent(QResizeEvent *event);
 private:
     ControlChangeItem *leftItem;
     ControlChangeItem *rightItem;

@@ -8,25 +8,13 @@ TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
     setViewportUpdateMode(MinimalViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
 
-  //  setMinimumWidth(400);
+    //  setMinimumWidth(400);
     setMinimumHeight(70);
-   setMaximumHeight(100);
- //   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setMaximumHeight(90);
+    //   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
-void TrackMidiView::addViewItem(int start, int length, int note)
-{
-    //    QGraphicsRectItem *rect = new QGraphicsRectItem(0,0,length,50);
-    //    //scene->addItem(rect);
-    //    qDebug() << start << "    " << note;
-    //   //  QPen pen(Qt::black,0);
-    //   // rect->setPen(pen);
-    //    rect->setBrush(Qt::darkGray);
-    //    rect->setX(start);
-    //    rect->setY(note);
-    //    qDebug() << "recieved";
-}
 
 void TrackMidiView::paintEvent(QPaintEvent *event)
 {
@@ -47,17 +35,9 @@ void TrackMidiView::resizeEvent(QResizeEvent *event)
 }
 void TrackMidiView::onPianoRollResized(float x)
 {
-     fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
+    fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
 }
 
-void TrackMidiView::deleteViewItem(int start, int note)
-{
-    //    QGraphicsItem * item = scene->itemAt(QPointF(start,note),QGraphicsView::transform());
-    //    QGraphicsRectItem * ritem = static_cast<QGraphicsRectItem*>(item);
-    //    qDebug() << start << "    " << note;
-    //    scene->removeItem(ritem);
-    //    delete(ritem);
-}
 
 void TrackMidiView::shareScene(QGraphicsScene *scene)
 {

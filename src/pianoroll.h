@@ -4,6 +4,7 @@
 //Forward declarations
 class Keyboard;
 class VelocityView;
+class ControlChangeBridge;
 
 #include <QWidget>
 #include <QPainter>
@@ -22,6 +23,7 @@ class VelocityView;
 #include <QKeyEvent>
 #include <map>
 #include <src/controlchangeoverlay.h>
+
 class PianoRoll : public QGraphicsView{
     Q_OBJECT
 public:
@@ -47,6 +49,7 @@ public:
     QGraphicsScene *scene;
     QRectF *sceneRect;
     QGraphicsRectItem *line;
+    ControlChangeBridge * bridge;
     int cols = 60;
     int tPQN = MidiManager::TPQN;
     int totalDT = MidiManager::TPQN*cols;

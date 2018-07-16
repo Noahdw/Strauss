@@ -21,7 +21,11 @@ bool firstRun = true;    int note = 0;
 VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
                                    VstInt32 index, VstInt32 value, void *ptr, float opt)
 {
-    // qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
+    if (opcode != 7)
+    {
+        // qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
+    }
+
     //http://jdmcox.com/PianoRollComposer.cpp for opcodes
     switch (opcode) {
     case audioMasterVersion:
@@ -267,7 +271,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
         evnt->noteOffVelocity = 0;
         evnt->reserved1 = 0;
         evnt->reserved2 = 0;
-        evnt->midiData[0] =  0x90;
+        evnt->midiData[0] =  eventStruct.status;
         evnt->midiData[1] = (uchar)eventStruct.note;
         evnt->midiData[2] = eventStruct.velocity;
         evnt->midiData[3] = 0;
@@ -387,9 +391,9 @@ void Vst2HostCallback::pauseOrResumePlayback(bool isResume)
     }
 }
 
-void Vst2HostCallback::addMidiEvent(uchar note, uchar velocity)
+void Vst2HostCallback::addMidiEvent(uchar status,uchar note, uchar velocity)
 {
-    EventToAdd evnt{note,false,false,0,velocity};
+    EventToAdd evnt{status,note,false,false,0,velocity};
     midiEventQueue.push(evnt);
 }
 
@@ -449,6 +453,11 @@ void Vst2HostCallback::turnOffAllNotes(AEffect *plugin)
         ++events->numEvents;
     }
     dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
+}
+
+void Vst2HostCallback::controlModeChange(int channel, int value)
+{
+  //  dispatcher(plugin, effset, 0, 0, events, 0.0f);
 }
 
 

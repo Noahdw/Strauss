@@ -28,15 +28,18 @@ HeaderContainer::HeaderContainer()
     recordButton->setMaximumWidth(maxWidth);
     hbox->setMargin(0);
     groupBox->setLayout(hbox);
-    groupBox->setFlat(false);
+    groupBox->setFlat(true);
     mainbox->addWidget(groupBox);
     mainbox->setAlignment(Qt::AlignTop|Qt::AlignCenter);
     setLayout(mainbox);
-
     QObject::connect(playButton,   &QPushButton::clicked,this,&HeaderContainer::play);
     QObject::connect(pauseButton,  &QPushButton::clicked,this,&HeaderContainer::pause);
     QObject::connect(restartButton,&QPushButton::clicked,this,&HeaderContainer::restart);
     QObject::connect(recordButton, &QPushButton::clicked,this,&HeaderContainer::record);
+
+
+
+    groupBox->setStyleSheet("QGroupBox {  border: 1px solid gray;}");
 }
 
 void HeaderContainer::play()

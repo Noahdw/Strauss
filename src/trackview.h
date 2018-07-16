@@ -38,7 +38,7 @@ private:
     QCheckBox *muteBox;
     QCheckBox *recordBox;
     bool canEditLine = false;
-    const int widgetWidth = 70;
+    const int widgetWidth = 150;
     int randomRed = 0;
     int randomGreen = 0;
     int randomBlue = 0;

@@ -1,6 +1,6 @@
 #include "controlchangecontainer.h"
 #include "src/pianorollcontainer.h"
-#include "src/controlchangebridge.h".h"
+#include "src/controlchangebridge.h"
 
 /*
 This class holds two views which can be switched between.
@@ -14,8 +14,8 @@ ControlChangeContainer::ControlChangeContainer(PianoRollContainer *pRollCont)
     sLayout = new QStackedLayout;
     sLayout2 = new QStackedLayout;
     ccStackedHolder = new QWidget;
-    ccStackedHolder->setMinimumWidth(1000);
-    ccStackedHolder->setMinimumHeight(200);
+  //  ccStackedHolder->setMinimumWidth(1000);
+ //   ccStackedHolder->setMinimumHeight(200);
     pRollCont->ccContainer = this;
     ccStackedHolder->setLayout(sLayout2);
     sLayout->addWidget(pRollCont);
@@ -35,13 +35,13 @@ void ControlChangeContainer::addControlChangeView(PianoRoll * pianoRoll)
     ControlChangeBridge * bridge = new ControlChangeBridge;
     QGraphicsScene * scene = new QGraphicsScene;
     bridge->view->pRoll = pianoRoll;
+    pianoRoll->bridge = bridge;
     bridge->view->scene = pianoRoll->scene;
     bridge->view->setScene(pianoRoll->scene);
-
- //   scene->set
-    bridge->overlay->scene = scene;
+    bridge->baseScene = scene;
+    bridge->overlays[bridge->currentIndex]->scene = scene;
     scene->setSceneRect(*pianoRoll->sceneRect);
-    bridge->overlay->setScene(scene);
+    bridge->overlays[bridge->currentIndex]->setScene(scene);
     sLayout2->addWidget(bridge);
     sLayout2->setCurrentIndex(0);
 }
@@ -49,9 +49,8 @@ void ControlChangeContainer::addControlChangeView(PianoRoll * pianoRoll)
 void ControlChangeContainer::switchControlChangeType(int index)
 {
    auto w = dynamic_cast<ControlChangeBridge*>(sLayout2->currentWidget());
-   w->overlay->setCurrentOverlay(index);
+   w->setCurrentOverlay(index);
 }
-
 void ControlChangeContainer::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key())

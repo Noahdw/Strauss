@@ -9,6 +9,7 @@
 PianoRollContainer::PianoRollContainer()
 {      
     stackedLayout = new QStackedLayout;
+  //  setMinimumWidth(1000);
     this->setLayout(stackedLayout);
 }
 
@@ -37,6 +38,7 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     auto *key         = new Keyboard;
     auto *velocity    = new VelocityView;
     auto *trackLength = new TrackLengthView;
+
 
     roll->track = view;
     if (view->track->totalDT != 0) {
@@ -81,4 +83,12 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     velocity->trackView = view;
     velocity->trackView->trackMidiView->shareScene(roll->scene);
     ccContainer->addControlChangeView(roll);
+}
+
+void PianoRollContainer::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    QBrush brush(Qt::darkGray);
+    painter.setBrush(brush);
+    painter.drawRect(0,0,width(),height());
 }

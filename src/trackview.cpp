@@ -13,7 +13,7 @@ std::uniform_int_distribution<int> distribution(1,255);
 TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
 {
     setMinimumHeight(70);
-    setMaximumHeight(100);
+    setMaximumHeight(90);
     this->track = track;
     instrumentName = track->instrumentName;
     if (instrumentName == "") {
@@ -28,6 +28,7 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     // instrumentLabel->setAttribute(Qt::Wa_ws,0);
     muteBox   = new QCheckBox("Mute",this);
     recordBox = new QCheckBox("Record",this);
+    recordBox->setChecked(true);
     vlayout   = new QVBoxLayout;
     vlayout->setAlignment(Qt::AlignTop);
     vlayout->addWidget(instrumentLabel,0,Qt::AlignTop|Qt::AlignLeft);
@@ -54,18 +55,35 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
 }
 bool TrackView::eventFilter(QObject *target, QEvent *event)
 {
-    if(target == instrumentLabel && event->type() == QEvent::MouseButtonPress )
+    //idk how to do this
+    qDebug() << event->type();
+    if(target == instrumentLabel )
     {
         if (canEditLine)
         {
-            return true;
-        }
-        else
-        {
-            // event->ignore();
-            emit trackClickedOn(id);
             return false;
+        }else
+        {
+
         }
+        if (event->type() == QEvent::MouseButtonPress )
+        {
+            if (canEditLine)
+            {
+                return false;
+            }
+            else
+            {
+                // event->ignore();
+                emit trackClickedOn(id);
+                return true;
+            }
+        }
+        if (!canEditLine && (event->type() == QEvent::ToolTip || event->type() == QEvent::MouseButtonPress ))
+        {
+            //return true;
+        }
+
     }
 
     return false;

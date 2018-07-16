@@ -42,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
     prollContainer   = new PianoRollContainer;
     controlContainer = new ControlChangeContainer(prollContainer);
     prollHelper      = new PianoRollHelperView;
+
     trackContainer->setPianoRollReference(prollContainer);
     folderView->pRollContainer = prollContainer;
     headerContainer->audioManager = audioManager;
@@ -49,21 +50,25 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QVBoxLayout *mainLayout   = new QVBoxLayout;
     QHBoxLayout *helperLayout = new QHBoxLayout;
-    QSplitter *trackSplitter  = new QSplitter(this);
-    QSplitter *prollSplitter  = new QSplitter(this);
+    QSplitter *trackSplitter  = new QSplitter;
+    QSplitter *prollSplitter  = new QSplitter;
+
     prollSplitter->setOrientation(Qt::Vertical);
-    helperLayout->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
+    helperLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+   // helperLayout->setSpacing(0);
+    helperLayout->setContentsMargins(0,0,0,0);
     trackSplitter->addWidget(trackScrollArea);
     trackSplitter->addWidget(folderView);
     mainLayout->addWidget(headerContainer);
-    // mainLayout->addWidget(trackSplitter);
     prollSplitter->addWidget(trackSplitter);
+   // prollSplitter->setStyleSheet("background-color: rgb(150, 150, 150);");
     prollSplitter->addWidget(controlContainer);
     helperLayout->addWidget(prollHelper);
     helperLayout->addWidget(prollSplitter);
     mainLayout->addLayout(helperLayout);
     prollHelper->container = controlContainer;
     centralWidget->setLayout(mainLayout);
+
     QObject::connect(trackContainer,&TrackContainer::switchControlChange,controlContainer,
                      &ControlChangeContainer::switchControlChangeContainer);
     QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
@@ -73,8 +78,17 @@ MainWindow::MainWindow(QWidget *parent) :
     audioManager->startPortAudio();
     audioManager->openStream();
     audioManager->startStream();
-    player.getDevices();
+
+
+    for (int i = 0; i < player.getDevices(); ++i)
+    {
+        player.openDevice(i);
+    }
     player.openDevice(3);
+    QPalette pal = palette();
+    pal.setColor(QPalette::Background, QColor(150,150,150));
+    setAutoFillBackground(true);
+    setPalette(pal);
 }
 
 MainWindow::~MainWindow()
@@ -201,6 +215,15 @@ void MainWindow::setUpMenuBar()
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(deleteAllNotesAction);
     editMenu->addAction(addNewTrackAction);
+}
+
+void MainWindow::paintEvent(QPaintEvent *event)
+{
+//    QPainter painter(this);
+//    QBrush brush(Qt::lightGray);
+//    brush.setColor(QColor(150,150,150));
+//    painter.setBrush(brush);
+//    painter.drawRect(0,0,width(),height());
 }
 
 void MainWindow::addNewTrack()

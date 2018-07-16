@@ -1,6 +1,8 @@
 #include "midiplayer.h"
 #include "src/mainwindow.h"
 #include "src/vst2hostcallback.h"
+#include "src/controlchangebridge.h"
+
 //This class is no longer needed
 
 MidiPlayer::MidiPlayer()
@@ -120,7 +122,7 @@ void MidiPlayer::openDevice(uint deviceNumber)
     midiInStart(hMidiDevice);
 }
 
-void MidiPlayer::getDevices()
+int MidiPlayer::getDevices()
 {
     MIDIINCAPSA cap;
     UINT_PTR numDevs = midiInGetNumDevs();
@@ -134,7 +136,7 @@ void MidiPlayer::getDevices()
         }
 
     }
-
+    return numDevs;
 }
 
 void MidiPlayer::addMidiAfterRecording()
@@ -148,8 +150,13 @@ void MidiPlayer::addMidiAfterRecording()
             {
                 EventToAdd event = plugs->host->recordedMidiEventDeque.front();
                 plugs->host->recordedMidiEventDeque.pop_front();
-                if (event.velocity == 0)
+                if (event.status != 0x90 || event.velocity == 0)
                 {
+                    if (event.status == 0xB0)
+                    {
+                        plugs->host->pianoroll->bridge->verifyOverlayExists(event.note);
+                        plugs->host->pianoroll->bridge->overlays[event.note]->addPoint(event.timeInTicks,event.velocity);
+                    }
                     continue;
                 }
                 for(const auto& e : plugs->host->recordedMidiEventDeque)
@@ -177,21 +184,26 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
     uchar status = dwParam1 & 0xFF;
     uchar note = dwParam1 >> 8;
     uchar velocity = dwParam1 >> 16;
-    if (status == 0x90)
+    if (status >= 0xB0 && status <=0xBF)
+    {
+        status = 0xB0;
+    }
+  //  qDebug() << "status: " << status << " Note: " << note << " Velocity: " << velocity;
+    if (status == 0x90 || status == 0xB0) // Note on / Note off
     {
         for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
         {
             pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
             if(plugs->host->canRecord()){
-                plugs->host->addMidiEvent(note,velocity);
+                plugs->host->addMidiEvent(status,note,velocity);
                 if (MidiPlayer::canRecordInput)
                 {
                     if (MidiPlayer::recordingOverwrites)
                     {
-                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{note,false,false,plugs->host->pianoroll->line->x(),velocity});
+                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,plugs->host->pianoroll->line->x(),velocity});
                     }else
                     {
-                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{note,false,false,plugs->host->pianoroll->line->x(),velocity});
+                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,plugs->host->pianoroll->line->x(),velocity});
 
                     }
                 }
@@ -200,47 +212,19 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
         }
         qDebug() << "status: " << status << " Note: " << note << " Velocity: " << velocity;
     }
+    else if(status == 0xB1111) //Control mode change
+    {
+        for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
+        {
+            pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
+            if(plugs->host->canRecord()){
 
-    //    LPMIDIHDR   lpMIDIHeader;
-    //    MIDIEVENT * lpMIDIEvent;
+           //  plugs->host->controlModeChange(note,velocity); // note = CC, velocity = value
+ // plugs->host->addMidiEvent(note,velocity);
+            }
+        }
+    }
 
-    //    /* Determine why Windows called me */
-    //    switch (uMsg)
-    //    {
-    //    /* Got some event with its MEVT_F_CALLBACK flag set */
-
-    //    case MOM_POSITIONCB:
-
-    //        /* Assign address of MIDIHDR to a LPMIDIHDR variable. Makes it easier to access the
-    //               field that contains the pointer to our block of MIDI events */
-    //        lpMIDIHeader = (LPMIDIHDR)dwParam1;
-
-    //        /* Get address of the MIDI event that caused this call */
-    //        lpMIDIEvent = (MIDIEVENT *)&(lpMIDIHeader->lpData[lpMIDIHeader->dwOffset]);
-
-    //        /* Normally, if you had several different types of events with the
-    //               MEVT_F_CALLBACK flag set, you'd likely now do a switch on the highest
-    //               byte of the dwEvent field, assuming that you need to do different
-    //               things for different types of events.
-    //            */
-
-    //        break;
-
-    //        /* The last event in the MIDIHDR has played */
-    //    case MOM_DONE:
-
-    //        /* Wake up main() */
-    //        SetEvent(hEvent);
-
-    //        break;
-
-
-    //        /* Process these messages if you desire */
-    //    case MOM_OPEN:
-    //    case MOM_CLOSE:
-
-    //        break;
-    //    }
 }
 bool streamOpen = false;
 void MidiPlayer::pausePlayBack(){

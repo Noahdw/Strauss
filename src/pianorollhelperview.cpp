@@ -13,7 +13,7 @@ PianoRollHelperView::PianoRollHelperView()
     vLayout->addWidget(comboBox);
 
     connect(comboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            [=](int index){ comboBoxIdChanged(index);});
+            [=](int index){ comboBoxIdChanged(index);}); // wtf
 }
 
 void PianoRollHelperView::comboBoxIdChanged(int index)

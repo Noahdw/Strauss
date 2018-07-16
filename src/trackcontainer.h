@@ -13,6 +13,7 @@ class TrackMidiView;
 #include <QSpacerItem>
 #include <QSplitter>
 #include <QKeyEvent>
+#include <QPainter>
 
 class TrackContainer : public QWidget
 {
@@ -40,6 +41,7 @@ private:
 protected:
    void mousePressEvent(QMouseEvent *event);
    void keyPressEvent(QKeyEvent * event);
+   void paintEvent(QPaintEvent *event);
    PianoRollContainer *prcontainer;
 };
 

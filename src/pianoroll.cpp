@@ -37,8 +37,8 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setContextMenuPolicy(Qt::CustomContextMenu);
-    setMinimumWidth(1000);
-    setMinimumHeight(200);
+   // setMinimumWidth(1000);
+  //  setMinimumHeight(200);
 
     scene = new QGraphicsScene;
     scene->setSceneRect(0,0,tPQN*cols,keyHeight*128);
@@ -61,10 +61,10 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     line = new QGraphicsRectItem(0,0,1,5000);
     scene->addItem(line);
     line->setZValue(1);
-    QPen pen(Qt::red,0);
+    QPen pen(QColor(156,21,25),0);
     line->setPen(pen);
-    line->setBrush(Qt::red);
-    line->setPos(0,0);
+    line->setBrush(QColor(156,21,25));
+    line->setPos(0,-50);
     animation->setItem(line);
     animation->setTimeLine(timer);
     rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
@@ -90,7 +90,6 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
 
             velocityView->addOrRemoveVelocityViewItem(pItem->noteStart,0,note,false);
             MidiManager::removeMidiNote(pItem->noteStart,pItem->noteEnd,note,track->track);
-            track->trackMidiView->deleteViewItem(pItem->noteStart,pItem->y());
             scene->removeItem(item);
             delete item;
             item=nullptr;
@@ -190,7 +189,7 @@ void PianoRoll::mouseReleaseEvent(QMouseEvent *event)
     rubberBand->hide();
     QGraphicsView::mouseReleaseEvent(event);
 }
-/*! test */
+
 void PianoRoll::clearActiveNotes()
 {
     foreach (auto note, scene->selectedItems()) {
@@ -204,7 +203,7 @@ void PianoRoll::clearActiveNotes()
     scene->clearSelection();
 }
 
-//Takes midi data and converts to notes on a Pianoroll
+//Takes track (midi) data and converts to notes on a Pianoroll
 void PianoRoll::convertTrackToItems()
 {
     int dw =track->track->totalDT;
