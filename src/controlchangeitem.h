@@ -26,6 +26,7 @@ private:
     const qreal radius = 6;
     int leftValue;
     int rightValue;
+    bool firstEvent = true;
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);

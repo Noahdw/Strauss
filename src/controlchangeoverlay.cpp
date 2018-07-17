@@ -59,7 +59,7 @@ void ControlChangeOverlay::removeSelectedItems()
          }
 
     }
-    scene->selectedItems().clear();
+    scene->clearSelection();
     createLineConnector();
 }
 
@@ -184,23 +184,23 @@ void ControlChangeOverlay::mousePressEvent(QMouseEvent *event)
 
 void ControlChangeOverlay::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    qDebug() << "OVERLAY";
-    auto t = mapToScene(event->pos());
-    ControlChangeItem *item = new ControlChangeItem();
-    item->setPos(t);
-    item->overlay = this;
-    activeItems.insert(t.x(),item);
-    scene->addItem(item);
-    createLineConnector();
+
+    //Add new item
+        auto t = mapToScene(event->pos());
+        ControlChangeItem *item = new ControlChangeItem();
+        item->setPos(t);
+        item->overlay = this;
+        activeItems.insert(t.x(),item);
+        scene->addItem(item);
+        createLineConnector();
+
     QGraphicsView::mouseDoubleClickEvent(event);
 }
 
 void ControlChangeOverlay::mouseMoveEvent(QMouseEvent *event)
 {
-
     if (canDraw)
     {
-
         auto newPos = mapToScene(event->pos());
 
         ControlChangeItem *item = new ControlChangeItem();
@@ -245,12 +245,10 @@ void ControlChangeOverlay::keyPressEvent(QKeyEvent *event)
 
 void ControlChangeOverlay::resizeEvent(QResizeEvent *event)
 {
-   // viewport()->update();
     if (!firstShow)
     {
         qDebug() << "ewrw";
         fitIntoView();
     }
-   // this->scale(2,1);
     QGraphicsView::resizeEvent(event);
 }

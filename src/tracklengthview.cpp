@@ -16,10 +16,10 @@ TrackLengthView::TrackLengthView(QWidget *parent) : QGraphicsView(parent)
     setMinimumWidth(1000);
     setMinimumHeight(20);
     setMaximumHeight(20);
-    scene = new QGraphicsScene;
+    scene = new QGraphicsScene(0,0,MidiManager::TPQN*60,height());
     scene->setSceneRect(0,0,MidiManager::TPQN*60,height());
     this->setScene(scene);
-   (scene->sceneRect(),Qt::KeepAspectRatio);
+   fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
   //  resetMatrix();this->scale(((float)width() / (MidiManager::TPQN*60)),1);
 }
 
@@ -62,3 +62,10 @@ void TrackLengthView::mousePressEvent(QMouseEvent *event)
    //AudioManager will detect if the variable is -1 or not and will act appropriatly
     AudioManager::requestedPlaybackPos = scenePt.x();
 }
+
+void TrackLengthView::resizeEvent(QResizeEvent *event)
+{
+     fitInView(scene->sceneRect());
+     QGraphicsView::resizeEvent(event);
+}
+

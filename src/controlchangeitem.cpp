@@ -127,6 +127,6 @@ void ControlChangeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void ControlChangeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-    QGraphicsItem::mouseDoubleClickEvent(event);
+QGraphicsItem::mouseDoubleClickEvent(event);
 }
 

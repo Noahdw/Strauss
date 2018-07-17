@@ -46,8 +46,8 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     setScene(scene);
     sceneRect = new QRectF(0,0,tPQN*cols,keyHeight*128);
     colSpacing = width()/cols;
-    scale(((float)width() / (tPQN*cols)),1);
-
+   // scale(((float)width() / (tPQN*cols)),1);
+    fitInView(scene->sceneRect());
 
     connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
             this, SLOT(ShowContextMenu(const QPoint &)));
@@ -543,7 +543,9 @@ void PianoRoll::resizeEvent(QResizeEvent *event)
     scale(x,1);
     velocityView->onPianoRollResized(x);
     track->trackMidiView->onPianoRollResized(x);
-
+    QScrollBar* wheelPos = this->horizontalScrollBar();
+    wheelPos->setValue(0);
+    QGraphicsView::resizeEvent(event);
 }
 
 void PianoRoll::keyPressEvent(QKeyEvent *event)

@@ -17,6 +17,7 @@ class CollisionItem;
 #include <QRubberBand>
 #include <QEvent>
 #include <QGraphicsSceneEvent>
+#include <QPointF>
 class ControlChangeOverlay  : public QGraphicsView{
     Q_OBJECT
 

@@ -7,6 +7,7 @@
 #include <QScrollArea>
 #include <QFileSystemModel>
 #include <QListView>
+#include <QTreeView>
 #include "pianorollcontainer.h"
 class FolderView : public QWidget
 {
