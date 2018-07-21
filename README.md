@@ -10,10 +10,10 @@ on composer workflow through the integration of both notation software such as M
 
 
 ### Current features
-* Pianoroll editing
-* Pianoroll zooming
+* Complete Piano roll functionality
 * Velocity editing
-* Midi file importing
+* CC recording and editing
+* Load midi files
 * VST2 playback
 * Midi device recording
 * A bunch of misc things
