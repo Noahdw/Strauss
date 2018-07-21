@@ -51,12 +51,12 @@ void ControlChangeItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     oldY = y();
     auto i = overlay->activeItems.find(x());
     i--;
-    leftValue = (*i)->x();
-    qDebug() << "left: " << (*i)->x();
+    leftValue = (*i).second->x();
+  //  qDebug() << "left: " << (*i)->x();
     i++;
     i++;
-    rightValue = (*i)->x();
-        qDebug() << "right: " << (*i)->x();
+    rightValue = (*i).second->x();
+        qDebug() << "right: " << (*i).second->x();
     QGraphicsItem::mousePressEvent(event);
 }
 
@@ -119,9 +119,10 @@ void ControlChangeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     overlay->viewport()->update();
 
     auto temp = this;
-    overlay->activeItems.remove(oldX);
-    overlay->activeItems.insert(x(),temp);
+    overlay->activeItems.erase(oldX);
+    overlay->activeItems[x()] = temp;
     overlay->createLineConnector();
+    overlay->recalculateDT();
     QGraphicsItem::mouseReleaseEvent(event);
 }
 

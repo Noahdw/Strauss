@@ -17,7 +17,6 @@ public:
     ControlChangeView(QWidget* parent = 0);
      QGraphicsScene * scene = nullptr;
      PianoRoll * pRoll;
-     std::map<int,int> ccValueMap;
 
 protected:
      void mousePressEvent(QMouseEvent *event);

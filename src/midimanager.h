@@ -61,6 +61,7 @@ public:
 
     static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
     static  void addMidiNote(int note, int veloc, int start, int length, mTrack *track);
+    static  void addPartialMidiNote(DWORD event, int start, mTrack *track);
     static  void removeMidiNote(int start, int length, int note, mTrack *track);
     static  void changeMidiVelocity(int start, int note, int velocity, mTrack *track);
     static  void recalculateNoteListDT(mTrack *track);

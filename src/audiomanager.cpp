@@ -5,7 +5,7 @@ PaStream *stream;
 paTestData data;
 int AudioManager::requestedPlaybackPos;
 bool isPaused = false;
-uint AudioManager::blocksize = 256;
+uint AudioManager::blocksize = 64;
 
 float** inputss = 0;
 float** outputss = 0;

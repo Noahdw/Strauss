@@ -51,12 +51,13 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     QObject::connect(muteBox,  &QCheckBox::stateChanged,this,&TrackView::notifyMuteChange);
     QObject::connect(this, &QWidget::customContextMenuRequested,
                      this,&TrackView::ShowContextMenu);
+    plugin.host->setCanRecord(true);
 
 }
 bool TrackView::eventFilter(QObject *target, QEvent *event)
 {
     //idk how to do this
-    qDebug() << event->type();
+    //qDebug() << event->type();
     if(target == instrumentLabel )
     {
         if (canEditLine)

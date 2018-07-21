@@ -45,16 +45,16 @@ void TrackContainer::addTrackView(mSong *song)
 
         // vLayout->addWidget(view,Qt::AlignTop|Qt::AlignLeft);
         view->id = ID;
-        emit addPianoRoll(view);
+
         ID++;
-
-        QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
-
         auto *midiView = new TrackMidiView;
         view->trackMidiView = midiView;
-        hlayout->addWidget(midiView);
-        vLayout->addWidget(widget,Qt::AlignTop|Qt::AlignLeft);
-       // vLayout->setAlignment(widget,Qt::AlignTop);
+        emit addPianoRoll(view);
+        QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
+
+
+        vLayout->addWidget(midiView);
+        vSplitter->addWidget(view);
     }
     adjustSize();
 }

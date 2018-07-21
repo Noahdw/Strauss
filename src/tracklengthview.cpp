@@ -19,23 +19,24 @@ TrackLengthView::TrackLengthView(QWidget *parent) : QGraphicsView(parent)
     scene = new QGraphicsScene(0,0,MidiManager::TPQN*60,height());
     scene->setSceneRect(0,0,MidiManager::TPQN*60,height());
     this->setScene(scene);
-   fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
-  //  resetMatrix();this->scale(((float)width() / (MidiManager::TPQN*60)),1);
 }
 
 void TrackLengthView::paintEvent(QPaintEvent *event)
 {
     QPainter painter(viewport());
     QPen pen;
-    pen.setColor(Qt::lightGray);
-    painter.setBrush(Qt::lightGray);
+    pen.setColor(Qt::black);
+    pen.setWidthF(1);
     painter.setPen(pen);
-    painter.drawRect(viewport()->rect());
+    painter.resetMatrix();
+ //   painter.setBrush(Qt::lightGray);
+  //  painter.drawRect(viewport()->rect());
     painter.setBrush(Qt::black);
-    double cols = width()/MidiManager::TPQN;
+    double cols = 60;
     for (int var = 0; var < cols; var++)
     {
-        painter.drawRect(var*cols,0,3,height()/4);
+        painter.drawLine(var*(float)MidiManager::TPQN * transform().m11(),0,var*MidiManager::TPQN * transform().m11(),height()/2);
+       // painter.drawLine(var* (width()/cols),0,var* (width()/cols),height()/2);
     }
 }
 

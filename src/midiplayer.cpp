@@ -174,6 +174,14 @@ void MidiPlayer::addMidiAfterRecording()
             //    MidiManager::addUnfinishedNote(event.note,event.velocity,event.timeInTicks,plugs->host->track);
             }
             MidiManager::recalculateNoteListDT(plugs->host->track);
+            for (int i = 0; i < 128; ++i)
+            {
+                if (plugs->host->pianoroll->bridge->overlays[i] != NULL)
+                {
+                    plugs->host->pianoroll->bridge->overlays[i]->recalculateDT();
+                }
+            }
+
         }
     }
 }

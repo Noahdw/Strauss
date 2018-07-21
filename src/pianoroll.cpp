@@ -34,6 +34,7 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setViewportUpdateMode(MinimalViewportUpdate);
+
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setContextMenuPolicy(Qt::CustomContextMenu);
@@ -56,7 +57,8 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     timer = new QTimeLine((float)(60.0/120.0)*cols*1000);//Song time in ms
     timer->setFrameRange(0,100);
     timer->setCurveShape(QTimeLine::LinearCurve);
-
+    timer->setUpdateInterval(1000);
+    rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     animation = new QGraphicsItemAnimation;
     line = new QGraphicsRectItem(0,0,1,5000);
     scene->addItem(line);
@@ -65,11 +67,11 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     line->setPen(pen);
     line->setBrush(QColor(156,21,25));
     line->setPos(0,-50);
+
     animation->setItem(line);
     animation->setTimeLine(timer);
-    rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
-
-    for (int i = 0; i < sceneRect->width(); ++i) {
+    for (int i = 0; i < sceneRect->width(); ++i)
+    {
         animation->setPosAt(i / (double)sceneRect->width(), QPointF(i, 0));
     }
 
@@ -213,11 +215,10 @@ void PianoRoll::convertTrackToItems()
     int tqn = dw/MidiManager::TPQN;
     if (tqn == 0) {
         tqn = cols;
-        dw = MidiManager::TPQN*cols;
     }
     qDebug() << "totalDT:" << totalDT;
     scene->setSceneRect(0,0,dw,128*keyHeight);
-    double qnotes = totalDT/(MidiManager::TPQN);
+    double qnotes = (double)totalDT / MidiManager::TPQN;
     timer->setDuration(((float)(60.0/120.0)*qnotes*1000));
     qDebug() <<"Time: " << timer->duration();
     animation->clear();
@@ -225,26 +226,27 @@ void PianoRoll::convertTrackToItems()
         animation->setPosAt(i / (double)dw, QPointF(i, 0));
     }
     int curNote = 0;
-    int elapsedDW = 0;
+    int elapsedDT = 0;
     int noteEnd = 0;
 
     for(int i = 0; i < track->track->listOfNotes.length(); i+=2){
-        elapsedDW += track->track->listOfNotes.at(i);
+        elapsedDT += track->track->listOfNotes.at(i);
         //indicates a note. ignore other junk for now
-        if((track->track->listOfNotes.at(i+1)& 0xF0) ==0x90){
+        if((track->track->listOfNotes.at(i+1)& 0xF0) == 0x90){
             curNote = (track->track->listOfNotes.at(i+1) >> 8) & 127;
             //now I need to find its note off
 
-            for(int j = i+5; j< track->track->listOfNotes.length(); j+=2){
-                noteEnd+= track->track->listOfNotes.at(j -1);
-                if(((track->track->listOfNotes.at(j) >> 8) & 127) == curNote ){
+            for(int j = i+2; j < track->track->listOfNotes.length(); j+=2){
+                noteEnd += track->track->listOfNotes.at(j );
+                if(((track->track->listOfNotes.at(j+1) >> 8) & 127) == curNote ){
 
                     PianoRollItem *pNote = new PianoRollItem;
                     scene->addItem(pNote);
-                    pNote->setPos(elapsedDW,128*keyHeight - curNote*keyHeight);
+                    pNote->setInitalPosition(elapsedDT,noteEnd,curNote);
+                    pNote->setBoundingRect(noteEnd);
                     pNote->pianoroll = this;
                     pNote->setBoundingRect(noteEnd);
-                    pNote->noteStart = elapsedDW;
+                    pNote->noteStart = elapsedDT;
                     pNote->noteEnd = noteEnd;
                     noteEnd = 0;
                     break;
@@ -257,17 +259,14 @@ void PianoRoll::convertTrackToItems()
     tPQN = MidiManager::TPQN;
     colSpacing = (double)width()/cols;
 
-    this->resetMatrix();
-    scale((float)width() / (dw),1);
-    while(tPQN*scaleFactor*transform().m11()<minimumColSpacing) {
+    resetMatrix();
+    float x = (float)width() / (tPQN*cols);
+    scale(x,1);
+    while(tPQN*scaleFactor*transform().m11() < minimumColSpacing) {
         scaleFactor *=2;
     }
-    this->viewport()->update();
-    this->update();
     horizontalScrollBar()->setValue(0);
     verticalScrollBar()->setValue(0);
-
-
 }
 
 void PianoRoll::turnNoteOff(int note)
@@ -278,7 +277,7 @@ void PianoRoll::turnNoteOff(int note)
 //thing and just make it dependent on custom
 void PianoRoll::updateSongTrackerPos(bool isPauseOrResume, bool isResume, int custom)
 {
-    qDebug() << "Timer req: " << custom;
+   // qDebug() << "Timer req: " << custom;
     if (custom != -1)
     {
         double percent = custom/(double)totalDT;

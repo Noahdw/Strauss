@@ -52,6 +52,10 @@ mSong MidiManager::Deserialize(QByteArray &array)
     if (true) {
         //Runs for amount of tracks in a song
         for (int var = 0; var < trackChunks; ++var) {
+            if (var == 44)
+            {
+                var = 44;
+            }
             mTrack *track = new mTrack;
             track->trackName = "";
             track->instrumentName ="";
@@ -60,6 +64,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                              (uchar)(array.at(currentPos+1)) << 16 |
                              (uchar)(array.at(currentPos+2)) << 8 |
                              (uchar)(array.at(currentPos+3)));
+            qDebug() << "Track " << var << "length: " << track->length;
             currentPos += 4; //should put on first byte after length
 
             uchar lastStatus = 0,lastChannel = 0;
@@ -79,14 +84,14 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 }
                 else if (array.at(pos+1) >> 7 == 0)
                 {
-                    deltaTime = (uchar)(array.at(pos) ^ 128) << 7;
-                    deltaTime = ((uchar)deltaTime | ((uchar)array.at(pos+1)));
+                    deltaTime = (uchar)(array.at(pos) ^ 0x80) << 7;
+                    deltaTime = (deltaTime | ((uchar)array.at(pos+1)));
 
                     pos+=2;
                 }
                 else if (array.at(pos+2) >> 7 == 0)
                 {
-                    deltaTime = ((uchar)(array.at(pos) ^ 128) << 14 |
+                    deltaTime = ((uchar)(array.at(pos) ^ 0x80) << 14 |
                                  (uchar)(array.at(pos+1)) << 7 |
                                  (uchar)(array.at(pos+2)));
 
@@ -94,7 +99,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 }
                 else if ((uchar)array.at(pos+3) >> 7 == 0)
                 {
-                    deltaTime = ((uchar)(array.at(pos)^ 128) << 21 |
+                    deltaTime = ((uchar)(array.at(pos)^ 0x80) << 21 |
                                  (uchar)(array.at(pos+1)) << 14 |
                                  (uchar)(array.at(pos+2)) << 7 |
                                  (uchar)(array.at(pos+3)));
@@ -105,11 +110,21 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 track->totalDT += deltaTime;
 
                 //Running status
-                if (((uchar)array.at(pos)  & 128) != 128) {
+                if (((uchar)array.at(pos)  & 0x80) != 0x80) {
                     eventCanAdd = true;
+                    if (lastStatus >= 0xb0 && lastStatus <= 0xBF) //IGNORE CC FOR NOW
+                    {
+                        pos += 1;
+                        continue;
+                    }
+                    else if(lastStatus >= 0xC0 && lastStatus <= 0xCF) // IGNORE PC FOR NOW
+                    {
+                        continue;
+                    }
                     uchar dataByte1 = (uchar)array.at(pos);
                     uchar channel = lastChannel;
                     uchar status = lastStatus;
+
                     uchar dataByte2 = (uchar)array.at(++pos);
                     if (dataByte2 == 0) {
                         // event.noteOn = false;
@@ -118,27 +133,40 @@ mSong MidiManager::Deserialize(QByteArray &array)
                     DWORD nvnt =( dataByte2 << 16 |
                                   dataByte1 << 8 |
                                   status);
-                    track->listOfNotes.append(deltaTime);
-                    track->listOfNotes.append(nvnt);
+                    addPartialMidiNote(nvnt,track->totalDT,track);
                 }
 
                 //No need to run if running status
                 if (!eventCanAdd) {
                     //Normal event
-                    if (((uchar)array.at(pos) >>4) != 15) {
+                    if (((uchar)array.at(pos) >>4) != 0xF) {
                         uchar status = (uchar)array.at(pos);
-                        uchar channel =  (uchar)array.at(pos) & 15;
+                        lastStatus = status;
+                        if (status >= 0xb0 && status <= 0xBF) //IGNORE CC FOR NOW
+                        {
+                            pos +=2;
+                            continue;
+                        }
+                        else if(status >= 0xC0 && status <= 0xCF) // IGNORE PC FOR NOW
+                        {
+                            pos +=1;
+                            continue;
+                        }
+                        if (status != 0x90 && status != 0x80)
+                        {
+                           qDebug() << "Status not implemented: " << status;
+                        }
+                        uchar channel =  (uchar)array.at(pos) & 0xF;
                         uchar dataByte1 = (uchar)array.at(++pos);
                         uchar dataByte2 = (uchar)array.at(++pos);
+
                         DWORD nvnt =( dataByte2 << 16 |
                                       dataByte1 << 8 |
                                       status);
                         eventCanAdd = true;
 
-                        track->listOfNotes.append(deltaTime);
-                        track->listOfNotes.append(nvnt);
+                        addPartialMidiNote(nvnt,track->totalDT,track);
                         lastChannel = channel;
-                        lastStatus = status;
                     }
 
                     //Meta event
@@ -208,7 +236,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                             pos =  track->length + currentPos;
                             break;
                         case 33:
-                            pos++;
+                            pos+=2;
                             break;
 
                         default:
@@ -219,7 +247,9 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 }
 
             }
-            qDebug() << "TPQN: " << track->totalDT << " LENGTH: " << track->listOfNotes.length();
+
+            recalculateNoteListDT(track);
+            qDebug() << "TOTALDT: " << track->totalDT << " LENGTH: " << track->listOfNotes.length();
             song.tracks.append(track);
         }
     }
@@ -243,6 +273,11 @@ void MidiManager::addMidiNote(int note,int velocity, int start, int length,mTrac
     track->noteMap[start+length].push_back(event & 0x00FFFF);
 }
 
+void MidiManager::addPartialMidiNote(DWORD event, int start, mTrack *track)
+{
+    track->noteMap[start].push_back(event);
+}
+
 void MidiManager::removeMidiNote(int start, int length, int note, mTrack *track)
 {
     for (int var = 0; var < track->noteMap.at(start).size(); ++var)
@@ -258,7 +293,7 @@ void MidiManager::removeMidiNote(int start, int length, int note, mTrack *track)
                 track->noteMap.at(start).erase(track->noteMap.at(start).begin()+var);
 
             }
-               break;
+            break;
         }
     }
     for (int var = 0; var < track->noteMap.at(start+length).size(); ++var)
@@ -271,9 +306,9 @@ void MidiManager::removeMidiNote(int start, int length, int note, mTrack *track)
             }
             else
             {
-                 track->noteMap.at(start+length).erase(track->noteMap.at(start+length).begin() + var);
+                track->noteMap.at(start+length).erase(track->noteMap.at(start+length).begin() + var);
             }
-             break;
+            break;
         }
     }
     MidiManager::recalculateNoteListDT(track);

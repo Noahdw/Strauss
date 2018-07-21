@@ -18,7 +18,7 @@ public:
     QPainterPath shape() const;
     void setInitalPos(QPointF pos);
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
-    int value;
+    int value = 0;
     int oldX;
     int oldY;
     ControlChangeOverlay * overlay;

@@ -22,7 +22,6 @@ void TrackMidiView::paintEvent(QPaintEvent *event)
     QPen pen;
     pen.setColor(Qt::black);
     painter.setBrush(Qt::lightGray);
-
     painter.setPen(pen);
     painter.fillRect(viewport()->rect(),painter.brush());
     QGraphicsView::paintEvent(event);
@@ -45,5 +44,4 @@ void TrackMidiView::shareScene(QGraphicsScene *scene)
     setScene(scene);
     totalDT = scene->width();
     fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
-
 }

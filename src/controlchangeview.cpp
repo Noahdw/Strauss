@@ -5,7 +5,7 @@ ControlChangeView::ControlChangeView(QWidget *parent) : QGraphicsView(parent)
    // setMinimumWidth(1000);
    // setMinimumHeight(200);
     setStyleSheet("background-color: transparent;");
-    setViewportUpdateMode(MinimalViewportUpdate);
+    setViewportUpdateMode(NoViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
 }
 void ControlChangeView::paintEvent(QPaintEvent *event)
@@ -49,3 +49,4 @@ void ControlChangeView::showEvent(QShowEvent *event)
     setUpdatesEnabled(true);
     QGraphicsView::showEvent(event);
 }
+

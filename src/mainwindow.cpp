@@ -79,8 +79,8 @@ MainWindow::MainWindow(QWidget *parent) :
     audioManager->openStream();
     audioManager->startStream();
 
-
-    for (int i = 0; i < player.getDevices(); ++i)
+    int devices = player.getDevices();
+    for (int i = 0; i < devices; ++i)
     {
         player.openDevice(i);
     }

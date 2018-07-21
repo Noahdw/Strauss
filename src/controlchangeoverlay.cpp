@@ -32,15 +32,15 @@ void ControlChangeOverlay::createLineConnector()
 
     size = tempItem.size() - 1;
 
-    QMap<int, QGraphicsItem*>::const_iterator i = activeItems.constBegin();
-    while (i != activeItems.constEnd()) {
+    std::map<int, QGraphicsItem*>::const_iterator i = activeItems.begin();
+    while (i != activeItems.end()) {
         auto item = *i;
         ++i;
-        if (i != activeItems.constEnd())
+        if (i != activeItems.end())
         {
             auto item2 = *i;
             QPen pen(Qt::red,4);
-            lineItems.push_back(scene->addLine(item->x(),item->y(),item2->x(),item2->y(),pen));
+            lineItems.push_back(scene->addLine(item.second->x(),item.second->y(),item2.second->x(),item2.second->y(),pen));
         }
     }
 }
@@ -53,7 +53,7 @@ void ControlChangeOverlay::removeSelectedItems()
          if (item && item != leftItem && item != rightItem)
          {
              scene->removeItem(var);
-            activeItems.remove(item->x());
+            activeItems.erase(item->x());
              delete item;
              item=nullptr;
          }
@@ -71,7 +71,7 @@ void ControlChangeOverlay::removeCollidingItems(QList<QGraphicsItem *> &items)
         if (ccItem && ccItem != leftItem && ccItem != rightItem)
         {
             scene->removeItem(ccItem);
-            activeItems.remove(ccItem->x());
+            activeItems.erase(ccItem->x());
             delete ccItem;
         }
 
@@ -79,7 +79,7 @@ void ControlChangeOverlay::removeCollidingItems(QList<QGraphicsItem *> &items)
 }
 
 void ControlChangeOverlay::addPoint(int x, int value)
-{if (!activeItems.contains(x))
+{if (!activeItems.count(x))
     {
         value = 127 - value;
         ControlChangeItem *item = new ControlChangeItem();
@@ -89,7 +89,8 @@ void ControlChangeOverlay::addPoint(int x, int value)
         int NewValue = (((value - 0) * NewRange) / OldRange) + 0;
         item->setY(NewValue);
         item->overlay = this;
-        activeItems.insert(x,item);
+        item->value = 127 - value;
+        activeItems[x] = item;
 
         scene->addItem(item);
         createLineConnector();
@@ -147,8 +148,8 @@ void ControlChangeOverlay::showEvent(QShowEvent *event)
         collisionItem->setZValue(2);
         leftItem->setPos(0,1092);
         rightItem->setPos(960*60,1092);
-        activeItems.insert(0,leftItem);
-        activeItems.insert(960*60,rightItem);
+        activeItems[0] = leftItem;
+        activeItems[960*60] = rightItem;
         createLineConnector();
         firstShow  = false;
         leftItem->overlay = this;
@@ -190,10 +191,10 @@ void ControlChangeOverlay::mouseDoubleClickEvent(QMouseEvent *event)
         ControlChangeItem *item = new ControlChangeItem();
         item->setPos(t);
         item->overlay = this;
-        activeItems.insert(t.x(),item);
+        activeItems[t.x()] = item;
         scene->addItem(item);
         createLineConnector();
-
+        recalculateDT();
     QGraphicsView::mouseDoubleClickEvent(event);
 }
 
@@ -206,11 +207,11 @@ void ControlChangeOverlay::mouseMoveEvent(QMouseEvent *event)
         ControlChangeItem *item = new ControlChangeItem();
         item->setInitalPos(newPos);
         item->overlay = this;
-        if (item->x() == 0 && activeItems.contains(0))
+        if (item->x() == 0 && activeItems.count(0))
         {
             return;
         }
-        activeItems.insert(item->x(),item);
+        activeItems[item->x()] = item;
         scene->addItem(item);
         createLineConnector();
     }
@@ -251,4 +252,40 @@ void ControlChangeOverlay::resizeEvent(QResizeEvent *event)
         fitIntoView();
     }
     QGraphicsView::resizeEvent(event);
+}
+
+
+
+
+void ControlChangeOverlay::recalculateDT()
+{
+    listOfCC.clear();
+    listOfCC.reserve(activeItems.size()*2);
+    int counter = 0;
+    int last = 0;
+    for(const auto& var : activeItems)
+    {
+        auto item = static_cast<ControlChangeItem*>(var.second);
+        if (item == leftItem || item == rightItem)
+        {
+            continue;
+        }
+        int event = (item->value << 16 |
+                          ccType << 8  |
+                                  0xB0);
+            if (counter == 0)
+            {
+                listOfCC.push_back(var.first);
+                listOfCC.push_back(event);
+                last = var.first;
+                counter++;
+            }
+            else
+            {
+                listOfCC.push_back(var.first - last);
+                listOfCC.push_back(event);
+                last = var.first;
+            }
+
+    }
 }

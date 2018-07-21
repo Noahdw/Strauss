@@ -81,7 +81,7 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     velocity->setSceneRect(0,0,roll->totalDT,velocity->height());
     velocity->populateVelocityViewFromTrack(view);
     velocity->trackView = view;
-    velocity->trackView->trackMidiView->shareScene(roll->scene);
+    view->trackMidiView->shareScene(roll->scene);
     ccContainer->addControlChangeView(roll);
 }
 

@@ -39,5 +39,6 @@ void ControlChangeBridge::verifyOverlayExists(int value)
         scene->setSceneRect(baseScene->sceneRect());
         overlays[value]->scene = scene;
         overlays[value]->setScene(scene);
+        overlays[value]->ccType = value;
     }
 }
