@@ -57,7 +57,7 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     timer = new QTimeLine((float)(60.0/120.0)*cols*1000);//Song time in ms
     timer->setFrameRange(0,100);
     timer->setCurveShape(QTimeLine::LinearCurve);
-    timer->setUpdateInterval(1000);
+    timer->setUpdateInterval(20);
     rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     animation = new QGraphicsItemAnimation;
     line = new QGraphicsRectItem(0,0,1,5000);
