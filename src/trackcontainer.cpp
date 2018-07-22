@@ -8,12 +8,25 @@ int ID = 0;
  **/
 TrackContainer::TrackContainer()
 {
+    vSplitter = new QSplitter(this);
+    vSplitter->setOrientation(Qt::Vertical);
+    vSplitter->setContentsMargins(0,0,0,0);
+    vSplitter->setHandleWidth(0);
     vLayout = new QVBoxLayout;
     vLayout->setSpacing(0);
     vLayout->setContentsMargins(0,0,0,0);
     vLayout->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-    //  setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Minimum);
-    setLayout(vLayout);
+    hLayout = new QHBoxLayout;
+    hLayout->setSpacing(0);
+    hLayout->setContentsMargins(0,0,0,0);
+    hLayout->addLayout(vLayout);
+    auto lt = new QVBoxLayout;
+    lt->setSpacing(0);
+    lt->setContentsMargins(0,0,0,0);
+    lt->setAlignment(Qt::AlignTop|Qt::AlignLeft);
+    lt->addWidget(vSplitter);
+    hLayout->addLayout(lt);
+    setLayout(hLayout);
 }
 
 void TrackContainer::addTrackView(mSong *song)
@@ -32,16 +45,16 @@ void TrackContainer::addTrackView(mSong *song)
 
         // vLayout->addWidget(view,Qt::AlignTop|Qt::AlignLeft);
         view->id = ID;
-        emit addPianoRoll(view);
+
         ID++;
-
-        QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
-
         auto *midiView = new TrackMidiView;
         view->trackMidiView = midiView;
-        hlayout->addWidget(midiView);
-        vLayout->addWidget(widget,Qt::AlignTop|Qt::AlignLeft);
-       // vLayout->setAlignment(widget,Qt::AlignTop);
+        emit addPianoRoll(view);
+        QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
+
+
+        vLayout->addWidget(midiView);
+        vSplitter->addWidget(view);
     }
     adjustSize();
 }
@@ -56,15 +69,6 @@ void TrackContainer::setPianoRollReference(PianoRollContainer *prc)
 void TrackContainer::addSingleView(TrackView *view)
 {
 
-    QWidget *widget = new QWidget;
-    auto *hlayout = new QHBoxLayout;
-    hlayout->setAlignment(Qt::AlignTop);
-    hlayout->setSpacing(0);
-    hlayout->setContentsMargins(0,0,0,0);
-    widget->setLayout(hlayout);
-    //hlayout->addWidget(view); for left placing
-
-
     view->id = ID;
     ID++;
     auto *midiView = new TrackMidiView;
@@ -72,23 +76,34 @@ void TrackContainer::addSingleView(TrackView *view)
 
     emit addPianoRoll(view);
     QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
-    adjustSize();
 
-    hlayout->addWidget(midiView);
-    hlayout->addWidget(view);
-
-    vLayout->addWidget(widget,Qt::AlignTop|Qt::AlignLeft);
-   // QSpacerItem *verticalSpacer = new QSpacerItem(1, 200, QSizePolicy::Minimum, QSizePolicy::Expanding);
-  //  if(ID == 1)
-
- //vLayout->addItem(verticalSpacer);
-   // vLayout->insertSpacerItem(-1,verticalSpacer);
-    adjustSize();
-
+    vLayout->addWidget(midiView);
+    vSplitter->addWidget(view);
 
 }
 void TrackContainer::mousePressEvent(QMouseEvent *event)
 {
 
+}
+
+void TrackContainer::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key())
+    {
+    case Qt::Key_C:
+        switchControlChange();
+        break;
+    default:
+        break;
+    }
+    QWidget::keyPressEvent(event);
+}
+
+void TrackContainer::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    QBrush brush(Qt::darkGray);
+    painter.setBrush(brush);
+    painter.drawRect(0,0,width(),height());
 }
 

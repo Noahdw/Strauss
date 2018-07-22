@@ -5,6 +5,7 @@
 #include <src/audiomanager.h>
 #include <src/midiplayer.h>
 
+
 MidiPlayer player;
 MidiManager *manager;
 
@@ -17,7 +18,7 @@ AEffect *plugin = NULL;
 QVector<pluginHolder*> MainWindow::pluginHolderVec;
 
 MainWindow::MainWindow(QWidget *parent) :
-        QMainWindow(parent)
+    QMainWindow(parent)
 {
     centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
@@ -35,24 +36,41 @@ MainWindow::MainWindow(QWidget *parent) :
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
-    folderView      = new FolderView;
-    headerContainer = new HeaderContainer;
-    trackContainer  = new TrackContainer;
-    prollContainer  = new PianoRollContainer;
+    folderView       = new FolderView;
+    headerContainer  = new HeaderContainer;
+    trackContainer   = new TrackContainer;
+    prollContainer   = new PianoRollContainer;
+    controlContainer = new ControlChangeContainer(prollContainer);
+    prollHelper      = new PianoRollHelperView;
+
     trackContainer->setPianoRollReference(prollContainer);
     folderView->pRollContainer = prollContainer;
     headerContainer->audioManager = audioManager;
     trackScrollArea->setWidget(trackContainer);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addWidget(trackScrollArea);
-    hLayout->addWidget(folderView);
+    QVBoxLayout *mainLayout   = new QVBoxLayout;
+    QHBoxLayout *helperLayout = new QHBoxLayout;
+    QSplitter *trackSplitter  = new QSplitter;
+    QSplitter *prollSplitter  = new QSplitter;
+
+    prollSplitter->setOrientation(Qt::Vertical);
+    helperLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+   // helperLayout->setSpacing(0);
+    helperLayout->setContentsMargins(0,0,0,0);
+    trackSplitter->addWidget(trackScrollArea);
+    trackSplitter->addWidget(folderView);
     mainLayout->addWidget(headerContainer);
-    mainLayout->addLayout(hLayout);
-    mainLayout->addWidget(prollContainer);
+    prollSplitter->addWidget(trackSplitter);
+   // prollSplitter->setStyleSheet("background-color: rgb(150, 150, 150);");
+    prollSplitter->addWidget(controlContainer);
+    helperLayout->addWidget(prollHelper);
+    helperLayout->addWidget(prollSplitter);
+    mainLayout->addLayout(helperLayout);
+    prollHelper->container = controlContainer;
     centralWidget->setLayout(mainLayout);
 
+    QObject::connect(trackContainer,&TrackContainer::switchControlChange,controlContainer,
+                     &ControlChangeContainer::switchControlChangeContainer);
     QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
     addNewTrack();
     setUpMenuBar();
@@ -60,8 +78,17 @@ MainWindow::MainWindow(QWidget *parent) :
     audioManager->startPortAudio();
     audioManager->openStream();
     audioManager->startStream();
-    player.getDevices();
+
+    int devices = player.getDevices();
+    for (int i = 0; i < devices; ++i)
+    {
+        player.openDevice(i);
+    }
     player.openDevice(3);
+    QPalette pal = palette();
+    pal.setColor(QPalette::Background, QColor(150,150,150));
+    setAutoFillBackground(true);
+    setPalette(pal);
 }
 
 MainWindow::~MainWindow()
@@ -146,34 +173,6 @@ void MainWindow::on_actionPlay_triggered()
 void MainWindow::openVST()
 {
 
-
-
-    //    QFileDialog dialog;
-    //    QString fileName  = dialog.getOpenFileName(this, tr("Open File"), QString(),
-    //                                               tr("dll Files (*.dll)"));
-
-    //    if (!fileName.isEmpty()) {
-    //        QByteArray array = fileName.toLocal8Bit();
-    //        char* file = array.data();
-
-
-
-    //        plugin = host->loadPlugin(file);
-    //        if (plugin == NULL) {
-    //            qDebug() << "NULLPTR PLUGIN";
-    //            return;
-    //        }
-    //        int state = host->configurePluginCallbacks(plugin);
-    //        if (state == -1) {
-    //            qDebug() << "Failed to configure button. abort startPlugin";
-    //            return;
-    //        }
-    //        host->startPlugin(plugin);
-
-
-
-
-    //    }
 }
 
 void MainWindow::deleteAllNotes()
@@ -208,7 +207,6 @@ void MainWindow::setUpMenuBar()
     //Add pause
 
     //Create menu crap
-
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(openFileAction);
     fileMenu->addAction(playSongAction);
@@ -217,8 +215,15 @@ void MainWindow::setUpMenuBar()
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(deleteAllNotesAction);
     editMenu->addAction(addNewTrackAction);
+}
 
-
+void MainWindow::paintEvent(QPaintEvent *event)
+{
+//    QPainter painter(this);
+//    QBrush brush(Qt::lightGray);
+//    brush.setColor(QColor(150,150,150));
+//    painter.setBrush(brush);
+//    painter.drawRect(0,0,width(),height());
 }
 
 void MainWindow::addNewTrack()

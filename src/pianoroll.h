@@ -4,6 +4,7 @@
 //Forward declarations
 class Keyboard;
 class VelocityView;
+class ControlChangeBridge;
 
 #include <QWidget>
 #include <QPainter>
@@ -19,6 +20,10 @@ class VelocityView;
 #include <src/trackmidiview.h>
 #include "src/tracklengthview.h"
 #include <QRubberBand>
+#include <QKeyEvent>
+#include <map>
+#include <src/controlchangeoverlay.h>
+
 class PianoRoll : public QGraphicsView{
     Q_OBJECT
 public:
@@ -29,15 +34,22 @@ public:
     void playKeyboardNote(int note, bool active);
     void clearActiveNotes();
     void deleteAllNotes();
+    void deleteSelectedNotes();
     void setScrollWheelValue(int value);
     void updateSongTrackerPos(bool isPauseOrResume, bool isResume, int custom);
     void notifyPianoRollItemMoved(int xMove, int yMove,QGraphicsItem *item);
+    void addNoteToScene(int note, int position, int length, int velocity);
+    void changeNotesAfterMouseDrag(QGraphicsItem *item);
+    void switchViewContainer();
 
+    std::map<int,ControlChangeOverlay*> controlChangeOverlays;
     TrackView *track;
     TrackLengthView * trackLengthView;
     VelocityView *velocityView;
     QGraphicsScene *scene;
     QRectF *sceneRect;
+    QGraphicsRectItem *line;
+    ControlChangeBridge * bridge;
     int cols = 60;
     int tPQN = MidiManager::TPQN;
     int totalDT = MidiManager::TPQN*cols;
@@ -60,7 +72,7 @@ protected:
     void drawBackground(QPainter * painter, const QRectF & rect);
     void wheelEvent(QWheelEvent *event);
     void resizeEvent(QResizeEvent *event);
-
+    void keyPressEvent(QKeyEvent *event);
 private:
     Keyboard *keyboard;
     QTimeLine *timer;

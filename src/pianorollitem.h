@@ -20,11 +20,13 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
     void setBoundingRect(int _width);
+    void setInitalPosition(int start, int length, int note);
     PianoRoll *pianoroll;
     QBrush brush;
 
     int noteStart;
     int noteEnd;
+    int note;
     bool canMove = true;
 
 protected:

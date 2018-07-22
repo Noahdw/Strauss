@@ -11,6 +11,9 @@ class TrackMidiView;
 #include <QScrollArea>
 #include <src/pianorollcontainer.h>
 #include <QSpacerItem>
+#include <QSplitter>
+#include <QKeyEvent>
+#include <QPainter>
 
 class TrackContainer : public QWidget
 {
@@ -20,6 +23,8 @@ public:
     void setPianoRollReference(PianoRollContainer *prc);
     void addSingleView(TrackView *view);
 
+signals:
+void switchControlChange();
 public slots:
     void addTrackView(mSong *song);
 
@@ -28,12 +33,15 @@ signals:
     void requestTrackChange(int id);
 
 private:
+    QSplitter *vSplitter;
     QVBoxLayout *vLayout;
+    QHBoxLayout *hLayout;
     QScrollArea *scrollArea;
 
 protected:
    void mousePressEvent(QMouseEvent *event);
-
+   void keyPressEvent(QKeyEvent * event);
+   void paintEvent(QPaintEvent *event);
    PianoRollContainer *prcontainer;
 };
 

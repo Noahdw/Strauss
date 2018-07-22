@@ -4,6 +4,7 @@
 #include <src/midiplayer.h>
 #include <src/pianorollitem.h>
 int main(int argc, char *argv[])
+
 {
     QApplication app(argc, argv);
     MainWindow window;

@@ -12,6 +12,8 @@
 #include <QStackedLayout>
 #include <src/velocityview.h>
 #include <src/tracklengthview.h>
+#include <src/controlchangecontainer.h>
+#include <QPainter>
 
 class PianoRollContainer : public QWidget
 {
@@ -19,17 +21,21 @@ class PianoRollContainer : public QWidget
 public:
     PianoRollContainer();
     void propogateFolderViewDoubleClicked(QString filepath,QString path);
-
+    PianoRoll *getPianoRollRef();
     PianoRoll *pianoRoll;
     Keyboard *keyboard;
-
+    ControlChangeContainer *ccContainer;
+     QStackedLayout *stackedLayout;
 public slots:
    void switchPianoRoll(int id);
    void addPianoRolls(TrackView *view);
 
 private:
     QHBoxLayout *layout;
-    QStackedLayout *stackedLayout;
+
+protected:
+    void paintEvent(QPaintEvent * event);
+
 };
 
 #endif // PIANOROLLCONTAINER_H

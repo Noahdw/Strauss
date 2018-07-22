@@ -16,11 +16,14 @@ public:
     explicit TrackLengthView(QWidget *parent = nullptr);
     QGraphicsScene * scene;
     void setScale(float x, bool needsReset, int wheelPos);
+private:
 
 protected:
     void paintEvent(QPaintEvent * event);
     void mouseDoubleClickEvent(QMouseEvent  *event);
     void mousePressEvent(QMouseEvent *event);
+    void resizeEvent(QResizeEvent *event);
+
 };
 
 #endif // TRACKLENGTHVIEW_H

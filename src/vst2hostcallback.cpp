@@ -4,25 +4,33 @@
 #include <SDK/audioeffectx.h>
 #include <qdatetime.h>
 #include <src/pianoroll.h>
+#include <src/audiomanager.h>
+#include <src/controlchangebridge.h>
+#include <src/controlchangeoverlay.h>
 #pragma comment(lib,"user32.lib")
 
 Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
 {
     track = mtrack;
-
+    blocksize = AudioManager::blocksize;
 }
+
 dispatcherFuncPtr dispatcher;
 VstTimeInfo vtime;
 float sRate;
 double sPos = 0;
-int processLevel = kVstProcessLevelUser; //1
+int processLevel = 2;//kVstProcessLevelUser; //1
 
 extern "C"{
-bool firstRun = true;
+bool firstRun = true;    int note = 0;
 VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
                                    VstInt32 index, VstInt32 value, void *ptr, float opt)
 {
-    // qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
+    if (opcode != 7)
+    {
+        // qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
+    }
+
     //http://jdmcox.com/PianoRollComposer.cpp for opcodes
     switch (opcode) {
     case audioMasterVersion:
@@ -100,8 +108,6 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
 AEffect *Vst2HostCallback::loadPlugin(char* fileName)
 {
     AEffect *plugin = NULL;
-
-
     HMODULE modulePtr = LoadLibraryA(fileName);
     hinst = modulePtr;
     if(modulePtr == NULL) {
@@ -110,7 +116,7 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     }
 
     vstPluginFuncPtr mainEntryPoint =
-                    (vstPluginFuncPtr)GetProcAddress(modulePtr, "VSTPluginMain");
+            (vstPluginFuncPtr)GetProcAddress(modulePtr, "VSTPluginMain");
 
     if(mainEntryPoint == NULL)
     {
@@ -124,8 +130,8 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName)
     // Instantiate the plugin
     plugin = mainEntryPoint((audioMasterCallback)hostCallback);
     sRate = sampleRate;
-    // samplesPerTick =(BPM / TPQN )/(1000000/sRate);/
-    samplesPerTick =(60.0/120.0 )*(1000000/sRate);//Why do i need /2 to work????
+    samplesPerTick = sampleRate/(float)(MidiManager::TPQN * (120.0f/60.0f));
+    // samplesPerTick =(60.0/120.0 )*(1000000/sRate);//Why do i need /2 to work????
     qDebug() << "SamplesperTick: " << samplesPerTick;
     return plugin;
 }
@@ -231,11 +237,12 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
     bool canSkip = false;
     int df =0;
     int velocity;
-
+    // These are events from the keyboard to the right of the pianoRoll. in the future this might be
+    // merged into the queue below.
     if (eventToAdd.hasEventToAdd) {
 
         (eventToAdd.eventOn) ? velocity = 70 : velocity = 0;
-        VstMidiEvent* evnt = new VstMidiEvent;
+        VstMidiEvent* evnt = eventsHolder[pos];
         evnt->byteSize =24;
         evnt->deltaFrames = 0;
         evnt->type = kVstMidiType;
@@ -257,30 +264,31 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 
         eventToAdd.hasEventToAdd = false;
     }
+    //These are events which are the result of playback from some midi device (e.g. human genorated from a keyboard).
     while (!midiEventQueue.empty())
     {
         EventToAdd eventStruct = midiEventQueue.front();
 
-        VstMidiEvent* evnt = new VstMidiEvent;
-        evnt->byteSize =24;
-        evnt->deltaFrames = 0;
-        evnt->type = kVstMidiType;
-        evnt->flags = 0;
-        evnt->detune = 0;
+        VstMidiEvent* evnt = eventsHolder[pos];
+        evnt->byteSize        = 24;
+        evnt->deltaFrames     = 0;
+        evnt->type            = kVstMidiType;
+        evnt->flags           = 0;
+        evnt->detune          = 0;
         evnt->noteOffVelocity = 0;
-        evnt->reserved1 = 0;
-        evnt->reserved2 = 0;
-        evnt->midiData[0] =  0x90;
-        evnt->midiData[1] = (uchar)eventStruct.note;
-        evnt->midiData[2] = eventStruct.velocity;
-        evnt->midiData[3] = 0;
-        evnt->noteOffset = 0;
-        evnt->noteLength = 0;
+        evnt->reserved1       = 0;
+        evnt->reserved2       = 0;
+        evnt->midiData[0]     = eventStruct.status;
+        evnt->midiData[1]     = eventStruct.note;
+        evnt->midiData[2]     = eventStruct.velocity;
+        evnt->midiData[3]     = 0;
+        evnt->noteOffset      = 0;
+        evnt->noteLength      = 0;
 
         events->events[pos] = (VstEvent*)evnt;
         ++events->numEvents;
         ++pos;
-         midiEventQueue.pop();
+        midiEventQueue.pop();
     }
 
     if (isPaused)
@@ -288,11 +296,92 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
         dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
         return;
     }
+
     // If we are too many samples away from inputing an event, subtract blocksize and give empty vstevents
+    /* Some help to make sense of this: We want to send our midi events to our plugins but we must abide
+     * by the fact that our audio engine calls this function SampleRate/blocksize times every second.
+     * e.g. 48000/256 = 187 times per second. Our midi data is stored in an vector by its delta time since the last
+     * midi note. If the TicksPerQuarterNote is 980 and the BPM is 120, then there are 1960 ticks per second. This tells us that
+     * each tick corresponds to 22.9 samples of audio. A single quarter note that starts at the very beginning of a song will have
+     * its note off a DT of 960 from its note on. The note on is added instantly as an event as it has a DT of 0, but the note off
+     * is 960 * 22.9 (21984) samples away. We can subract the block size from this every time the function is called until we are in
+     * the range [0,block size] at which point it is added as an event. Delta frames are the samples since the start of a block,
+     * or in our case the value our FramesTillBLock is at when it is in the range to add an event. Delta frames only really matter when
+     * the block size is quite large.
+     */
     if (!hasReachedEnd) {
+        auto cc = &pianoroll->bridge->overlays;
+        for (int j = 0; j < cc->size(); ++j)
+        {
+            df = 0;
+            canSkip = false;
+            uint k = 0;
+            if (cc->at(j) != NULL && cc->at(j)->activeItems.size() > 2)
+            {
+                while(k < blocksize){
+                    //  qDebug() << cc->at(j)->listOfCC.size();
+                    if (ccVecPos[j] >= cc->at(j)->listOfCC.size())
+                    {
+                        break;
+                    }
+                    if (ccFramesTillBlock[j] > 0)
+                    {
+                        if (ccFramesTillBlock[j] < blocksize)
+                        {
+                            canSkip = true;
+                        }
+                        else
+                        {
+                            ccFramesTillBlock[j] -= blocksize;
+                            break;
+                        }
+                    }
+                    if (!canSkip) {
+                        //Deltaframes, bless its heart, is actually samples since the start of a block.
+                        // A lot of sources claimed it was Microseconds since the start. Wrong.
+                        df = cc->at(j)->listOfCC.at(ccVecPos[j]) * samplesPerTick;
+                        k+=df;
+                        if (k > blocksize) {
+                            ccFramesTillBlock[j] = df;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        df = ccFramesTillBlock[j];
+                        k+=df;
+                        canSkip = false;
+                    }
+
+                    ccFramesTillBlock[j] = 0;
+
+                    //can add new event as we are in block timeframe
+                    VstMidiEvent* evnt = eventsHolder[pos];
+                    evnt->byteSize =24;
+                    evnt->deltaFrames = df;
+                    evnt->type = kVstMidiType;
+                    evnt->flags = 0;
+                    evnt->detune = 0;
+                    evnt->noteOffVelocity = 0;
+                    evnt->reserved1 = 0;
+                    evnt->reserved2 = 0;
+                    evnt->midiData[0] = (uchar)cc->at(j)->listOfCC.at(ccVecPos[j] + 1) & 0xFF;
+                    evnt->midiData[1] = (uchar)(cc->at(j)->listOfCC.at(ccVecPos[j] + 1) >> 8) & 0xFF;
+                    evnt->midiData[2] = (uchar)(cc->at(j)->listOfCC.at(ccVecPos[j] + 1) >> 16) & 0xFF;
+                    evnt->midiData[3] = 0;
+                    evnt->noteOffset = 0;
+                    evnt->noteLength = 0;
+                    events->events[pos] = (VstEvent*)evnt;
+
+                    ++pos;
+                    ++events->numEvents;
+                    ccVecPos[j] += 2;
+                }
+            }
+        }
 
         while(i < blocksize){
-            //   qDebug() << framesTillBlock;
+            //  qDebug() << framesTillBlock;
             if (noteVecPos >= track->listOfNotes.length()) {
                 qDebug() << "notevec length :" << track->listOfNotes.length();
                 qDebug() << "Reached end of midi";
@@ -315,7 +404,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
                 df = track->listOfNotes.at(noteVecPos) * samplesPerTick;
                 i+=df;
                 if (i > blocksize) {
-                    framesTillBlock = df - (blocksize - i);
+                    framesTillBlock = df;
                     break;
                 }
             }
@@ -328,10 +417,8 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 
             framesTillBlock = 0;
 
-
             //can add new event as we are in block timeframe
-            VstMidiEvent* evnt = new VstMidiEvent;
-
+            VstMidiEvent* evnt = eventsHolder[pos];
             evnt->byteSize =24;
             evnt->deltaFrames = df;
             evnt->type = kVstMidiType;
@@ -340,9 +427,9 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
             evnt->noteOffVelocity = 0;
             evnt->reserved1 = 0;
             evnt->reserved2 = 0;
-            evnt->midiData[0] =  (uchar)track->listOfNotes.at(noteVecPos+2) & 0xFF;
-            evnt->midiData[1] = (uchar)(track->listOfNotes.at(noteVecPos+2) >>8) & 0xFF;
-            evnt->midiData[2] = (uchar)(track->listOfNotes.at(noteVecPos+2) >>16) & 0xFF;
+            evnt->midiData[0] = (uchar)track->listOfNotes.at(noteVecPos+1) & 0xFF;
+            evnt->midiData[1] = (uchar)(track->listOfNotes.at(noteVecPos+1) >>8) & 0xFF;
+            evnt->midiData[2] = (uchar)(track->listOfNotes.at(noteVecPos+1) >>16) & 0xFF;
             evnt->midiData[3] = 0;
             evnt->noteOffset = 0;
             evnt->noteLength = 0;
@@ -351,7 +438,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 
             ++pos;
             ++events->numEvents;
-            noteVecPos +=3;
+            noteVecPos +=2;
         }
     }
     dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
@@ -361,15 +448,24 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 //There is no need to malloc every call and create new events. Reuse just one structure.
 void Vst2HostCallback::initializeMidiEvents()
 {
-    int numEventsRequired = maxNotes;
-    events = (VstEvents*)malloc(sizeof(VstEvents) + sizeof(VstEvents*)*(numEventsRequired));
-    events->numEvents = numEventsRequired;
+    events = (VstEvents*)malloc(sizeof(VstEvents) + sizeof(VstEvents*)*(maxNotes));
+    for (int i = 0; i < maxNotes; ++i)
+    {
+        VstMidiEvent* evnt = new VstMidiEvent;
+        eventsHolder[i] = evnt;
+    }
+  //  events->numEvents = maxNotes;
     events->reserved = 0;
     qDebug() << "initializeMidiEvents okay";
 }
 
 void Vst2HostCallback::restartPlayback()
 {
+    for (int i = 0; i < 128; ++i)
+    {
+        ccFramesTillBlock[i] = 0;
+        ccVecPos[i] = 0;
+    }
     noteVecPos = 0;
     framesTillBlock = 0;
     hasReachedEnd = false;
@@ -390,9 +486,9 @@ void Vst2HostCallback::pauseOrResumePlayback(bool isResume)
     }
 }
 
-void Vst2HostCallback::addMidiEvent(uchar note, uchar velocity)
+void Vst2HostCallback::addMidiEvent(uchar status,uchar note, uchar velocity)
 {
-    EventToAdd evnt{note,false,false,velocity};
+    EventToAdd evnt{status,note,false,false,0,velocity};
     midiEventQueue.push(evnt);
 }
 
@@ -400,7 +496,7 @@ void Vst2HostCallback::setCustomPlackbackPos(int playbackPos)
 {
     pianoroll->updateSongTrackerPos(false,false,playbackPos);
     int total = 0;
-    for (int var = 0; var < track->listOfNotes.length(); var+= 3)
+    for (int var = 0; var < track->listOfNotes.length(); var+= 2)
     {
         total += track->listOfNotes.at(var);
         if (total >= playbackPos)
@@ -455,14 +551,18 @@ void Vst2HostCallback::turnOffAllNotes(AEffect *plugin)
 }
 
 
+
+
 void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **outputs,
                                     long numFrames) {
     // qDebug() << plugin->numInputs;
 
-    if (plugin->flags & effFlagsCanReplacing) {
+    if (plugin->flags & effFlagsCanReplacing)
+    {
         plugin->processReplacing(plugin, inputs, outputs, numFrames);
     }
-    else{
+    else
+    {
         qDebug() << "processReplacing not supported by plugin";
     }
 }

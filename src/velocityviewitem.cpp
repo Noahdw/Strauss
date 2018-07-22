@@ -31,7 +31,7 @@ void VelocityViewItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     // painter->setClipRect(option->exposedRect);
     // painter->fillRect(rect,brush);
     //painter->drawRect(rect);
-    painter->drawEllipse(0,0,8,8);
+    painter->drawPath(shape());
     painter->setBrush(brush);
     painter->drawRect(3,8,1,velocity);
     //painter->f
@@ -45,7 +45,7 @@ QRectF VelocityViewItem::boundingRect() const
 QPainterPath VelocityViewItem::shape() const
 {
     QPainterPath path;
-    path.addEllipse(0,0,5,5);
+    path.addEllipse(0,0,radius,radius);
     return path;
 }
 

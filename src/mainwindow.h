@@ -21,6 +21,11 @@
 #include <src/headercontainer.h>
 #include <QLibrary>
 #include <qvector.h>
+#include <QSplitter>
+#include <src/controlchangecontainer.h>
+#include "src/pianorollhelperview.h"
+#include <QPainter>
+
 namespace Ui {
 class MainWindow;
 }
@@ -54,6 +59,8 @@ private:
     TrackContainer *trackContainer;
     FolderView * folderView;
     HeaderContainer * headerContainer;
+    ControlChangeContainer * controlContainer;
+    PianoRollHelperView * prollHelper;
 
     QMenu *fileMenu;
     QMenu *editMenu;
@@ -64,6 +71,8 @@ private:
     QAction *deleteAllNotesAction;
     QAction *openVSTAction;
     QAction *addNewTrackAction;
+protected:
+    void paintEvent(QPaintEvent * event);
 
 };
 
