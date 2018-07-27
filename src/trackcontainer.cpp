@@ -51,8 +51,6 @@ void TrackContainer::addTrackView(mSong *song)
         view->trackMidiView = midiView;
         emit addPianoRoll(view);
         QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
-
-
         vLayout->addWidget(midiView);
         vSplitter->addWidget(view);
     }

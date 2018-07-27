@@ -11,6 +11,13 @@ class PianoRoll;
 #include <QObject>
 #include <queue>
 
+struct Rect {
+    short top;
+    short left;
+    short bottom;
+    short right;
+};
+
 struct EventToAdd
 {
     uchar status = 0x90;
@@ -26,7 +33,7 @@ class Vst2HostCallback : public QObject
     Q_OBJECT
 public:
     Vst2HostCallback(mTrack *track);
-    AEffect* loadPlugin(char* fileName);
+    AEffect* loadPlugin(char* fileName, char *pluginName);
     bool canRecord();
     int configurePluginCallbacks(AEffect *plugin);
     void startPlugin(AEffect *plugin);
@@ -41,7 +48,7 @@ public:
     void setPianoRollRef(PianoRoll *piano);
     void setCanRecord(bool canRec);
     void turnOffAllNotes(AEffect *plugin);
-
+    void showPlugin();
     EventToAdd eventToAdd;
     std::queue<EventToAdd> midiEventQueue;
     std::deque<EventToAdd> recordedMidiEventDeque;
@@ -54,6 +61,7 @@ public:
     bool canPlay = false;
     bool isMuted = false;
     bool isPaused = false;
+
     int noteVecPos = 0;
 
 private:
@@ -73,7 +81,8 @@ private:
     float ** outputs;
     float ** inputs;
     float samplesPerTick = 0;
-
+    char *pluginName;
+    HWND editor;
 public slots:
     void setCustomPlackbackPos(int playbackPos);
 

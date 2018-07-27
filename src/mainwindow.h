@@ -7,7 +7,7 @@
 #include <QTextStream>
 #include <QDebug>
 #include <src/midiplayer.h>
-#include<QtConcurrent/QtConcurrent>
+#include <QtConcurrent/QtConcurrent>
 #include <src/pianoroll.h>
 #include <src/pianorollitem.h>
 #include <QVBoxLayout>
@@ -25,6 +25,7 @@
 #include <src/controlchangecontainer.h>
 #include "src/pianorollhelperview.h"
 #include <QPainter>
+#include <QKeyEvent>
 
 namespace Ui {
 class MainWindow;
@@ -39,7 +40,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     static QVector<pluginHolder*> pluginHolderVec;
-
+    static bool keyboardModeEnabled;
+    static int tempFolderID;
 private slots:
     void on_PauseButton_clicked(int type);
     void on_quitButton_clicked();
@@ -47,23 +49,22 @@ private slots:
     void on_actionPlay_triggered();
     void on_StartButton_clicked();
     void openFile();
-    void openVST();
     void playSong();
     void deleteAllNotes();
     void addNewTrack();
 
 private:
     void setUpMenuBar();
+    int getNoteFromKeyboard(int key);
+    PianoRollContainer     *prollContainer;
+    TrackContainer         *trackContainer;
+    FolderView             *folderView;
+    HeaderContainer        *headerContainer;
+    ControlChangeContainer *controlContainer;
+    PianoRollHelperView    *prollHelper;
 
-    PianoRollContainer *prollContainer;
-    TrackContainer *trackContainer;
-    FolderView * folderView;
-    HeaderContainer * headerContainer;
-    ControlChangeContainer * controlContainer;
-    PianoRollHelperView * prollHelper;
-
-    QMenu *fileMenu;
-    QMenu *editMenu;
+    QMenu   *fileMenu;
+    QMenu   *editMenu;
     QAction *saveAction;
     QAction *openFileAction;
     QAction *playSongAction;
@@ -71,8 +72,10 @@ private:
     QAction *deleteAllNotesAction;
     QAction *openVSTAction;
     QAction *addNewTrackAction;
+    int velocity = 70;
 protected:
-    void paintEvent(QPaintEvent * event);
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
 
 };
 

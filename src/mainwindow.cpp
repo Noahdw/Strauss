@@ -14,7 +14,8 @@ AudioManager* audioManager;
 //temp
 Vst2HostCallback* host;
 AEffect *plugin = NULL;
-
+bool MainWindow::keyboardModeEnabled = false;
+int MainWindow::tempFolderID = 0;
 QVector<pluginHolder*> MainWindow::pluginHolderVec;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -55,13 +56,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     prollSplitter->setOrientation(Qt::Vertical);
     helperLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-   // helperLayout->setSpacing(0);
     helperLayout->setContentsMargins(0,0,0,0);
     trackSplitter->addWidget(trackScrollArea);
     trackSplitter->addWidget(folderView);
     mainLayout->addWidget(headerContainer);
     prollSplitter->addWidget(trackSplitter);
-   // prollSplitter->setStyleSheet("background-color: rgb(150, 150, 150);");
     prollSplitter->addWidget(controlContainer);
     helperLayout->addWidget(prollHelper);
     helperLayout->addWidget(prollSplitter);
@@ -89,6 +88,11 @@ MainWindow::MainWindow(QWidget *parent) :
     pal.setColor(QPalette::Background, QColor(150,150,150));
     setAutoFillBackground(true);
     setPalette(pal);
+
+
+        QDir dir(QDir::current().path()+"/TempPlugins");
+        dir.removeRecursively();
+        dir.mkdir(QDir::current().path()+"/TempPlugins");
 }
 
 MainWindow::~MainWindow()
@@ -170,21 +174,16 @@ void MainWindow::on_actionPlay_triggered()
     playSong();
 }
 
-void MainWindow::openVST()
-{
-
-}
-
 void MainWindow::deleteAllNotes()
 {
-    prollContainer->pianoRoll->deleteAllNotes();
+    //  prollContainer->pianoRoll->deleteAllNotes();
 }
 
 void MainWindow::setUpMenuBar()
 {
 
     //Create action crap
-    openFileAction = new QAction(tr("&Open"),this);
+    openFileAction = new QAction(tr("&Open Midi File"),this);
     openFileAction->setStatusTip(tr("Open an existing midi file"));
     connect(openFileAction, &QAction::triggered, this, &MainWindow::openFile);
 
@@ -196,11 +195,6 @@ void MainWindow::setUpMenuBar()
     deleteAllNotesAction->setStatusTip(tr("Delete all notes from the roll"));
     connect(deleteAllNotesAction, &QAction::triggered, this, &MainWindow::deleteAllNotes);
 
-
-    openVSTAction = new QAction(tr("&Open VST"),this);
-    openVSTAction->setStatusTip(tr("Opens a VST"));
-    connect(openVSTAction, &QAction::triggered, this, &MainWindow::openVST);
-
     addNewTrackAction = new QAction(tr("&Add Track"),this);
     addNewTrackAction->setStatusTip(tr("Adds a new MIDI track"));
     connect(addNewTrackAction, &QAction::triggered, this, &MainWindow::addNewTrack);
@@ -210,20 +204,68 @@ void MainWindow::setUpMenuBar()
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(openFileAction);
     fileMenu->addAction(playSongAction);
-    fileMenu->addAction(openVSTAction);
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(deleteAllNotesAction);
     editMenu->addAction(addNewTrackAction);
 }
 
-void MainWindow::paintEvent(QPaintEvent *event)
+void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-//    QPainter painter(this);
-//    QBrush brush(Qt::lightGray);
-//    brush.setColor(QColor(150,150,150));
-//    painter.setBrush(brush);
-//    painter.drawRect(0,0,width(),height());
+    if (MainWindow::keyboardModeEnabled)
+    {
+        if (event->isAutoRepeat())
+        {
+            event->ignore();
+            QMainWindow::keyReleaseEvent(event);
+            return;
+        }
+        for(const auto& plugin : pluginHolderVec)
+        {
+            if (plugin->host->canRecord())
+            {
+                int note = getNoteFromKeyboard(event->key());
+                if (note)
+                {
+                    plugin->host->addMidiEvent(0x90,note,velocity);
+                }
+            }
+        }
+    }
+    else
+    {
+        event->ignore();
+        QMainWindow::keyPressEvent(event);
+    }
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    if (MainWindow::keyboardModeEnabled)
+    {
+        if (event->isAutoRepeat())
+        {
+            event->ignore();
+            QMainWindow::keyReleaseEvent(event);
+            return;
+        }
+        for(const auto& plugin : pluginHolderVec)
+        {
+            if (plugin->host->canRecord())
+            {
+                int note = getNoteFromKeyboard(event->key());
+                if (note)
+                {
+                   plugin->host->addMidiEvent(0x90,note,0);
+                }
+            }
+        }
+    }
+    else
+    {
+        event->ignore();
+        QMainWindow::keyReleaseEvent(event);
+    }
 }
 
 void MainWindow::addNewTrack()
@@ -234,4 +276,35 @@ void MainWindow::addNewTrack()
     trackContainer->addSingleView(view);
 }
 
-
+int MainWindow::getNoteFromKeyboard(int key)
+{
+    switch (key)
+    {
+    case Qt::Key_A:
+        return 60; // Middle C
+    case Qt::Key_S:
+        return 61;
+    case Qt::Key_D:
+        return 62;
+    case Qt::Key_F:
+        return 63;
+    case Qt::Key_G:
+        return 64;
+    case Qt::Key_H:
+        return 65;
+    case Qt::Key_J:
+        return 66;
+    case Qt::Key_K:
+        return 67;
+    case Qt::Key_L:
+        return 68;
+    case Qt::Key_Semicolon:
+        return 69;
+    case Qt::Key_Apostrophe:
+        return 70;
+    case Qt::Key_Return:
+        return 71;
+    default:
+        return 0;
+    }
+}

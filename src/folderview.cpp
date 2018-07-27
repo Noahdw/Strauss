@@ -7,7 +7,7 @@ FolderView::FolderView()
     vLayout->setSpacing(0);
     vLayout->setContentsMargins(0,0,0,0);
     vLayout->setAlignment(Qt::AlignTop|Qt::AlignLeft);
-   // setMaximumWidth(300);
+    setMaximumWidth(300);
   //  setMinimumWidth(150);
     setBaseSize(300,150);
     setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
@@ -34,6 +34,6 @@ FolderView::FolderView()
 void FolderView::itemDoubleClicked()
 {
     QModelIndex index = list->currentIndex();
-    QString itemText = index.data(Qt::DisplayRole).toString();
-    pRollContainer->propogateFolderViewDoubleClicked(itemText,path);
+    QString pluginName = index.data(Qt::DisplayRole).toString();
+    pRollContainer->propogateFolderViewDoubleClicked(pluginName,path);
 }

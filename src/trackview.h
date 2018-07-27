@@ -15,7 +15,7 @@ class TrackMidiView;
 #include <src/vst2hostcallback.h>
 #include <QCheckBox>
 #include <QLineEdit>
-
+#include <QPushButton>
 
 
 class TrackView: public QFrame
@@ -37,6 +37,7 @@ private:
     QVBoxLayout *vlayout;
     QCheckBox *muteBox;
     QCheckBox *recordBox;
+    QPushButton * showButton;
     bool canEditLine = false;
     const int widgetWidth = 150;
     int randomRed = 0;
@@ -50,6 +51,7 @@ private slots:
     void notifyMuteChange(int state);
     void notifyRecordingChange(int state);
     void ShowContextMenu(const QPoint &pos);
+    void showPlugin();
     void renameTrack();
 
 protected:

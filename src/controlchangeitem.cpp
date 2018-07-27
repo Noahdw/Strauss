@@ -29,10 +29,19 @@ void ControlChangeItem::setInitalPos(QPointF pos)
     {
        setY(0);
     }
-    if(pos.x() < 0)
+    else if(pos.y() > scene()->height())
+    {
+        setY(scene()->height());
+    }
+    else if(pos.x() < 0)
     {
         setX(0);
     }
+    else if(pos.x() > scene()->width())
+    {
+        setX(scene()->width());
+    }
+
 }
 
 void ControlChangeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -52,11 +61,9 @@ void ControlChangeItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     auto i = overlay->activeItems.find(x());
     i--;
     leftValue = (*i).second->x();
-  //  qDebug() << "left: " << (*i)->x();
     i++;
     i++;
     rightValue = (*i).second->x();
-        qDebug() << "right: " << (*i).second->x();
     QGraphicsItem::mousePressEvent(event);
 }
 

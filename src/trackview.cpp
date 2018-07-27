@@ -8,11 +8,11 @@
 #include <src/trackmidiview.h>
 
 std::default_random_engine generator;
-std::uniform_int_distribution<int> distribution(1,255);
+std::uniform_int_distribution<int> distribution(80,255);
 
 TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
 {
-    setMinimumHeight(70);
+    setMinimumHeight(90);
     setMaximumHeight(90);
     this->track = track;
     instrumentName = track->instrumentName;
@@ -26,15 +26,19 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     instrumentLabel->setFrame(false);
     instrumentLabel->installEventFilter(this);
     // instrumentLabel->setAttribute(Qt::Wa_ws,0);
-    muteBox   = new QCheckBox("Mute",this);
-    recordBox = new QCheckBox("Record",this);
+    muteBox    = new QCheckBox("Mute",this);
+    recordBox  = new QCheckBox("Record",this);
+    showButton = new QPushButton("Show",this);
+    vlayout    = new QVBoxLayout;
     recordBox->setChecked(true);
-    vlayout   = new QVBoxLayout;
+
     vlayout->setAlignment(Qt::AlignTop);
     vlayout->addWidget(instrumentLabel,0,Qt::AlignTop|Qt::AlignLeft);
     vlayout->addSpacing(5);
     vlayout->addWidget(muteBox);
     vlayout->addWidget(recordBox);
+    vlayout->addWidget(showButton);
+    showButton->setFixedSize(50,20);
     setLayout(vlayout);
     // setLineWidth(0);
 
@@ -49,6 +53,7 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
 
     QObject::connect(recordBox,&QCheckBox::stateChanged,this,&TrackView::notifyRecordingChange);
     QObject::connect(muteBox,  &QCheckBox::stateChanged,this,&TrackView::notifyMuteChange);
+    QObject::connect(showButton,&QPushButton::clicked,this,&TrackView::showPlugin);
     QObject::connect(this, &QWidget::customContextMenuRequested,
                      this,&TrackView::ShowContextMenu);
     plugin.host->setCanRecord(true);
@@ -98,7 +103,7 @@ void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
         QByteArray array = filepath.toLocal8Bit();
         char* file = array.data();
 
-        plugin.effect = plugin.host->loadPlugin(file);
+        plugin.effect = plugin.host->loadPlugin(file,name.left(name.size() - 4).toLocal8Bit().data());
         if (plugin.effect == NULL) {
             qDebug() << "NULLPTR PLUGIN: in loadPlugin";
             return;
@@ -108,7 +113,7 @@ void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
             qDebug() << "Failed to configurePluginCallbacks. abort startPlugin";
             return;
         }
-        instrumentLabel->setText(name);
+        instrumentLabel->setText(name.left(name.size() - 4));
         plugin.host->startPlugin(plugin.effect);
         MainWindow::pluginHolderVec.append(&plugin);
     }
@@ -145,6 +150,14 @@ void TrackView::ShowContextMenu(const QPoint &pos)
 
     contextMenu.addAction(&renameAction);
     contextMenu.exec(mapToGlobal(pos));
+}
+
+void TrackView::showPlugin()
+{
+    if (plugin.host)
+    {
+        plugin.host->showPlugin();
+    }
 }
 
 void TrackView::renameTrack()

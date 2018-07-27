@@ -105,8 +105,9 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
 }
 //from http://teragonaudio.com/article/How-to-make-your-own-VST-host.html
 
-AEffect *Vst2HostCallback::loadPlugin(char* fileName)
+AEffect *Vst2HostCallback::loadPlugin(char* fileName,char *pluginName)
 {
+    this->pluginName = pluginName;
     AEffect *plugin = NULL;
     HMODULE modulePtr = LoadLibraryA(fileName);
     hinst = modulePtr;
@@ -159,18 +160,25 @@ int Vst2HostCallback::configurePluginCallbacks(AEffect *plugin) {
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    return DefWindowProc(hWnd, msg, wParam, lParam);
+    switch (msg) {
+    case WM_CLOSE:
+        ShowWindow(hWnd,SW_HIDE);
+        return true;
+    }
+    return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
 int WINAPI MainProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
     case WM_CLOSE:
-
-        return true;
+        ShowWindow(hWnd,SW_HIDE);
+        break;
+    default:
+        return DefWindowProcA(hWnd, msg, wParam, lParam);
     }
 
-    return DefWindowProc(hWnd, msg, wParam, lParam);
+    return 0;
 }
 
 void Vst2HostCallback::startPlugin(AEffect *plugin) {
@@ -201,15 +209,33 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
         return;
     }
 
-    HWND editor;
-    editor = CreateWindowExA(0,APPLICATION_CLASS_NAME,"mywindow",WS_OVERLAPPEDWINDOW,
+
+    LPSTR  lpFilename;
+    err = GetModuleFileNameA(hinst,lpFilename,100);
+    if (err == 0)
+    {
+       qDebug() <<  "Error - Could not get module name: " << GetLastError();
+    }
+    editor = CreateWindowExA(0,APPLICATION_CLASS_NAME,pluginName,WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX,
                              CW_USEDEFAULT, CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,NULL,hinst,NULL);
     if (editor == NULL) {
         qDebug() <<  "Error - Could not create window: " << GetLastError();
         return;
     }
     dispatcher(plugin,effEditOpen,0,0,editor,0);
-    ShowWindow(editor,SW_SHOW);
+    Rect *rect = 0;
+        plugin->dispatcher(plugin, effEditGetRect, 0, 0, &rect, 0);
+        if (!rect)
+        {
+        qDebug() << "Error - Could not get plugin rect";
+        return;
+        }
+        SetWindowPos(editor, 0, 0, 0,
+                     rect->right - rect->left + 6,
+                     rect->bottom - rect->top + 25,
+                     SWP_NOACTIVATE | SWP_NOMOVE |
+                     SWP_NOOWNERZORDER | SWP_NOZORDER);
+    ShowWindow(editor,SW_SHOWNORMAL);
     UpdateWindow(editor);
 
     initializeMidiEvents();
@@ -300,7 +326,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
     // If we are too many samples away from inputing an event, subtract blocksize and give empty vstevents
     /* Some help to make sense of this: We want to send our midi events to our plugins but we must abide
      * by the fact that our audio engine calls this function SampleRate/blocksize times every second.
-     * e.g. 48000/256 = 187 times per second. Our midi data is stored in an vector by its delta time since the last
+     * e.g. 48000/256 = 187 times per second. Our midi data is stored in a vector by its delta ticks since the last
      * midi note. If the TicksPerQuarterNote is 980 and the BPM is 120, then there are 1960 ticks per second. This tells us that
      * each tick corresponds to 22.9 samples of audio. A single quarter note that starts at the very beginning of a song will have
      * its note off a DT of 960 from its note on. The note on is added instantly as an event as it has a DT of 0, but the note off
@@ -548,6 +574,14 @@ void Vst2HostCallback::turnOffAllNotes(AEffect *plugin)
         ++events->numEvents;
     }
     dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
+}
+
+void Vst2HostCallback::showPlugin()
+{
+    if (editor)
+    {
+        ShowWindow(editor,SW_SHOW);
+    }
 }
 
 

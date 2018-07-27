@@ -7,6 +7,7 @@ PianoRollHelperView::PianoRollHelperView()
     setMaximumSize(150,200);
     vLayout = new QVBoxLayout;
     comboBox = new QComboBox;
+    comboBox->setMaxVisibleItems(16);
     setLayout(vLayout);
     initializeComboBox();
     vLayout->setAlignment(Qt::AlignTop | Qt::AlignCenter);
@@ -21,8 +22,6 @@ void PianoRollHelperView::comboBoxIdChanged(int index)
     qDebug() << index;
     container->switchControlChangeType(index);
 }
-
-
 
 void PianoRollHelperView::paintEvent(QPaintEvent *event)
 {

@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
 
 {
     QApplication app(argc, argv);
+    app.setApplicationDisplayName("MidiInter - A Composers Tool");
     MainWindow window;
     window.show();
     return app.exec();

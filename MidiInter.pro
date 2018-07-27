@@ -83,8 +83,3 @@ else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lportaudio_x6
 INCLUDEPATH += $$PWD/Debug
 DEPENDPATH += $$PWD/Debug
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lportaudio_x64
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lportaudio_x64
-
-INCLUDEPATH += $$PWD/Release
-DEPENDPATH += $$PWD/Release

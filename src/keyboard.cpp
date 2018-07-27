@@ -35,6 +35,7 @@ void Keyboard::addNotesToScene()
     for (int var = 0; var <= 128; ++var)
     {
         QGraphicsRectItem *note = new QGraphicsRectItem(0,0,noteWidth,keyHeight);
+
         switch (notepos) {
         case 1:
             note->setBrush(Qt::white);
@@ -75,6 +76,8 @@ void Keyboard::addNotesToScene()
         default:
             break;
         }
+
+
         notepos++;
         QPen pen(Qt::black,0);
         note->setPen(pen);
@@ -84,29 +87,56 @@ void Keyboard::addNotesToScene()
         if (notepos>12) {
             notepos = 1;
         }
+        if (var % 12 == 0)
+        {
+            QGraphicsTextItem *text = new QGraphicsTextItem();
+            text->setTextInteractionFlags(Qt::NoTextInteraction);
+            QString str = "C" + QString::number(10 - (var / 12));
+            text->setPlainText(str);
+            scene->addItem(text);
+            text->setX(0);
+            text->setY((var - 5)*keyHeight - 5);
+        }
     }
 }
 
 void Keyboard::mousePressEvent(QMouseEvent *event)
 {
-    auto item = itemAt(event->pos());
-    QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
-    activeBrush =note->brush();
-    note->setBrush(Qt::red);
-    activeNote = note;
+    auto items = scene->items(mapToScene(event->pos()),Qt::ContainsItemShape);
 
-    pianoroll->playKeyboardNote(127 - note->y()/keyHeight, true);
+    for(const auto & item : items)
+    {
+        QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
+        if (note)
+        {
+            activeBrush =note->brush();
+            note->setBrush(Qt::red);
+            activeNote = note;
+            pianoroll->playKeyboardNote(127 - note->y()/keyHeight, true);
+        }
+
+    }
+
 
 }
 
 void Keyboard::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    auto item = itemAt(event->pos());
-    QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
-    activeBrush =note->brush();
-    note->setBrush(Qt::red);
-    activeNote = note;
-    pianoroll->playKeyboardNote(127 - note->y()/keyHeight, true);
+    auto items = scene->items(mapToScene(event->pos()),Qt::ContainsItemShape);
+
+    for(const auto & item : items)
+    {
+        QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
+        if (note)
+        {
+            activeBrush =note->brush();
+            note->setBrush(Qt::red);
+            activeNote = note;
+            pianoroll->playKeyboardNote(127 - note->y()/keyHeight, true);
+        }
+
+    }
+
 }
 
 void Keyboard::wheelEvent(QWheelEvent *event)

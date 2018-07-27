@@ -1,5 +1,5 @@
 #include "pianorollcontainer.h"
-
+#include "src/mainwindow.h"
 /*This class represents a collection of widgets whose uses are all linked to
  * one another. A Piano roll for editing MIDI, a Keyboard to for simple user
  * playback, and a Velocity view for editing velocities.
@@ -13,10 +13,27 @@ PianoRollContainer::PianoRollContainer()
     this->setLayout(stackedLayout);
 }
 
-void PianoRollContainer::propogateFolderViewDoubleClicked(QString filepath, QString path)
+
+// Can't load the same .dll from same folder so I copy to temp folder
+// TODO: See if changing .dll name suffices and don't need to make x copies of a plugin, just 1
+void PianoRollContainer::propogateFolderViewDoubleClicked(QString pluginName, QString filePath)
 {
+    QString tempPath = QString(QDir::current().path()+"/TempPlugins/%1.dll").arg(MainWindow::tempFolderID++);
+    qDebug() << tempPath;
+    if (QFile::exists(tempPath))
+    {
+        QFile::remove(tempPath);
+    }
+
+    if (!QFile::copy(filePath + pluginName, tempPath))
+    {
+        qDebug() <<QDir::current().path();
+        qDebug() << "Could not copy plugin";
+        return;
+    }
+
   PianoRoll *roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
-  roll->track->folderViewItemDoubleClicked(path + filepath,filepath);
+  roll->track->folderViewItemDoubleClicked(tempPath,pluginName);
 }
 
 PianoRoll *PianoRollContainer::getPianoRollRef()
@@ -29,6 +46,18 @@ void PianoRollContainer::switchPianoRoll(int id)
     if (stackedLayout->currentIndex() != id) {
         stackedLayout->setCurrentIndex(id);
         ccContainer->sLayout2->setCurrentIndex(id);
+        for (int i = 0; i < stackedLayout->count(); i++)
+        {
+             QWidget *w = stackedLayout->itemAt(i)->widget();
+             if (w)
+             {
+                 auto proll = dynamic_cast<PianoRoll*>(w->children().at(3));
+                 proll->track->trackMidiView->clickedOn(false);
+             }
+
+        }
+        auto roll = getPianoRollRef();
+                 roll->track->trackMidiView->clickedOn(true);
     }
 }
 
@@ -38,7 +67,6 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     auto *key         = new Keyboard;
     auto *velocity    = new VelocityView;
     auto *trackLength = new TrackLengthView;
-
 
     roll->track = view;
     if (view->track->totalDT != 0) {
@@ -64,10 +92,8 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
 
 
     hlayout2->addSpacing(key->width());
-
     hlayout2->addWidget(velocity);
     vlayout->addLayout(hlayout2);
-
 
     QWidget *initview = new QWidget;
     initview->setLayout(vlayout);

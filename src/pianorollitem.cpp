@@ -7,8 +7,9 @@ PianoRollItem::PianoRollItem()
 {
     brush = (QColor(102, 179, 255));
     setCacheMode(QGraphicsItem::NoCache);
-    setFlag(QGraphicsItem::ItemIsMovable, true);
+    //   setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable,true);
+    setAcceptHoverEvents(true);
 }
 
 QRectF PianoRollItem::boundingRect() const
@@ -17,13 +18,10 @@ QRectF PianoRollItem::boundingRect() const
 }
 void PianoRollItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget)
 {
-    QRectF rect = boundingRect();
-    //const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
     QPen pen(Qt::black,0);
     painter->setPen(pen);
-
-    painter->fillRect(rect,brush);
-    painter->drawRect(rect);
+    painter->fillRect(boundingRect(),brush);
+    painter->drawRect(boundingRect());
 }
 
 void PianoRollItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -33,6 +31,28 @@ void PianoRollItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    QGraphicsItem::mouseMoveEvent(event);
+    lastSceneResizePos = x();
+    if (canResizeRight)
+    {
+        prepareGeometryChange();
+        width += event->pos().x() - adjust;
+        adjust = width;
+        return;
+    }
+    else if (canResizeLeft)
+    {
+
+        setX(event->lastScenePos().x());
+        prepareGeometryChange();
+        qDebug() << "POS: " << event->pos().x() << " ADJUST: " << adjust << " Width: " << width;
+        width = adjust - x();
+        //adjust = (event->pos().x() - adjust) + (event->lastScenePos().x() - lastSceneResizePos);
+
+        // lastSceneResizePos = event->lastScenePos().x();
+
+        return;
+    }
     int yPos = event->lastScenePos().y()/keyHeight;
     setY(yPos*keyHeight);
     int xMove = 0;
@@ -76,6 +96,22 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+    QGraphicsItem::mousePressEvent(event);
+    lastSceneResizePos = event->lastScenePos().x();
+    initXPos = x();
+    initWidth = width;
+    if (event->pos().x() <= (width / noteResizeThreshold) )
+    {
+        adjust = x() + width;
+        canResizeLeft = true;
+        return;
+    }
+    else if(event->pos().x() >= (width - width / noteResizeThreshold))
+    {
+        adjust = event->pos().x();
+        canResizeRight = true;
+        return;
+    }
     int yPos = event->lastScenePos().y()/keyHeight;
     double colSpacing =pianoroll->tPQN *pianoroll->scaleFactor;
     int xPos = event->lastScenePos().x()/colSpacing;
@@ -88,6 +124,20 @@ void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
+    if (canResizeLeft || canResizeRight)
+    {
+        if (initWidth != width || initXPos != x())
+        {
+            int velocity = MidiManager::getVelocityFromNote(noteStart,note,pianoroll->track->track);
+            MidiManager::removeMidiNote(noteStart,noteEnd,note,pianoroll->track->track);
+            noteStart = x();
+            noteEnd = width;
+            MidiManager::addMidiNote(note,velocity,x(),noteEnd,pianoroll->track->track);
+            MidiManager::recalculateNoteListDT(pianoroll->track->track);
+        }
+        canResizeLeft = canResizeRight = false;
+        return;
+    }
     int yPos = event->lastScenePos().y()/keyHeight;
     double colSpacing =pianoroll->tPQN *pianoroll->scaleFactor;
     int xPos = event->lastScenePos().x()/colSpacing;
@@ -99,13 +149,18 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         MidiManager::removeMidiNote(noteStart,noteEnd,note,pianoroll->track->track);
         pianoroll->velocityView->changeVelocityViewItemPosition(noteStart,x(),note,127-yPos);
         //pianoroll->track->trackMidiView->deleteViewItem(noteStart,lastYPos);
-       // pianoroll->track->trackMidiView->addViewItem(x(),width,yPos*keyHeight);
+        // pianoroll->track->trackMidiView->addViewItem(x(),width,yPos*keyHeight);
         note = 127 - yPos;
         MidiManager::addMidiNote(note,velocity,x(),noteEnd,pianoroll->track->track);
         noteStart = x();
-         MidiManager::recalculateNoteListDT(pianoroll->track->track);
-         pianoroll->changeNotesAfterMouseDrag(this);
+        MidiManager::recalculateNoteListDT(pianoroll->track->track);
+        pianoroll->changeNotesAfterMouseDrag(this);
     }
+}
+
+void PianoRollItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+
 }
 
 void PianoRollItem::setBoundingRect(int _width)

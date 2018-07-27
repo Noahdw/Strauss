@@ -17,6 +17,7 @@ public:
      QPainterPath shape() const;
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
     ControlChangeOverlay *parent;
+    int lastX;
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);

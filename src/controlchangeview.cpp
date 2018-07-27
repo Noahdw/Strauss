@@ -2,10 +2,10 @@
 #include <QApplication>
 ControlChangeView::ControlChangeView(QWidget *parent) : QGraphicsView(parent)
 {
-   // setMinimumWidth(1000);
-   // setMinimumHeight(200);
+    // setMinimumWidth(1000);
+    // setMinimumHeight(200);
     setStyleSheet("background-color: transparent;");
-    setViewportUpdateMode(NoViewportUpdate);
+    setViewportUpdateMode(MinimalViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
 }
 void ControlChangeView::paintEvent(QPaintEvent *event)
@@ -14,26 +14,22 @@ void ControlChangeView::paintEvent(QPaintEvent *event)
     QPen pen;
     pen.setColor(Qt::black);
     painter.setBrush(Qt::lightGray);
-
     painter.setPen(pen);
     painter.fillRect(viewport()->rect(),painter.brush());
     QGraphicsView::paintEvent(event);
-
 }
 
 void ControlChangeView::resizeEvent(QResizeEvent *event)
 {
- fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
+    fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
 }
 void ControlChangeView::mousePressEvent(QMouseEvent *event)
 {
-    qDebug() << "LOL";
 
 }
 
 void ControlChangeView::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    qDebug() << mapToScene(event->pos()) << " : " << event->y();
 }
 
 void ControlChangeView::showEvent(QShowEvent *event)

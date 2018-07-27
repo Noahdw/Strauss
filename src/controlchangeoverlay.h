@@ -19,6 +19,7 @@ class CollisionItem;
 #include <QGraphicsSceneEvent>
 #include <QPointF>
 #include <map>
+
 class ControlChangeOverlay  : public QGraphicsView{
     Q_OBJECT
 
@@ -30,13 +31,15 @@ public:
     void addPoint(int x, int value);
     void fitIntoView();
     void recalculateDT();
-
+    void switchDrawModes();
     bool eventFilter(QObject *target, QEvent *event);
     QGraphicsScene * scene = nullptr;
+    ControlChangeItem* recentItem;
     std::map<int,QGraphicsItem*> activeItems;
     bool canDraw = false;
     std::vector<int> listOfCC;
     int ccType;
+
 protected:
     void showEvent(QShowEvent *event);
     void mousePressEvent(QMouseEvent *event);
@@ -45,6 +48,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
     void resizeEvent(QResizeEvent *event);
+    void paintEvent(QPaintEvent *event);
 private:
     ControlChangeItem *leftItem;
     ControlChangeItem *rightItem;

@@ -2,40 +2,45 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <src/audiomanager.h>
+#include <src/mainwindow.h>
 
 const int maxWidth = 50;
 HeaderContainer::HeaderContainer()
 {
     //buttonGroup = new QButtonGroup;
 
-    auto *playButton    = new QPushButton("Play",this);
-    auto *pauseButton   = new QPushButton("Pause",this);
-    auto *restartButton = new QPushButton("Restart",this);
-    auto *recordButton  = new QPushButton("Record",this);
-    auto *hbox          = new QHBoxLayout;
-    auto *mainbox       = new QHBoxLayout;
-    recordStyle         = new QCheckBox;
-    groupBox            = new QGroupBox;
+    auto *playButton     = new QPushButton("Play",this);
+    auto *pauseButton    = new QPushButton("Pause",this);
+    auto *restartButton  = new QPushButton("Restart",this);
+    auto *recordButton   = new QPushButton("Record",this);
+    auto *keyboardButton = new QPushButton("Keyboard mode",this);
+    auto *hbox           = new QHBoxLayout;
+    auto *mainbox        = new QHBoxLayout;
+    recordStyle          = new QCheckBox;
+    groupBox             = new QGroupBox;
 
     hbox->addWidget(playButton);
     hbox->addWidget(pauseButton);
     hbox->addWidget(restartButton);
     hbox->addWidget(recordButton);
     hbox->addWidget(recordStyle);
+    hbox->addWidget(keyboardButton);
     playButton->setMaximumWidth(maxWidth);
     pauseButton->setMaximumWidth(maxWidth);
     restartButton->setMaximumWidth(maxWidth);
     recordButton->setMaximumWidth(maxWidth);
+    keyboardButton->setCheckable(true);
     hbox->setMargin(0);
     groupBox->setLayout(hbox);
     groupBox->setFlat(true);
     mainbox->addWidget(groupBox);
     mainbox->setAlignment(Qt::AlignTop|Qt::AlignCenter);
     setLayout(mainbox);
-    QObject::connect(playButton,   &QPushButton::clicked,this,&HeaderContainer::play);
-    QObject::connect(pauseButton,  &QPushButton::clicked,this,&HeaderContainer::pause);
-    QObject::connect(restartButton,&QPushButton::clicked,this,&HeaderContainer::restart);
-    QObject::connect(recordButton, &QPushButton::clicked,this,&HeaderContainer::record);
+    QObject::connect(playButton,     &QPushButton::clicked,this,&HeaderContainer::play);
+    QObject::connect(pauseButton,    &QPushButton::clicked,this,&HeaderContainer::pause);
+    QObject::connect(restartButton,  &QPushButton::clicked,this,&HeaderContainer::restart);
+    QObject::connect(recordButton,   &QPushButton::clicked,this,&HeaderContainer::record);
+    QObject::connect(keyboardButton, &QPushButton::toggled,this,&HeaderContainer::keyboardMode);
 
 
 
@@ -84,4 +89,9 @@ void HeaderContainer::record()
     MidiPlayer::canRecordInput = true;
     MidiPlayer::recordingOverwrites = recordStyle->isChecked();
     play();
+}
+
+void HeaderContainer::keyboardMode(bool enabled)
+{
+    MainWindow::keyboardModeEnabled = enabled;
 }

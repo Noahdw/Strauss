@@ -11,7 +11,7 @@ class VelocityView;
 #include <src/pianoroll.h>
 #include <QScrollBar>
 #include <QTimer>
-
+#include <QGraphicsSceneHoverEvent>
 class PianoRollItem : public QGraphicsItem
 {
 
@@ -34,6 +34,7 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* event);
 
 private:
     int width;
@@ -41,8 +42,13 @@ private:
     int lastYPos;
     int initXPos;
     int initYPos;
+    int initWidth;
     int lastYWithSound;
-
+    const int noteResizeThreshold = 10; // in percent, so first x% and last x% allows resizing
+    bool canResizeRight = false;
+    bool canResizeLeft = false;
+    int adjust;
+    int lastSceneResizePos;
 };
 
 static  const double keyHeight = 12;

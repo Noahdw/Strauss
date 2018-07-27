@@ -5,8 +5,8 @@ CollisionItem::CollisionItem(ControlChangeOverlay *_parent)
     :parent(_parent)
 {
     setCacheMode(QGraphicsItem::NoCache);
-  //  setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
-   // setFlag(QGraphicsItem::ItemIsMovable, true);
+    // setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
+    // setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable,true);
 }
 
@@ -30,22 +30,29 @@ void CollisionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 
 void CollisionItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-
-     QGraphicsItem::mousePressEvent(event);
+    lastX = event->lastScenePos().x();
+    QGraphicsItem::mousePressEvent(event);
 }
 
 void CollisionItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     //interpolate points and adjust width since mouseEvents skip some pixels
+    int adjust = 50;
+    if (event->lastScenePos().x() < lastX) // mouse moving left
+    {
+            adjust = -50;
+    }
+
+    lastX = event->lastScenePos().x();
     auto pos = mapToScene(event->pos());
     prepareGeometryChange();
-    width = pos.x() - x();
+    width = pos.x() - x() + adjust;
     auto list = collidingItems();
-     qDebug() << list.size();
+
     parent->removeCollidingItems(list);
-      setPos(pos.x(),0);
-      prepareGeometryChange();
-      width = 100;
+    setPos(pos.x()+adjust,0);
+    prepareGeometryChange();
+    width = 100;
     QGraphicsItem::mouseMoveEvent(event);
 }
 

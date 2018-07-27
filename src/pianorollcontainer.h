@@ -20,7 +20,7 @@ class PianoRollContainer : public QWidget
     Q_OBJECT
 public:
     PianoRollContainer();
-    void propogateFolderViewDoubleClicked(QString filepath,QString path);
+    void propogateFolderViewDoubleClicked(QString pluginName,QString filePath);
     PianoRoll *getPianoRollRef();
     PianoRoll *pianoRoll;
     Keyboard *keyboard;

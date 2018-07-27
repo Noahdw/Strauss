@@ -20,12 +20,13 @@ private:
     QGroupBox * groupBox;
     QButtonGroup * buttonGroup;
     QCheckBox * recordStyle;
-    bool isPaused = true;
+    bool isPaused = false;
 private slots:
     void play();
     void restart();
     void pause();
     void record();
+    void keyboardMode(bool enabled);
 };
 
 #endif // HEADERCONTAINER_H
