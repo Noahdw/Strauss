@@ -6,6 +6,8 @@
  *
  * */
 
+
+
 PianoRollContainer::PianoRollContainer()
 {      
     stackedLayout = new QStackedLayout;
@@ -18,22 +20,8 @@ PianoRollContainer::PianoRollContainer()
 // TODO: See if changing .dll name suffices and don't need to make x copies of a plugin, just 1
 void PianoRollContainer::propogateFolderViewDoubleClicked(QString pluginName, QString filePath)
 {
-    QString tempPath = QString(QDir::current().path()+"/TempPlugins/%1.dll").arg(MainWindow::tempFolderID++);
-    qDebug() << tempPath;
-    if (QFile::exists(tempPath))
-    {
-        QFile::remove(tempPath);
-    }
-
-    if (!QFile::copy(filePath + pluginName, tempPath))
-    {
-        qDebug() <<QDir::current().path();
-        qDebug() << "Could not copy plugin";
-        return;
-    }
-
   PianoRoll *roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
-  roll->track->folderViewItemDoubleClicked(tempPath,pluginName);
+  roll->track->folderViewItemDoubleClicked(filePath,pluginName);
 }
 
 PianoRoll *PianoRollContainer::getPianoRollRef()
@@ -102,6 +90,8 @@ void PianoRollContainer::addPianoRolls(TrackView *view)
     roll->setKeyboard(key);
     roll->setVelocityView(velocity);
     roll->trackLengthView = trackLength;
+    trackLength->initTrackLengthView(QRectF(0,0,view->track->totalDT,0),((float)trackLength->width() / (960*g_quarterNotes)));
+
     key->setPianoRoll(roll);
     view->plugin.host->setPianoRollRef(roll);
     velocity->setSceneRect(0,0,roll->totalDT,velocity->height());

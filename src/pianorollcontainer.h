@@ -25,7 +25,8 @@ public:
     PianoRoll *pianoRoll;
     Keyboard *keyboard;
     ControlChangeContainer *ccContainer;
-     QStackedLayout *stackedLayout;
+    QStackedLayout *stackedLayout;
+
 public slots:
    void switchPianoRoll(int id);
    void addPianoRolls(TrackView *view);

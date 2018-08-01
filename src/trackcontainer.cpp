@@ -1,6 +1,7 @@
 #include "trackcontainer.h"
 #include <QWidget>
 #include <src/trackmidiview.h>
+#include "src/plugineditorcontainer.h"
 int ID = 0;
 /*This class represents a container for the tracks, located above the Pianoroll.
  *
@@ -53,6 +54,7 @@ void TrackContainer::addTrackView(mSong *song)
         QObject::connect(view,&TrackView::trackClickedOn,prcontainer,&PianoRollContainer::switchPianoRoll);
         vLayout->addWidget(midiView);
         vSplitter->addWidget(view);
+            view->pluginTrack = pluginEditorContainer->addTrack(view);
     }
     adjustSize();
 }
@@ -77,6 +79,7 @@ void TrackContainer::addSingleView(TrackView *view)
 
     vLayout->addWidget(midiView);
     vSplitter->addWidget(view);
+    view->pluginTrack = pluginEditorContainer->addTrack(view);
 
 }
 void TrackContainer::mousePressEvent(QMouseEvent *event)

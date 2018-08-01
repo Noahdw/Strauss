@@ -4,32 +4,39 @@
 #include <src/vst2hostcallback.h>
 #include <src/audiomanager.h>
 #include <src/midiplayer.h>
-
+#include <src/common.h>
 
 MidiPlayer player;
 MidiManager *manager;
-
+TimeTracker *timeTracker;
 AudioManager* audioManager;
 
 //temp
 Vst2HostCallback* host;
 AEffect *plugin = NULL;
-bool MainWindow::keyboardModeEnabled = false;
-int MainWindow::tempFolderID = 0;
+
+// init common vars
+bool keyboardModeEnabled = false;
+double g_tempo = 120;
+double g_quarterNotes = 60;
+QTimeLine *g_timer = new QTimeLine((float)(60.0/(float)g_tempo)*g_quarterNotes*1000);//Song time in ms
+//end init
+
 QVector<pluginHolder*> MainWindow::pluginHolderVec;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
     centralWidget = new QWidget(this);
-    setCentralWidget(centralWidget);
+    pluginEdiorCentralWidget = new QWidget(this);
+    stackedCentralWidget = new QStackedWidget;
+    audioManager     = new AudioManager;
+    manager          = new MidiManager;
+    timeTracker      = new TimeTracker;
 
-    audioManager = new AudioManager;
-    manager = new MidiManager;
-
-
+    setCentralWidget(stackedCentralWidget);
     QScrollArea *trackScrollArea = new QScrollArea;
-    trackScrollArea->setBackgroundRole(QPalette::Light);
+  //  trackScrollArea->setBackgroundRole(QPalette::Light);
     trackScrollArea->setWidgetResizable(true);
     trackScrollArea->setMinimumWidth(1000);
     trackScrollArea->setMinimumHeight(300);
@@ -43,16 +50,17 @@ MainWindow::MainWindow(QWidget *parent) :
     prollContainer   = new PianoRollContainer;
     controlContainer = new ControlChangeContainer(prollContainer);
     prollHelper      = new PianoRollHelperView;
+    pluginEditorContainer = new PluginEditorContainer;
 
+    trackContainer->pluginEditorContainer = pluginEditorContainer;
     trackContainer->setPianoRollReference(prollContainer);
     folderView->pRollContainer = prollContainer;
     headerContainer->audioManager = audioManager;
     trackScrollArea->setWidget(trackContainer);
-
-    QVBoxLayout *mainLayout   = new QVBoxLayout;
-    QHBoxLayout *helperLayout = new QHBoxLayout;
-    QSplitter *trackSplitter  = new QSplitter;
-    QSplitter *prollSplitter  = new QSplitter;
+    mainLayout   = new QVBoxLayout;
+    QHBoxLayout *helperLayout   = new QHBoxLayout;
+    QSplitter   *trackSplitter  = new QSplitter;
+    QSplitter   *prollSplitter  = new QSplitter;
 
     prollSplitter->setOrientation(Qt::Vertical);
     helperLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -67,10 +75,12 @@ MainWindow::MainWindow(QWidget *parent) :
     mainLayout->addLayout(helperLayout);
     prollHelper->container = controlContainer;
     centralWidget->setLayout(mainLayout);
-
+    stackedCentralWidget->addWidget(centralWidget);
+    stackedCentralWidget->addWidget(pluginEditorContainer);
     QObject::connect(trackContainer,&TrackContainer::switchControlChange,controlContainer,
                      &ControlChangeContainer::switchControlChangeContainer);
     QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
+
     addNewTrack();
     setUpMenuBar();
     AudioManager::requestedPlaybackPos = -1;
@@ -90,9 +100,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setPalette(pal);
 
 
-        QDir dir(QDir::current().path()+"/TempPlugins");
-        dir.removeRecursively();
-        dir.mkdir(QDir::current().path()+"/TempPlugins");
+    QDir dir(QDir::current().path()+"/TempPlugins");
+    dir.removeRecursively();
+    dir.mkdir(QDir::current().path()+"/TempPlugins");
 }
 
 MainWindow::~MainWindow()
@@ -134,6 +144,7 @@ void MainWindow::openFile()
 
         file.close();
     }
+    trackContainer->addTrackView(&manager->song);
 }
 
 
@@ -163,10 +174,9 @@ bool stopped = false;
 
 // Starts audio engine if a plugin is active
 // restarts a song if pressed while playing
-void MainWindow::playSong(){
-
+void MainWindow::playSong()
+{
     audioManager->requestPlaybackRestart();
-
 }
 
 void MainWindow::on_actionPlay_triggered()
@@ -212,7 +222,7 @@ void MainWindow::setUpMenuBar()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (MainWindow::keyboardModeEnabled)
+    if (keyboardModeEnabled)
     {
         if (event->isAutoRepeat())
         {
@@ -234,6 +244,14 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
     else
     {
+        switch (event->key())
+        {
+        case Qt::Key_Alt:
+            stackedCentralWidget->setCurrentIndex(!stackedCentralWidget->currentIndex());
+            break;
+        default:
+            break;
+        }
         event->ignore();
         QMainWindow::keyPressEvent(event);
     }
@@ -241,7 +259,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {
-    if (MainWindow::keyboardModeEnabled)
+    if (keyboardModeEnabled)
     {
         if (event->isAutoRepeat())
         {
@@ -256,7 +274,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
                 int note = getNoteFromKeyboard(event->key());
                 if (note)
                 {
-                   plugin->host->addMidiEvent(0x90,note,0);
+                    plugin->host->addMidiEvent(0x90,note,0);
                 }
             }
         }
@@ -274,6 +292,8 @@ void MainWindow::addNewTrack()
     track->instrumentName = "New Track";
     TrackView *view = new TrackView(track);
     trackContainer->addSingleView(view);
+
+
 }
 
 int MainWindow::getNoteFromKeyboard(int key)

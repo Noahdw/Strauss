@@ -157,7 +157,7 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     {
 
         pluginHolder *plugs = MainWindow::pluginHolderVec.at(var);
-        if (plugs->effect ==NULL) {
+        if (plugs->effect == NULL) {
             //   qDebug() <<"Plugin not set in Audiomanager";
             continue;
         }

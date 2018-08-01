@@ -7,7 +7,27 @@
 #include <src/audiomanager.h>
 #include <src/controlchangebridge.h>
 #include <src/controlchangeoverlay.h>
+#include <src/plugintrackview.h>
+#include "src/pluginview.h"
+
 #pragma comment(lib,"user32.lib")
+#pragma comment(lib, "advapi32")
+#define PROXY_REGKEY        "Software\\JBridge"
+
+#ifdef _M_X64
+#define PROXY_REGVAL        "Proxy64"  //use this for x64 builds
+#else
+#define PROXY_REGVAL        "Proxy32"  //use this for x86 builds
+#endif
+
+VstTimeInfo vtime;
+float sRate;
+double sPos = 0;
+int processLevel = 2;//kVstProcessLevelUser; //1
+Vst2HostCallback::Vst2HostCallback()
+{
+    blocksize = AudioManager::blocksize;
+}
 
 Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
 {
@@ -15,11 +35,7 @@ Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
     blocksize = AudioManager::blocksize;
 }
 
-dispatcherFuncPtr dispatcher;
-VstTimeInfo vtime;
-float sRate;
-double sPos = 0;
-int processLevel = 2;//kVstProcessLevelUser; //1
+
 
 extern "C"{
 bool firstRun = true;    int note = 0;
@@ -36,10 +52,11 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
     case audioMasterVersion:
         return 2400;
     case audioMasterIdle:
-        dispatcher(effect, effEditIdle, 0, 0, 0, 0);
+        effect->dispatcher(effect, effEditIdle, 0, 0, 0, 0);
         break;
     case audioMasterCurrentId:
         qDebug() << "audioMasterCurrentId" << opcode;
+        return 1;
         break;
     case audioMasterProcessEvents:
         qDebug() << "audioMasterProcessEvents" << opcode;
@@ -51,7 +68,7 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         vtime.samplePos = sPos;
         vtime.sampleRate = sRate;
         vtime.nanoSeconds = QDateTime::currentDateTime().currentMSecsSinceEpoch() * 1000000.0;
-        vtime.tempo = 120;
+        vtime.tempo = g_tempo;
         vtime.ppqPos = ((vtime.samplePos)/((60.0 / vtime.tempo) * sRate)) + 1;
         // qDebug() << time.ppqPos;
         vtime.barStartPos = 0;
@@ -86,11 +103,15 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         return processLevel;
     case audioMasterVendorSpecific:
         return 1;
+    case audioMasterGetSampleRate:
+        return sRate;
     case audioMasterCanDo:
         return 1; //I can do it all?
+    case audioMasterGetLanguage: //38?
+        return 1;
     case audioMasterUpdateDisplay: //42
         if (!firstRun) {
-            dispatcher(effect, effEditIdle, 0, 0, NULL, 0.0f);
+            effect->dispatcher(effect, effEditIdle, 0, 0, NULL, 0.0f);
         }
         firstRun = false;
         break;
@@ -107,7 +128,8 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
 
 AEffect *Vst2HostCallback::loadPlugin(char* fileName,char *pluginName)
 {
-    this->pluginName = pluginName;
+    this->pluginName = (char*)malloc(strlen(pluginName) + 1);
+    strcpy(this->pluginName,pluginName);
     AEffect *plugin = NULL;
     HMODULE modulePtr = LoadLibraryA(fileName);
     hinst = modulePtr;
@@ -115,23 +137,39 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName,char *pluginName)
         qDebug() << "failed loading VST: " << GetLastError();
         return NULL;
     }
-
-    vstPluginFuncPtr mainEntryPoint =
-            (vstPluginFuncPtr)GetProcAddress(modulePtr, "VSTPluginMain");
-
-    if(mainEntryPoint == NULL)
+    vstPluginFuncPtr mainEntryPoint;
+    if (GetProcAddress(modulePtr, "JBridgeBootstrap"))
     {
-        mainEntryPoint = (vstPluginFuncPtr)GetProcAddress(modulePtr, "main");
-        if (mainEntryPoint == NULL) {
-            qDebug() << "Could not get main entry point.";
+        qDebug() << "Jbridge plugin";
+        FreeLibrary(modulePtr);
+        plugin = LoadBridgedPlugin(fileName);
+        if (plugin == NULL)
+        {
+            qDebug() << "Jbridge plugin failed to load";
             return NULL;
         }
+    }
+    else
+    {
+        mainEntryPoint = (vstPluginFuncPtr)GetProcAddress(modulePtr, "VSTPluginMain");
 
+        if(mainEntryPoint == NULL)
+        {
+            // mainEntryPoint = (vstPluginFuncPtr)GetProcAddress(modulePtr, "JBridgeBootstrap");
+
+            mainEntryPoint = (vstPluginFuncPtr)GetProcAddress(modulePtr, "main");
+            if (mainEntryPoint == NULL) {
+                qDebug() << "Could not get main entry point.";
+                FreeLibrary(modulePtr);
+                return NULL;
+            }
+        }
+        plugin = mainEntryPoint((audioMasterCallback)hostCallback);
     }
     // Instantiate the plugin
-    plugin = mainEntryPoint((audioMasterCallback)hostCallback);
+
     sRate = sampleRate;
-    samplesPerTick = sampleRate/(float)(MidiManager::TPQN * (120.0f/60.0f));
+    samplesPerTick = sampleRate/(float)(MidiManager::TPQN * (g_tempo/60.0f));
     // samplesPerTick =(60.0/120.0 )*(1000000/sRate);//Why do i need /2 to work????
     qDebug() << "SamplesperTick: " << samplesPerTick;
     return plugin;
@@ -168,18 +206,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
-int WINAPI MainProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch (msg) {
-    case WM_CLOSE:
-        ShowWindow(hWnd,SW_HIDE);
-        break;
-    default:
-        return DefWindowProcA(hWnd, msg, wParam, lParam);
-    }
-
-    return 0;
-}
 
 void Vst2HostCallback::startPlugin(AEffect *plugin) {
 
@@ -209,13 +235,6 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
         return;
     }
 
-
-    LPSTR  lpFilename;
-    err = GetModuleFileNameA(hinst,lpFilename,100);
-    if (err == 0)
-    {
-       qDebug() <<  "Error - Could not get module name: " << GetLastError();
-    }
     editor = CreateWindowExA(0,APPLICATION_CLASS_NAME,pluginName,WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX,
                              CW_USEDEFAULT, CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,NULL,hinst,NULL);
     if (editor == NULL) {
@@ -224,17 +243,16 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
     }
     dispatcher(plugin,effEditOpen,0,0,editor,0);
     Rect *rect = 0;
-        plugin->dispatcher(plugin, effEditGetRect, 0, 0, &rect, 0);
-        if (!rect)
-        {
+    plugin->dispatcher(plugin, effEditGetRect, 0, 0, &rect, 0);
+    if (!rect)
+    {
         qDebug() << "Error - Could not get plugin rect";
         return;
-        }
-        SetWindowPos(editor, 0, 0, 0,
-                     rect->right - rect->left + 6,
-                     rect->bottom - rect->top + 25,
-                     SWP_NOACTIVATE | SWP_NOMOVE |
-                     SWP_NOOWNERZORDER | SWP_NOZORDER);
+    }
+    SetWindowPos(editor, 0, 0, 0,
+                 rect->right - rect->left + 6,
+                 rect->bottom - rect->top + 25,
+                 SWP_NOMOVE);
     ShowWindow(editor,SW_SHOWNORMAL);
     UpdateWindow(editor);
 
@@ -480,7 +498,7 @@ void Vst2HostCallback::initializeMidiEvents()
         VstMidiEvent* evnt = new VstMidiEvent;
         eventsHolder[i] = evnt;
     }
-  //  events->numEvents = maxNotes;
+    //  events->numEvents = maxNotes;
     events->reserved = 0;
     qDebug() << "initializeMidiEvents okay";
 }
@@ -580,20 +598,36 @@ void Vst2HostCallback::showPlugin()
 {
     if (editor)
     {
-        ShowWindow(editor,SW_SHOW);
+        ShowWindow(editor,SW_RESTORE);
+        SetForegroundWindow(editor);
     }
 }
 
-
-
-
 void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **outputs,
-                                    long numFrames) {
+                                    long numFrames)
+{
     // qDebug() << plugin->numInputs;
 
     if (plugin->flags & effFlagsCanReplacing)
     {
+
+        if (!isMasterPlugin)
+        {
+            // silenceChannel(outputs,64,numFrames);
+            // dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
+            plugin->processReplacing(plugin, inputs, outputs, numFrames);
+            return;
+        }
         plugin->processReplacing(plugin, inputs, outputs, numFrames);
+        for (int i = 1; i < masterPluginTrackView->plugins.size(); ++i)
+        {
+            auto p = masterPluginTrackView->plugins.at(i);
+            if (p->holder->host->canPlay)
+            {
+                p->holder->host->processAudio(p->holder->effect,outputs,outputs,numFrames);
+            }
+
+        }
     }
     else
     {
@@ -601,3 +635,45 @@ void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **out
     }
 }
 
+AEffect* Vst2HostCallback::LoadBridgedPlugin(char * szPath)
+{
+    // Get path to JBridge proxy
+    char szProxyPath[1024];
+    szProxyPath[0] = 0;
+    HKEY hKey;
+
+    if( RegOpenKeyA(HKEY_LOCAL_MACHINE, PROXY_REGKEY, &hKey) == ERROR_SUCCESS )
+    {
+        DWORD dw = sizeof(szProxyPath);
+        RegQueryValueExA(hKey, PROXY_REGVAL, NULL, NULL, (LPBYTE)szProxyPath, &dw);
+        RegCloseKey(hKey);
+    }
+
+    // Check key found and file exists
+    if (szProxyPath[0] == 0)
+    {
+        qDebug() << "Unable to locate proxy DLL";
+        return NULL;
+    }
+
+
+    // Load proxy DLL
+    HMODULE hModuleProxy = LoadLibraryA(szProxyPath);
+    if (!hModuleProxy)
+    {
+        qDebug() << "Failed to load proxy DLL";
+        return NULL;
+    }
+
+    // Get entry point
+    PFNBRIDGEMAIN pfnBridgeMain = (PFNBRIDGEMAIN)GetProcAddress(hModuleProxy, "BridgeMain");
+    if (!pfnBridgeMain)
+    {
+        FreeLibrary(hModuleProxy);
+        qDebug() << "Failed to get proxy entry point";
+        return NULL;
+    }
+    hinst = hModuleProxy;
+    return pfnBridgeMain((audioMasterCallback)hostCallback,szPath);
+
+}

@@ -2,6 +2,7 @@
 #define VST2HOSTCALLBACK_H
 
 class PianoRoll;
+class PluginTrackView;
 
 #include "SDK/aeffectx.h"
 #include <SDK/aeffect.h>
@@ -10,7 +11,8 @@ class PianoRoll;
 #include <qvector.h>
 #include <QObject>
 #include <queue>
-
+typedef VstIntPtr (*dispatcherFuncPtr)(AEffect *effect, VstInt32 opCode,
+                                       VstInt32 index, VstInt32 value, void *ptr, float opt);
 struct Rect {
     short top;
     short left;
@@ -32,8 +34,10 @@ class Vst2HostCallback : public QObject
 {
     Q_OBJECT
 public:
+    Vst2HostCallback();
     Vst2HostCallback(mTrack *track);
     AEffect* loadPlugin(char* fileName, char *pluginName);
+    AEffect* LoadBridgedPlugin(char * szPath);
     bool canRecord();
     int configurePluginCallbacks(AEffect *plugin);
     void startPlugin(AEffect *plugin);
@@ -60,9 +64,12 @@ public:
     float sampleRate = 44100.0f;
     bool canPlay = false;
     bool isMuted = false;
-    bool isPaused = false;
-
+    bool isPaused = true;
     int noteVecPos = 0;
+    char *pluginName;
+    PluginTrackView * masterPluginTrackView;
+    bool isMasterPlugin = false;
+    dispatcherFuncPtr dispatcher;
 
 private:
     VstEvents *events;
@@ -81,7 +88,7 @@ private:
     float ** outputs;
     float ** inputs;
     float samplesPerTick = 0;
-    char *pluginName;
+
     HWND editor;
 public slots:
     void setCustomPlackbackPos(int playbackPos);
@@ -96,11 +103,12 @@ struct pluginHolder
 
 //from http://teragonaudio.com/article/How-to-make-your-own-VST-host.html
 
+typedef AEffect * (*PFNBRIDGEMAIN)( audioMasterCallback audiomaster, char * pszPluginPath );
+
 // Plugin's entry point
 typedef AEffect* (*vstPluginFuncPtr)(audioMasterCallback host);
 // Plugin's dispatcher function
-typedef VstIntPtr (*dispatcherFuncPtr)(AEffect *effect, VstInt32 opCode,
-                                       VstInt32 index, VstInt32 value, void *ptr, float opt);
+
 // Plugin's getParameter() method
 typedef float (*getParameterFuncPtr)(AEffect *effect, VstInt32 index);
 // Plugin's setParameter() method

@@ -2,6 +2,7 @@
 #define TRACKVIEW_H
 
 class TrackMidiView;
+class PluginTrackView;
 
 #include <QWidget>
 #include <QPainter>
@@ -30,9 +31,12 @@ public:
     pluginHolder plugin;
     TrackMidiView *trackMidiView;
     int id;
-
+    int randomRed = 0;
+    int randomGreen = 0;
+    int randomBlue = 0;
+        QString instrumentName;
+        PluginTrackView *pluginTrack;
 private:
-    QString instrumentName;
     QLineEdit *instrumentLabel;
     QVBoxLayout *vlayout;
     QCheckBox *muteBox;
@@ -40,9 +44,7 @@ private:
     QPushButton * showButton;
     bool canEditLine = false;
     const int widgetWidth = 150;
-    int randomRed = 0;
-    int randomGreen = 0;
-    int randomBlue = 0;
+
 
 signals:
     void trackClickedOn(int id);

@@ -1,6 +1,8 @@
 #ifndef FOLDERVIEW_H
 #define FOLDERVIEW_H
 
+class PluginEditorContainer;
+
 #include <QObject>
 #include <QWidget>
 #include <QVBoxLayout>
@@ -15,10 +17,14 @@ class FolderView : public QWidget
 public:
     FolderView();
     PianoRollContainer * pRollContainer;
+    PluginEditorContainer * pluginContainer;
+
+    bool isPluginContainerWidget = false;
 private:
     QVBoxLayout *vLayout;
-    QListView *list;
+    QTreeView *list;
     QString path = "C:/Program Files/Native Instruments/VSTPlugins 64 bit/";
+    static int tempFolderID;
 
 private slots:
    void itemDoubleClicked();

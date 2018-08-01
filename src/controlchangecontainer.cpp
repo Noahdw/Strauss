@@ -1,7 +1,7 @@
 #include "controlchangecontainer.h"
 #include "src/pianorollcontainer.h"
 #include "src/controlchangebridge.h"
-
+#include "src/controlchangeitem.h"
 /*
 This class holds two views which can be switched between.
 The first is the PianoRollContainer which is a collection of
@@ -40,6 +40,7 @@ void ControlChangeContainer::addControlChangeView(PianoRoll * pianoRoll)
     bridge->view->setScene(pianoRoll->scene);
     bridge->baseScene = scene;
     bridge->overlays[bridge->currentIndex]->scene = scene;
+    bridge->overlays[bridge->currentIndex]->rightItem->setX(pianoRoll->scene->width());
     scene->setSceneRect(*pianoRoll->sceneRect);
     bridge->overlays[bridge->currentIndex]->setScene(scene);
     sLayout2->addWidget(bridge);

@@ -26,7 +26,9 @@
 #include "src/pianorollhelperview.h"
 #include <QPainter>
 #include <QKeyEvent>
-
+#include <src/timetracker.h>
+#include <QStackedWidget>
+#include "src/plugineditorcontainer.h"
 namespace Ui {
 class MainWindow;
 }
@@ -35,13 +37,13 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     QWidget *centralWidget;
-
+    QWidget *pluginEdiorCentralWidget;
+    QStackedWidget * stackedCentralWidget;
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     static QVector<pluginHolder*> pluginHolderVec;
-    static bool keyboardModeEnabled;
-    static int tempFolderID;
+
 private slots:
     void on_PauseButton_clicked(int type);
     void on_quitButton_clicked();
@@ -62,7 +64,8 @@ private:
     HeaderContainer        *headerContainer;
     ControlChangeContainer *controlContainer;
     PianoRollHelperView    *prollHelper;
-
+    QVBoxLayout            *mainLayout;
+    PluginEditorContainer  *pluginEditorContainer;
     QMenu   *fileMenu;
     QMenu   *editMenu;
     QAction *saveAction;

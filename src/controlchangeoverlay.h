@@ -33,13 +33,15 @@ public:
     void recalculateDT();
     void switchDrawModes();
     bool eventFilter(QObject *target, QEvent *event);
+
     QGraphicsScene * scene = nullptr;
     ControlChangeItem* recentItem;
     std::map<int,QGraphicsItem*> activeItems;
     bool canDraw = false;
     std::vector<int> listOfCC;
     int ccType;
-
+    ControlChangeItem *leftItem;
+    ControlChangeItem *rightItem;
 protected:
     void showEvent(QShowEvent *event);
     void mousePressEvent(QMouseEvent *event);
@@ -50,8 +52,6 @@ protected:
     void resizeEvent(QResizeEvent *event);
     void paintEvent(QPaintEvent *event);
 private:
-    ControlChangeItem *leftItem;
-    ControlChangeItem *rightItem;
     CollisionItem *collisionItem;
     bool firstShow = true;
     QPoint origin;

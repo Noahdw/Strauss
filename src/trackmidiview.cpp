@@ -4,12 +4,11 @@
 
 TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 {
-
     setViewportUpdateMode(MinimalViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
 
     //  setMinimumWidth(400);
-    setMinimumHeight(70);
+    setMinimumHeight(90);
     setMaximumHeight(90);
     //   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

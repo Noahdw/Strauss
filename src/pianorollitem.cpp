@@ -53,35 +53,62 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         return;
     }
+
     int yPos = event->lastScenePos().y()/keyHeight;
     setY(yPos*keyHeight);
+
+
     int xMove = 0;
     int yMove = 0;
+    double scaleFactor = pianoroll->tPQN * pianoroll->scaleFactor;
 
-    double colSpacing =pianoroll->tPQN *pianoroll->scaleFactor;
-    int xPos = event->lastScenePos().x()/colSpacing;
+    int xPos = (x() / scaleFactor);
+    int xAdjust = ( event->lastScenePos().x()/scaleFactor) - (actualInitX/ scaleFactor);
+    if (pianoroll->prefferedScaleFactor <= 0.03125)
+    {
+        setPos(x() + event->lastScenePos().x() - actualInitX,yPos*keyHeight);
+        actualInitX = event->lastScenePos().x();
+    }
+    else
+    {
+        if ((int)( event->lastScenePos().x()/scaleFactor) != (int)(actualInitX/ scaleFactor))
+        {
+            (int)( event->lastScenePos().x()/scaleFactor) < (int)(actualInitX/ scaleFactor) ? xAdjust = -1 : xAdjust = 1;
+            actualInitX = event->lastScenePos().x();
+        }
+        // qDebug() << "scenePos: " << event->lastScenePos().x()/scaleFactor << "pos.x()" << actualInitX/ scaleFactor;
+        xPos += xAdjust;
+    }
 
-    if(initXPos !=  x()){
-        qDebug() <<  x();
+    if(initXPos !=  x())
+    {
         xMove = x() - initXPos;
         initXPos = x();
     }
-    if(initYPos !=  y()){
-        qDebug() <<  y();
+    if(initYPos !=  y())
+    {
         yMove = y() - initYPos;
         initYPos = y();
     }
-    if(yMove != 0 || xMove != 0){
-        pianoroll->notifyPianoRollItemMoved(xMove,yMove,this);
+    if(yMove != 0 || xMove != 0)
+    {
+        pianoroll->notifyPianoRollItemMoved(xMove,yMove,this); //update all other selected notes
     }
 
-    if (xPos < 0) {
+    if (xPos < 0)
+    {
         xPos = 0;
-    }else if(xPos*colSpacing + noteEnd > pianoroll->totalDT){
-        xPos = pianoroll->totalDT - noteEnd;
-        colSpacing =1;
     }
-    setX(xPos*colSpacing);
+    else if(x() + noteEnd > pianoroll->totalDT)
+    {
+        xPos = pianoroll->totalDT - noteEnd;
+        setX(xPos);
+        scaleFactor =1;
+    }
+    else if(pianoroll->prefferedScaleFactor > 0.03125)
+    {
+        setX(xPos*scaleFactor);
+    }
     //Perhaps a bad idea, but if a drag changes the yPos, play the new note
     if (lastYWithSound != yPos*keyHeight) {
         int note = 127 - yPos;
@@ -99,6 +126,7 @@ void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsItem::mousePressEvent(event);
     lastSceneResizePos = event->lastScenePos().x();
     initXPos = x();
+    actualInitX = event->lastScenePos().x();
     initWidth = width;
     if (event->pos().x() <= (width / noteResizeThreshold) )
     {
@@ -113,9 +141,9 @@ void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
         return;
     }
     int yPos = event->lastScenePos().y()/keyHeight;
-    double colSpacing =pianoroll->tPQN *pianoroll->scaleFactor;
-    int xPos = event->lastScenePos().x()/colSpacing;
-    lastXPos = xPos*colSpacing;
+    double scaleFactor =pianoroll->tPQN *pianoroll->scaleFactor;
+    int xPos = event->lastScenePos().x()/scaleFactor;
+    lastXPos = xPos*scaleFactor;
     lastYPos = yPos*keyHeight;
     initXPos = lastXPos;
     initYPos = lastYPos;

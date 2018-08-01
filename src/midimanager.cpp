@@ -277,7 +277,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
         //Not supported
     }
 
-    emit notifyTrackViewChanged(&song);
+   // emit notifyTrackViewChanged(&song);
     return song;
 }
 //This simply adds a note to the map, it does not update the actual midi data itself

@@ -1,6 +1,10 @@
 #include "folderview.h"
 #include <QDebug>
 #include <src/audiomanager.h>
+#include <src/plugineditorcontainer.h>
+
+int FolderView::tempFolderID = 0;
+
 FolderView::FolderView()
 {
     vLayout = new QVBoxLayout;
@@ -18,7 +22,8 @@ FolderView::FolderView()
     model->setFilter(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot);
     model->setNameFilters(QStringList() << "*.dll");
     model->setNameFilterDisables(false);
-    list = new QListView();
+    list = new QTreeView();
+
     list->setSelectionMode(QAbstractItemView::SingleSelection);
     list->setModel(model);
     list->setRootIndex(model->index(path));
@@ -29,11 +34,39 @@ FolderView::FolderView()
     setPalette(pal);
     vLayout->addWidget(list);
     QObject::connect(list,&QListView::doubleClicked,this,&FolderView::itemDoubleClicked);
+
+    list->hideColumn(1);
+     list->hideColumn(2);
+     list->hideColumn(3);
+     list->setHeaderHidden(true);
 }
+
 
 void FolderView::itemDoubleClicked()
 {
     QModelIndex index = list->currentIndex();
     QString pluginName = index.data(Qt::DisplayRole).toString();
-    pRollContainer->propogateFolderViewDoubleClicked(pluginName,path);
+    QString tempPath = QString(QDir::current().path()+"/TempPlugins/%1.dll").arg(FolderView::tempFolderID++);
+    qDebug() << tempPath;
+    if (QFile::exists(tempPath))
+    {
+        QFile::remove(tempPath);
+    }
+
+    if (!QFile::copy(path + pluginName, tempPath))
+    {
+        qDebug() << QDir::current().path();
+        qDebug() << "Could not copy plugin";
+        return;
+    }
+    if (isPluginContainerWidget)
+    {
+            pluginContainer->FolderViewDoubleClicked(pluginName,tempPath);
+    }
+    else
+    {
+            pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath);
+    }
+
+
 }

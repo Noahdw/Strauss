@@ -3,6 +3,7 @@
 #include <QPushButton>
 #include <src/audiomanager.h>
 #include <src/mainwindow.h>
+#include <src/common.h>
 
 const int maxWidth = 50;
 HeaderContainer::HeaderContainer()
@@ -93,5 +94,5 @@ void HeaderContainer::record()
 
 void HeaderContainer::keyboardMode(bool enabled)
 {
-    MainWindow::keyboardModeEnabled = enabled;
+    keyboardModeEnabled = enabled;
 }

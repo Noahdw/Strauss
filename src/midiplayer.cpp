@@ -2,6 +2,7 @@
 #include "src/mainwindow.h"
 #include "src/vst2hostcallback.h"
 #include "src/controlchangebridge.h"
+#include "src/common.h"
 
 //This class is no longer needed
 
@@ -206,12 +207,14 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
                 plugs->host->addMidiEvent(status,note,velocity);
                 if (MidiPlayer::canRecordInput)
                 {
-                    if (MidiPlayer::recordingOverwrites)
+                    qreal currentTick =((qreal)g_timer->currentTime() / 1000.0f) * 960.0f / (60.0f / (float)g_tempo);
+                    qDebug() << currentTick;
+                    if (MidiPlayer::recordingOverwrites) // not implemented yet
                     {
-                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,plugs->host->pianoroll->line->x(),velocity});
+                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,currentTick,velocity});
                     }else
                     {
-                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,plugs->host->pianoroll->line->x(),velocity});
+                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,currentTick,velocity});
 
                     }
                 }

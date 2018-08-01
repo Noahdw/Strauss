@@ -2,6 +2,7 @@
 #define TRACKCONTAINER_H
 
 class TrackMidiView;
+class PluginEditorContainer;
 
 #include <QObject>
 #include <QWidget>
@@ -22,7 +23,7 @@ public:
     TrackContainer();
     void setPianoRollReference(PianoRollContainer *prc);
     void addSingleView(TrackView *view);
-
+    PluginEditorContainer *pluginEditorContainer;
 signals:
 void switchControlChange();
 public slots:

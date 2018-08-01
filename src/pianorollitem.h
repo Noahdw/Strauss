@@ -44,6 +44,7 @@ private:
     int initYPos;
     int initWidth;
     int lastYWithSound;
+    int actualInitX;
     const int noteResizeThreshold = 10; // in percent, so first x% and last x% allows resizing
     bool canResizeRight = false;
     bool canResizeLeft = false;

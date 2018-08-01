@@ -6,6 +6,7 @@
 #include <src/mainwindow.h>
 #include <random>
 #include <src/trackmidiview.h>
+#include "src/plugintrackview.h"
 
 std::default_random_engine generator;
 std::uniform_int_distribution<int> distribution(80,255);
@@ -97,7 +98,7 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
 }
 void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
 {
-    if (plugin.effect ==NULL) {
+    if (plugin.effect == NULL) {
         qDebug() << "No plugin is currently set";
 
         QByteArray array = filepath.toLocal8Bit();
@@ -116,6 +117,9 @@ void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
         instrumentLabel->setText(name.left(name.size() - 4));
         plugin.host->startPlugin(plugin.effect);
         MainWindow::pluginHolderVec.append(&plugin);
+        pluginTrack->addPlugin(&plugin);
+        plugin.host->isMasterPlugin = true;
+        plugin.host->masterPluginTrackView = this->pluginTrack;
     }
 
 }

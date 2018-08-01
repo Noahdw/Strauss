@@ -23,6 +23,8 @@ class ControlChangeBridge;
 #include <QKeyEvent>
 #include <map>
 #include <src/controlchangeoverlay.h>
+#include <src/common.h>
+#include <src/timetracker.h>
 
 class PianoRoll : public QGraphicsView{
     Q_OBJECT
@@ -50,12 +52,12 @@ public:
     QRectF *sceneRect;
     QGraphicsRectItem *line;
     ControlChangeBridge * bridge;
-    int cols = 60;
+   // int cols = 60;
     int tPQN = MidiManager::TPQN;
-    int totalDT = MidiManager::TPQN*cols;
+    int totalDT = MidiManager::TPQN*g_quarterNotes;
     double colSpacing = 0;
     double scaleFactor = 1;
-
+    double prefferedScaleFactor = 1.0;
 
 public slots:
     void ShowContextMenu(const QPoint &pos);
@@ -75,14 +77,14 @@ protected:
     void keyPressEvent(QKeyEvent *event);
 private:
     Keyboard *keyboard;
-    QTimeLine *timer;
     QGraphicsItemAnimation *animation;
     QRubberBand *rubberBand;
     QPoint origin;
     int currentTimer = 0;
     int lastYNote = 0;
-    const double minimumColSpacing = 3;
+    const double minimumColSpacing = 20;
     double xscale = 1.1;
+
 
 
 

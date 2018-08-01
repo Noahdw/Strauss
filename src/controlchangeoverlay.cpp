@@ -1,6 +1,7 @@
 #include "controlchangeoverlay.h"
 #include "src/controlchangeitem.h"
 #include "src/collisionitem.h"
+#include "src/common.h"
 
 ControlChangeOverlay::ControlChangeOverlay(QWidget *parent) : QGraphicsView(parent)
 {
@@ -150,10 +151,10 @@ void ControlChangeOverlay::showEvent(QShowEvent *event)
         scene->addItem(rightItem);
         scene->addItem(collisionItem);
         collisionItem->setZValue(2);
-        leftItem->setPos(0,1092);
-        rightItem->setPos(960*60,1092);
+        leftItem->setPos(0,scene->height());
+        rightItem->setPos(960*g_quarterNotes,scene->height());
         activeItems[0] = leftItem;
-        activeItems[960*60] = rightItem;
+        activeItems[960*g_quarterNotes] = rightItem;
         createLineConnector();
         firstShow  = false;
         leftItem->overlay = this;
@@ -164,12 +165,10 @@ void ControlChangeOverlay::showEvent(QShowEvent *event)
     fitIntoView();
 
     QGraphicsView::showEvent(event);
-
 }
 
 void ControlChangeOverlay::mousePressEvent(QMouseEvent *event)
 {
-
     QGraphicsItem *item = itemAt(event->pos());
     origin = event->pos();
 
@@ -198,6 +197,8 @@ void ControlChangeOverlay::mouseDoubleClickEvent(QMouseEvent *event)
             scene->removeItem(cci);
             activeItems.erase(cci->x());
             delete cci;
+            createLineConnector();
+            recalculateDT();
             return;
         }
     }
