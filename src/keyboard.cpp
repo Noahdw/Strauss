@@ -5,22 +5,18 @@
  *It emits MIDI data to the VST for playbck.
  * */
 
-Keyboard::Keyboard(QWidget *parent) : QGraphicsView(parent)
+Keyboard::Keyboard(PianoRoll *pianoRoll, QWidget *parent) : QGraphicsView(parent)
 {
+    piano_roll = pianoRoll;
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scene = new QGraphicsScene;
     scene->setSceneRect(0,0,noteWidth,keyHeight*128);
     this->setScene(scene);
-    // setFixedSize(noteWidth,400);
     setMaximumWidth(noteWidth);
     addNotesToScene();
 }
 
-void Keyboard::setPianoRoll(PianoRoll *proll)
-{
-    pianoroll = proll;
-}
 
 void Keyboard::setScrollWheelValue(int value)
 {
@@ -112,7 +108,7 @@ void Keyboard::mousePressEvent(QMouseEvent *event)
             activeBrush =note->brush();
             note->setBrush(Qt::red);
             activeNote = note;
-            pianoroll->playKeyboardNote(127 - note->y()/keyHeight, true);
+            piano_roll->playKeyboardNote(127 - note->y()/keyHeight, true);
         }
 
     }
@@ -132,11 +128,10 @@ void Keyboard::mouseDoubleClickEvent(QMouseEvent *event)
             activeBrush =note->brush();
             note->setBrush(Qt::red);
             activeNote = note;
-            pianoroll->playKeyboardNote(127 - note->y()/keyHeight, true);
+            piano_roll->playKeyboardNote(127 - note->y()/keyHeight, true);
         }
 
     }
-
 }
 
 void Keyboard::wheelEvent(QWheelEvent *event)
@@ -146,12 +141,12 @@ void Keyboard::wheelEvent(QWheelEvent *event)
     QScrollBar *wheelPos;
     wheelPos=this->verticalScrollBar();
     wheelPos->setValue(verticalScrollBar()->value()-yscroller);
-    pianoroll->setScrollWheelValue(wheelPos->value());
+    piano_roll->setScrollWheelValue(wheelPos->value());
 }
 
 void Keyboard::mouseReleaseEvent(QMouseEvent *event)
 {
     activeNote->setBrush(activeBrush);
-    pianoroll->playKeyboardNote(127 - activeNote->y()/keyHeight, false);
+    piano_roll->playKeyboardNote(127 - activeNote->y()/keyHeight, false);
 }
 

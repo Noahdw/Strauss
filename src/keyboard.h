@@ -17,21 +17,16 @@ class PianoRoll;
 class Keyboard: public QGraphicsView{
     Q_OBJECT
 public:
-    Keyboard(QWidget* parent = 0);
-    PianoRoll *getPianoRoll(){return pianoroll;}
+    Keyboard(PianoRoll *pianoRoll,QWidget* parent = 0);
+    PianoRoll *getPianoRoll(){return piano_roll;}
     void setScrollWheelValue(int value);
-    void setPianoRoll(PianoRoll *proll);
-
     int noteWidth = 24;
-
 private:
     void addNotesToScene();
-
     QGraphicsScene *scene;
-    PianoRoll *pianoroll;
+    PianoRoll *piano_roll;
     QGraphicsRectItem *activeNote;
     QBrush activeBrush;
-
 protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);

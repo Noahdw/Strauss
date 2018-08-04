@@ -16,7 +16,7 @@ class ControlChangeContainer: public QWidget
 {
     Q_OBJECT
 public:
-    ControlChangeContainer(PianoRollContainer * pRollCont);
+    ControlChangeContainer(PianoRollContainer *pianoRollContainer);
     QStackedLayout *sLayout;
     QStackedLayout *sLayout2;
     QWidget * ccStackedHolder;
@@ -24,7 +24,7 @@ public:
     void addControlChangeView(PianoRoll *pianoRoll);
     void switchControlChangeType(int index);
 private:
-    PianoRollContainer * pianoRollCont;
+    PianoRollContainer *piano_roll_container;
 
 protected:
     void keyPressEvent(QKeyEvent * event);

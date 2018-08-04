@@ -53,6 +53,10 @@ public:
     void setCanRecord(bool canRec);
     void turnOffAllNotes(AEffect *plugin);
     void showPlugin();
+    void exportAudioInit();
+    int exportAudioBegin(AEffect *plugin, float **outputs,
+                          long numFrames);
+    void exportAudioEnd();
     EventToAdd eventToAdd;
     std::queue<EventToAdd> midiEventQueue;
     std::deque<EventToAdd> recordedMidiEventDeque;
@@ -60,15 +64,16 @@ public:
     int ccFramesTillBlock[128];
     int ccVecPos[128];
     PianoRoll *pianoroll;
-    uint blocksize;
+
     float sampleRate = 44100.0f;
     bool canPlay = false;
     bool isMuted = false;
     bool isPaused = true;
+    bool isMasterPlugin = false;
     int noteVecPos = 0;
     char *pluginName;
     PluginTrackView * masterPluginTrackView;
-    bool isMasterPlugin = false;
+
     dispatcherFuncPtr dispatcher;
 
 private:
@@ -80,13 +85,12 @@ private:
     bool canRecording = false;
     bool hasReachedEnd = false;
     int TPQN = MidiManager::TPQN;
-    int BPM = 500000;
     const uint maxNotes = 256;
     VstMidiEvent *eventsHolder[256];
     uint numChannels = 2;
-    uint framesTillBlock = 0;
-    float ** outputs;
-    float ** inputs;
+    int framesTillBlock = -1;
+    float **outputs;
+    float **inputs;
     float samplesPerTick = 0;
 
     HWND editor;

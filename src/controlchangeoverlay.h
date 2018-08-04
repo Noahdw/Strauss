@@ -24,7 +24,7 @@ class ControlChangeOverlay  : public QGraphicsView{
     Q_OBJECT
 
 public:
-    ControlChangeOverlay(QWidget *parent = 0);
+    ControlChangeOverlay(int ccType,QWidget *parent = 0);
     void createLineConnector();
     void removeSelectedItems();
     void removeCollidingItems(QList<QGraphicsItem*> &items);
@@ -32,16 +32,15 @@ public:
     void fitIntoView();
     void recalculateDT();
     void switchDrawModes();
+    void updateScene(QGraphicsScene *scene);
     bool eventFilter(QObject *target, QEvent *event);
 
-    QGraphicsScene * scene = nullptr;
-    ControlChangeItem* recentItem;
+    ControlChangeItem *recentItem;
     std::map<int,QGraphicsItem*> activeItems;
     bool canDraw = false;
     std::vector<int> listOfCC;
     int ccType;
-    ControlChangeItem *leftItem;
-    ControlChangeItem *rightItem;
+
 protected:
     void showEvent(QShowEvent *event);
     void mousePressEvent(QMouseEvent *event);
@@ -57,7 +56,12 @@ private:
     QPoint origin;
     std::vector<QGraphicsLineItem*> lineItems;
     QRubberBand *rubberBand;
-    QGraphicsRectItem * rectItem;
+    QGraphicsScene *scene;
+    QGraphicsRectItem *rectItem;
+    //These items should never be deleted
+    ControlChangeItem *leftItem;
+    ControlChangeItem *rightItem;
+
 };
 
 #endif // CONTROLCHANGEOVERLAY_H

@@ -69,8 +69,6 @@ public:
 
     static int TPQN;
 
-signals:
-    void notifyTrackViewChanged(mSong *song);
 
 };
 

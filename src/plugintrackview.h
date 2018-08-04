@@ -19,8 +19,10 @@ public:
     PluginTrackView(TrackView *track);
     std::vector<PluginView*> plugins;
     void addPlugin(pluginHolder *holder);
+    void clickedOn(bool state);
+
     PluginEditorContainer * container;
-        TrackView * trackView;
+    TrackView * trackView;
 protected:
     void paintEvent(QPaintEvent *event);
     void mousePressEvent(QMouseEvent *event);
@@ -32,7 +34,8 @@ private:
     QCheckBox * recordBox;
     QVBoxLayout * vlayout;
     QString instrumentName;
-
+    QBrush brush;
+    QPen pen;
     int red;
     int green;
     int blue;

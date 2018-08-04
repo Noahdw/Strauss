@@ -5,8 +5,6 @@ CollisionItem::CollisionItem(ControlChangeOverlay *_parent)
     :parent(_parent)
 {
     setCacheMode(QGraphicsItem::NoCache);
-    // setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
-    // setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable,true);
 }
 
@@ -24,8 +22,7 @@ QPainterPath CollisionItem::shape() const
 
 void CollisionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-  //  painter->setBrush(QBrush(Qt::black));
-  //  painter->drawPath(shape());
+
 }
 
 void CollisionItem::mousePressEvent(QGraphicsSceneMouseEvent *event)

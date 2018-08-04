@@ -14,15 +14,16 @@ class CollisionItem : public QGraphicsItem
 public:
     CollisionItem(ControlChangeOverlay *_parent);
     QRectF boundingRect() const;
-     QPainterPath shape() const;
+    QPainterPath shape() const;
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
-    ControlChangeOverlay *parent;
+
     int lastX;
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+    ControlChangeOverlay *parent;
 private:
     qreal width = 500;
 };

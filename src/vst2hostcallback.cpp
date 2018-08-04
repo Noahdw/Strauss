@@ -4,7 +4,7 @@
 #include <SDK/audioeffectx.h>
 #include <qdatetime.h>
 #include <src/pianoroll.h>
-#include <src/audiomanager.h>
+#include <src/audioengine.h>
 #include <src/controlchangebridge.h>
 #include <src/controlchangeoverlay.h>
 #include <src/plugintrackview.h>
@@ -26,13 +26,13 @@ double sPos = 0;
 int processLevel = 2;//kVstProcessLevelUser; //1
 Vst2HostCallback::Vst2HostCallback()
 {
-    blocksize = AudioManager::blocksize;
+
 }
 
 Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
 {
     track = mtrack;
-    blocksize = AudioManager::blocksize;
+
 }
 
 
@@ -211,7 +211,7 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
 
     dispatcher(plugin, effOpen, 0, 0, NULL, 0.0f);
     dispatcher(plugin, effSetSampleRate, 0, 0, NULL, sampleRate);
-    dispatcher(plugin, effSetBlockSize, 0, blocksize, NULL, 0.0f);
+    dispatcher(plugin, effSetBlockSize, 0, g_blocksize, NULL, 0.0f);
     dispatcher(plugin, effMainsChanged, 0, 1, NULL, 0.0f);
 
     //This crap taken from https://github.com/falkTX/dssi-vst/blob/master/dssi-vst-server.cpp
@@ -260,7 +260,8 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
     canPlay = true;
 }
 
-void Vst2HostCallback::silenceChannel(float **channelData, int numChannels, long numFrames) {
+void Vst2HostCallback::silenceChannel(float **channelData, int numChannels, long numFrames)
+{
     for(int channel = 0; channel < numChannels; ++channel) {
         for(long frame = 0; frame < numFrames; ++frame) {
             channelData[channel][frame] = 0.0f;
@@ -272,8 +273,6 @@ This is used to convert midi arrays into blocks for processing
 */
 void Vst2HostCallback::processMidi(AEffect *plugin)
 { 
-    processLevel = kVstProcessLevelRealtime;
-
     events->numEvents =0;
     //  qDebug() << track->listOfNotes.length();
     uint i = 0;
@@ -362,21 +361,21 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
             uint k = 0;
             if (cc->at(j) != NULL && cc->at(j)->activeItems.size() > 2)
             {
-                while(k < blocksize){
+                while(k < g_blocksize){
                     //  qDebug() << cc->at(j)->listOfCC.size();
                     if (ccVecPos[j] >= cc->at(j)->listOfCC.size())
                     {
                         break;
                     }
-                    if (ccFramesTillBlock[j] > 0)
+                    if (ccFramesTillBlock[j] >= 0)
                     {
-                        if (ccFramesTillBlock[j] < blocksize)
+                        if (ccFramesTillBlock[j] < g_blocksize)
                         {
                             canSkip = true;
                         }
                         else
                         {
-                            ccFramesTillBlock[j] -= blocksize;
+                            ccFramesTillBlock[j] -= g_blocksize;
                             break;
                         }
                     }
@@ -385,7 +384,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
                         // A lot of sources claimed it was Microseconds since the start. Wrong.
                         df = cc->at(j)->listOfCC.at(ccVecPos[j]) * samplesPerTick;
                         k+=df;
-                        if (k > blocksize) {
+                        if (k > g_blocksize) {
                             ccFramesTillBlock[j] = df;
                             break;
                         }
@@ -397,7 +396,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
                         canSkip = false;
                     }
 
-                    ccFramesTillBlock[j] = 0;
+                    ccFramesTillBlock[j] = -1;
 
                     //can add new event as we are in block timeframe
                     VstMidiEvent* evnt = eventsHolder[pos];
@@ -424,7 +423,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
             }
         }
 
-        while(i < blocksize){
+        while(i < g_blocksize){
             //  qDebug() << framesTillBlock;
             if (noteVecPos >= track->listOfNotes.length()) {
                 qDebug() << "notevec length :" << track->listOfNotes.length();
@@ -432,13 +431,13 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
                 hasReachedEnd = true;
                 break;
             }
-            if (framesTillBlock > 0) {
-                if (framesTillBlock < blocksize) {
+            if (framesTillBlock >= 0) {
+                if (framesTillBlock < g_blocksize) {
                     canSkip = true;
                 }
                 else
                 {
-                    framesTillBlock -= blocksize;
+                    framesTillBlock -= g_blocksize;
                     break;
                 }
             }
@@ -447,7 +446,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
                 // A lot of sources claimed it was Microseconds since the start. Wrong.
                 df = track->listOfNotes.at(noteVecPos) * samplesPerTick;
                 i+=df;
-                if (i > blocksize) {
+                if (i > g_blocksize) {
                     framesTillBlock = df;
                     break;
                 }
@@ -459,7 +458,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
                 canSkip = false;
             }
 
-            framesTillBlock = 0;
+            framesTillBlock = -1;
 
             //can add new event as we are in block timeframe
             VstMidiEvent* evnt = eventsHolder[pos];
@@ -486,7 +485,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
         }
     }
     dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
-    sPos += blocksize;
+    sPos += g_blocksize;
 
 }
 //There is no need to malloc every call and create new events. Reuse just one structure.
@@ -507,11 +506,11 @@ void Vst2HostCallback::restartPlayback()
 {
     for (int i = 0; i < 128; ++i)
     {
-        ccFramesTillBlock[i] = 0;
+        ccFramesTillBlock[i] = -1;
         ccVecPos[i] = 0;
     }
     noteVecPos = 0;
-    framesTillBlock = 0;
+    framesTillBlock = -1;
     hasReachedEnd = false;
     isPaused = false;
     pianoroll->updateSongTrackerPos(false,false,-1);
@@ -546,7 +545,7 @@ void Vst2HostCallback::setCustomPlackbackPos(int playbackPos)
         if (total >= playbackPos)
         {
             noteVecPos = var;
-            framesTillBlock = 0;
+            framesTillBlock = -1;
             hasReachedEnd = false;
             isPaused = false;
             return;
@@ -603,18 +602,61 @@ void Vst2HostCallback::showPlugin()
     }
 }
 
+void Vst2HostCallback::exportAudioInit()
+{
+    for (int i = 0; i < 128; ++i)
+    {
+        ccFramesTillBlock[i] = -1;
+        ccVecPos[i] = 0;
+    }
+    noteVecPos = 0;
+    framesTillBlock = -1;
+    hasReachedEnd = false;
+    isPaused = false;
+    canPlay = true;
+    processLevel = kVstProcessLevelOffline;
+}
+
+int Vst2HostCallback::exportAudioBegin(AEffect *plugin,float **outputs,
+                                        long numFrames)
+{
+    processMidi(plugin);
+    processAudio(plugin,outputs,outputs,numFrames);
+    if (hasReachedEnd)
+    {
+        canPlay = false;
+        return 0;
+    }
+    return 1;
+}
+
+void Vst2HostCallback::exportAudioEnd()
+{
+    for (int i = 0; i < 128; ++i)
+    {
+        ccFramesTillBlock[i] = -1;
+        ccVecPos[i] = 0;
+    }
+    noteVecPos = 0;
+    framesTillBlock = -1;
+    hasReachedEnd = false;
+    isPaused = true;
+    canPlay = true;
+    processLevel = kVstProcessLevelRealtime;
+}
+
 void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **outputs,
                                     long numFrames)
 {
-    // qDebug() << plugin->numInputs;
-
+    if (!canPlay)
+    {
+        return;
+    }
     if (plugin->flags & effFlagsCanReplacing)
     {
 
         if (!isMasterPlugin)
         {
-            // silenceChannel(outputs,64,numFrames);
-            // dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
             plugin->processReplacing(plugin, inputs, outputs, numFrames);
             return;
         }

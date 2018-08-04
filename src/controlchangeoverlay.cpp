@@ -3,10 +3,9 @@
 #include "src/collisionitem.h"
 #include "src/common.h"
 
-ControlChangeOverlay::ControlChangeOverlay(QWidget *parent) : QGraphicsView(parent)
+ControlChangeOverlay::ControlChangeOverlay(int ccType, QWidget *parent) : QGraphicsView(parent)
 {
-    // setMinimumWidth(1000);
-    //  setMinimumHeight(200);
+    this->ccType = ccType;
     setStyleSheet("background-color: transparent;");
     setViewportUpdateMode(FullViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -16,7 +15,6 @@ ControlChangeOverlay::ControlChangeOverlay(QWidget *parent) : QGraphicsView(pare
     rightItem     = new ControlChangeItem;
     collisionItem = new CollisionItem(this);
     rubberBand    = new QRubberBand(QRubberBand::Rectangle, this);
-
 }
 
 void ControlChangeOverlay::createLineConnector()
@@ -35,7 +33,8 @@ void ControlChangeOverlay::createLineConnector()
 
     std::map<int, QGraphicsItem*>::const_iterator i = activeItems.begin();
     int j = 0;
-    while (i != activeItems.end()) {
+    while (i != activeItems.end())
+    {
         auto item = *i;
         ++i;
         if (i != activeItems.end())
@@ -378,4 +377,11 @@ void ControlChangeOverlay::switchDrawModes()
             item.second->show();
         }
     }
+}
+
+void ControlChangeOverlay::updateScene(QGraphicsScene *scene)
+{
+    this->scene = scene;
+    rightItem->setX(scene->width());
+    setScene(scene);
 }

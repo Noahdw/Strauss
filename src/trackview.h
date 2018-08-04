@@ -24,27 +24,31 @@ class TrackView: public QFrame
     Q_OBJECT
 
 public:
-    TrackView(mTrack *track,QWidget* parent = 0);
+    TrackView(mTrack *track, TrackMidiView *trackMidiView, QWidget* parent = 0);
     void folderViewItemDoubleClicked(QString filepath, QString name);
-
+    TrackMidiView *getTrackMidiView();
     mTrack *track;
     pluginHolder plugin;
-    TrackMidiView *trackMidiView;
     int id;
     int randomRed = 0;
     int randomGreen = 0;
     int randomBlue = 0;
-        QString instrumentName;
-        PluginTrackView *pluginTrack;
+    QString instrumentName;
+    PluginTrackView *pluginTrack;
+protected:
+    void paintEvent(QPaintEvent * event);
+    void mousePressEvent(QMouseEvent *event);
+    bool eventFilter(QObject *target, QEvent *event);
 private:
     QLineEdit *instrumentLabel;
     QVBoxLayout *vlayout;
     QCheckBox *muteBox;
     QCheckBox *recordBox;
     QPushButton * showButton;
+    TrackMidiView *track_midi_view;
+    QBrush brush;
     bool canEditLine = false;
-    const int widgetWidth = 150;
-
+    const int widgetWidth = 100;
 
 signals:
     void trackClickedOn(int id);
@@ -56,10 +60,6 @@ private slots:
     void showPlugin();
     void renameTrack();
 
-protected:
-    void paintEvent(QPaintEvent * event);
-    void mousePressEvent(QMouseEvent *event);
-    bool eventFilter(QObject *target, QEvent *event);
 };
 
 #endif // TRACKVIEW_H

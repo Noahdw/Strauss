@@ -21,21 +21,17 @@ class PianoRollContainer : public QWidget
 public:
     PianoRollContainer();
     void propogateFolderViewDoubleClicked(QString pluginName,QString filePath);
-    PianoRoll *getPianoRollRef();
-    PianoRoll *pianoRoll;
-    Keyboard *keyboard;
-    ControlChangeContainer *ccContainer;
+    void setControlChangeContainer(ControlChangeContainer *controlChangeContainer); // must be called before use
+    PianoRoll *getCurrentPianoRoll();
     QStackedLayout *stackedLayout;
-
 public slots:
-   void switchPianoRoll(int id);
-   void addPianoRolls(TrackView *view);
-
-private:
-    QHBoxLayout *layout;
-
+    void switchPianoRoll(int id);
+    void addPianoRolls(TrackView *trackView);
 protected:
     void paintEvent(QPaintEvent * event);
+private:
+    QHBoxLayout *layout;
+    ControlChangeContainer *control_change_container;
 
 };
 

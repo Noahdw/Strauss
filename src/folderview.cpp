@@ -1,6 +1,6 @@
 #include "folderview.h"
 #include <QDebug>
-#include <src/audiomanager.h>
+#include <src/audioengine.h>
 #include <src/plugineditorcontainer.h>
 
 int FolderView::tempFolderID = 0;
@@ -12,7 +12,7 @@ FolderView::FolderView()
     vLayout->setContentsMargins(0,0,0,0);
     vLayout->setAlignment(Qt::AlignTop|Qt::AlignLeft);
     setMaximumWidth(300);
-  //  setMinimumWidth(150);
+    //  setMinimumWidth(150);
     setBaseSize(300,150);
     setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
     setLayout(vLayout);
@@ -27,7 +27,8 @@ FolderView::FolderView()
     list->setSelectionMode(QAbstractItemView::SingleSelection);
     list->setModel(model);
     list->setRootIndex(model->index(path));
-    list->setStyleSheet("background-color: transparent;");
+
+
     QPalette pal = palette();
     setAutoFillBackground(true);
     pal.setColor(QPalette::Background, Qt::lightGray);
@@ -36,10 +37,12 @@ FolderView::FolderView()
     QObject::connect(list,&QListView::doubleClicked,this,&FolderView::itemDoubleClicked);
 
     list->hideColumn(1);
-     list->hideColumn(2);
-     list->hideColumn(3);
-     list->setHeaderHidden(true);
+    list->hideColumn(2);
+    list->hideColumn(3);
+    list->setHeaderHidden(true);
+    list->setStyleSheet("QTreeView {background-color: transparent; }");
 }
+
 
 
 void FolderView::itemDoubleClicked()
@@ -61,12 +64,13 @@ void FolderView::itemDoubleClicked()
     }
     if (isPluginContainerWidget)
     {
-            pluginContainer->FolderViewDoubleClicked(pluginName,tempPath);
+        pluginContainer->FolderViewDoubleClicked(pluginName,tempPath);
     }
     else
     {
-            pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath);
+        pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath);
     }
 
 
 }
+

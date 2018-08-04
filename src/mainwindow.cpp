@@ -2,14 +2,14 @@
 #include <src/keyboard.h>
 #include <windows.h>
 #include <src/vst2hostcallback.h>
-#include <src/audiomanager.h>
 #include <src/midiplayer.h>
 #include <src/common.h>
-
+#include <src/audioengine.h>
+#include <src/audiomanager.h>
 MidiPlayer player;
 MidiManager *manager;
 TimeTracker *timeTracker;
-AudioManager* audioManager;
+
 
 //temp
 Vst2HostCallback* host;
@@ -17,8 +17,11 @@ AEffect *plugin = NULL;
 
 // init common vars
 bool keyboardModeEnabled = false;
-double g_tempo = 120;
+double g_tempo = 90;
 double g_quarterNotes = 60;
+int g_blocksize = 64;
+int g_sampleRate = 44100;
+double g_volume = 0.333;
 QTimeLine *g_timer = new QTimeLine((float)(60.0/(float)g_tempo)*g_quarterNotes*1000);//Song time in ms
 //end init
 
@@ -30,33 +33,31 @@ MainWindow::MainWindow(QWidget *parent) :
     centralWidget = new QWidget(this);
     pluginEdiorCentralWidget = new QWidget(this);
     stackedCentralWidget = new QStackedWidget;
-    audioManager     = new AudioManager;
+    audio_engine     = new AudioEngine;
     manager          = new MidiManager;
     timeTracker      = new TimeTracker;
 
     setCentralWidget(stackedCentralWidget);
-    QScrollArea *trackScrollArea = new QScrollArea;
-  //  trackScrollArea->setBackgroundRole(QPalette::Light);
+    trackScrollArea = new QScrollArea;
+    //  trackScrollArea->setBackgroundRole(QPalette::Light);
     trackScrollArea->setWidgetResizable(true);
     trackScrollArea->setMinimumWidth(1000);
     trackScrollArea->setMinimumHeight(300);
     trackScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
-    folderView       = new FolderView;
-    headerContainer  = new HeaderContainer;
-    trackContainer   = new TrackContainer;
-    prollContainer   = new PianoRollContainer;
-    controlContainer = new ControlChangeContainer(prollContainer);
-    prollHelper      = new PianoRollHelperView;
-    pluginEditorContainer = new PluginEditorContainer;
+    folder_view              = new FolderView;
+    header_container         = new HeaderContainer(audio_engine);
+    piano_roll_container     = new PianoRollContainer;
+    plugin_editor_container  = new PluginEditorContainer;
+    track_container          = new TrackContainer(plugin_editor_container,piano_roll_container);
+    control_change_container = new ControlChangeContainer(piano_roll_container);
+    piano_roll_helper        = new PianoRollHelperView(control_change_container);
+    piano_roll_container->setControlChangeContainer(control_change_container);
+    folder_view->pRollContainer = piano_roll_container;
 
-    trackContainer->pluginEditorContainer = pluginEditorContainer;
-    trackContainer->setPianoRollReference(prollContainer);
-    folderView->pRollContainer = prollContainer;
-    headerContainer->audioManager = audioManager;
-    trackScrollArea->setWidget(trackContainer);
+    trackScrollArea->setWidget(track_container);
     mainLayout   = new QVBoxLayout;
     QHBoxLayout *helperLayout   = new QHBoxLayout;
     QSplitter   *trackSplitter  = new QSplitter;
@@ -66,34 +67,32 @@ MainWindow::MainWindow(QWidget *parent) :
     helperLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
     helperLayout->setContentsMargins(0,0,0,0);
     trackSplitter->addWidget(trackScrollArea);
-    trackSplitter->addWidget(folderView);
-    mainLayout->addWidget(headerContainer);
+    trackSplitter->addWidget(folder_view);
+    mainLayout->addWidget(header_container);
     prollSplitter->addWidget(trackSplitter);
-    prollSplitter->addWidget(controlContainer);
-    helperLayout->addWidget(prollHelper);
+    prollSplitter->addWidget(control_change_container);
+    helperLayout->addWidget(piano_roll_helper);
     helperLayout->addWidget(prollSplitter);
     mainLayout->addLayout(helperLayout);
-    prollHelper->container = controlContainer;
     centralWidget->setLayout(mainLayout);
     stackedCentralWidget->addWidget(centralWidget);
-    stackedCentralWidget->addWidget(pluginEditorContainer);
-    QObject::connect(trackContainer,&TrackContainer::switchControlChange,controlContainer,
+    stackedCentralWidget->addWidget(plugin_editor_container);
+    QObject::connect(track_container,&TrackContainer::switchControlChange,control_change_container,
                      &ControlChangeContainer::switchControlChangeContainer);
-    QObject::connect(manager,&MidiManager::notifyTrackViewChanged,trackContainer,&TrackContainer::addTrackView);
+
 
     addNewTrack();
     setUpMenuBar();
-    AudioManager::requestedPlaybackPos = -1;
-    audioManager->startPortAudio();
-    audioManager->openStream();
-    audioManager->startStream();
+    AudioEngine::requestedPlaybackPos = -1;
+    audio_engine->startPortAudio();
+    audio_engine->openStream();
+    audio_engine->startStream();
 
     int devices = player.getDevices();
     for (int i = 0; i < devices; ++i)
     {
         player.openDevice(i);
     }
-    player.openDevice(3);
     QPalette pal = palette();
     pal.setColor(QPalette::Background, QColor(150,150,150));
     setAutoFillBackground(true);
@@ -103,6 +102,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QDir dir(QDir::current().path()+"/TempPlugins");
     dir.removeRecursively();
     dir.mkdir(QDir::current().path()+"/TempPlugins");
+
+    trackScrollArea->setStyleSheet("QScrollArea {background-color: rgb(170,170,170); border: 2px solid grey }");
+
+
 }
 
 MainWindow::~MainWindow()
@@ -119,7 +122,7 @@ void MainWindow::on_quitButton_clicked()
 }
 
 
-//Opens and deserializes a song
+//Opens a midi file and deserializes into a song struct // the song struct is kinda deprecated
 void MainWindow::openFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), QString(),
@@ -144,7 +147,7 @@ void MainWindow::openFile()
 
         file.close();
     }
-    trackContainer->addTrackView(&manager->song);
+    track_container->addTrackView(manager->song);
 }
 
 
@@ -176,7 +179,7 @@ bool stopped = false;
 // restarts a song if pressed while playing
 void MainWindow::playSong()
 {
-    audioManager->requestPlaybackRestart();
+    audio_engine->requestPlaybackRestart();
 }
 
 void MainWindow::on_actionPlay_triggered()
@@ -197,9 +200,9 @@ void MainWindow::setUpMenuBar()
     openFileAction->setStatusTip(tr("Open an existing midi file"));
     connect(openFileAction, &QAction::triggered, this, &MainWindow::openFile);
 
-    playSongAction = new QAction(tr("&Play"),this);
-    playSongAction->setStatusTip(tr("play the current song"));
-    connect(playSongAction, &QAction::triggered, this, &MainWindow::playSong);
+    exportAudioAction = new QAction(tr("&Export Audio"),this);
+    exportAudioAction->setStatusTip(tr("Exports as mp3"));
+    connect(exportAudioAction, &QAction::triggered, this, &MainWindow::exportAudio);
 
     deleteAllNotesAction = new QAction(tr("&Delete all"),this);
     deleteAllNotesAction->setStatusTip(tr("Delete all notes from the roll"));
@@ -208,17 +211,26 @@ void MainWindow::setUpMenuBar()
     addNewTrackAction = new QAction(tr("&Add Track"),this);
     addNewTrackAction->setStatusTip(tr("Adds a new MIDI track"));
     connect(addNewTrackAction, &QAction::triggered, this, &MainWindow::addNewTrack);
+
+    settingsAction = new QAction(tr("Settings"),this);
+    connect(settingsAction, &QAction::triggered, this, &MainWindow::displaySettingsDialog);
+
     //Add pause
 
     //Create menu crap
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(openFileAction);
-    fileMenu->addAction(playSongAction);
+    fileMenu->addAction(exportAudioAction);
+
+    QMenu *toolMenu = menuBar()->addMenu(tr("&Tools"));
+    toolMenu->addAction(settingsAction);
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(deleteAllNotesAction);
     editMenu->addAction(addNewTrackAction);
 }
+
+
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
@@ -288,12 +300,29 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 
 void MainWindow::addNewTrack()
 {
-    mTrack *track = new mTrack;
-    track->instrumentName = "New Track";
-    TrackView *view = new TrackView(track);
-    trackContainer->addSingleView(view);
 
+    track_container->addSingleView();
+}
 
+void MainWindow::displaySettingsDialog()
+{
+     auto settingsDialog = new SettingsDialog;
+     settingsDialog->exec();
+}
+
+void MainWindow::exportAudio()
+{
+    QString filePath = QFileDialog::getSaveFileName(this,tr("Export audio"),QDir::currentPath(),tr("format (*.wav)"));
+    audio_engine->stopPortAudio();
+    AudioManager audio;
+    if (!audio.exportAudio(filePath))
+    {
+        qDebug() << "Could not export audio";
+    }
+    audio_engine->startPortAudio();
+    audio_engine->openStream();
+    audio_engine->startStream();
+  // audio_engine->requestPauseOrResume(false);
 }
 
 int MainWindow::getNoteFromKeyboard(int key)

@@ -11,7 +11,7 @@
 class VelocityViewItem  : public QGraphicsItem
 {
 public:
-    VelocityViewItem();
+    VelocityViewItem(VelocityView * velocityView);
     QRectF boundingRect() const;
     QPainterPath shape() const;
     void notifyVelocityChanged(int velocity);
@@ -21,10 +21,11 @@ public:
     int note;
     int viewHeight;
     int velocity;
-    VelocityView * velocityView;
+
     QGraphicsEllipseItem *circle;
 private:
     const int radius = 8;
+     VelocityView *velocity_view;
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);

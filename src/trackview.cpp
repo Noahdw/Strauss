@@ -11,22 +11,27 @@
 std::default_random_engine generator;
 std::uniform_int_distribution<int> distribution(80,255);
 
-TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
+TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView, QWidget *parent) : QFrame(parent)
 {
-    setMinimumHeight(90);
-    setMaximumHeight(90);
+    setStyleSheet("QFrame { background-color: lightGray; border: 1px solid black; }");
     this->track = track;
+    track_midi_view = trackMidiView;
+    setMinimumWidth(widgetWidth);
+    setMaximumWidth(widgetWidth);
+    setMinimumHeight(100);
+    setMaximumHeight(100);
     instrumentName = track->instrumentName;
-    if (instrumentName == "") {
+    if (instrumentName == "")
+    {
         instrumentName = "new track";
     }
     instrumentLabel = new QLineEdit(instrumentName);
     instrumentLabel->setReadOnly(true);
     instrumentLabel->setMaximumWidth(widgetWidth-10);
-    instrumentLabel->setStyleSheet("* { background-color: rgba(0, 0, 0, 0); }");
+    instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(0, 0, 0, 0); }");
     instrumentLabel->setFrame(false);
     instrumentLabel->installEventFilter(this);
-    // instrumentLabel->setAttribute(Qt::Wa_ws,0);
+
     muteBox    = new QCheckBox("Mute",this);
     recordBox  = new QCheckBox("Record",this);
     showButton = new QPushButton("Show",this);
@@ -41,12 +46,7 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
     vlayout->addWidget(showButton);
     showButton->setFixedSize(50,20);
     setLayout(vlayout);
-    // setLineWidth(0);
 
-    // setFixedSize(widgetWidth+lineWidth()*2,90);
-    // setFrameStyle(QFrame::Box | QFrame::Plain);
-    setFrameShape(QFrame::Box);
-    //setMidLineWidth(0);
     plugin.host = new Vst2HostCallback(track);
     randomRed = distribution(generator);
     randomGreen = distribution(generator);
@@ -59,17 +59,20 @@ TrackView::TrackView(mTrack *track,QWidget *parent) : QFrame(parent)
                      this,&TrackView::ShowContextMenu);
     plugin.host->setCanRecord(true);
 
+    brush = QBrush(QColor(randomRed, randomGreen, randomBlue));
+
 }
 bool TrackView::eventFilter(QObject *target, QEvent *event)
 {
     //idk how to do this
     //qDebug() << event->type();
-    if(target == instrumentLabel )
+    if(target == instrumentLabel)
     {
         if (canEditLine)
         {
             return false;
-        }else
+        }
+        else
         {
 
         }
@@ -98,19 +101,22 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
 }
 void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
 {
-    if (plugin.effect == NULL) {
+    if (plugin.effect == NULL)
+    {
         qDebug() << "No plugin is currently set";
 
         QByteArray array = filepath.toLocal8Bit();
         char* file = array.data();
 
         plugin.effect = plugin.host->loadPlugin(file,name.left(name.size() - 4).toLocal8Bit().data());
-        if (plugin.effect == NULL) {
+        if (plugin.effect == NULL)
+        {
             qDebug() << "NULLPTR PLUGIN: in loadPlugin";
             return;
         }
         int state = plugin.host->configurePluginCallbacks(plugin.effect);
-        if (state == -1) {
+        if (state == -1)
+        {
             qDebug() << "Failed to configurePluginCallbacks. abort startPlugin";
             return;
         }
@@ -124,12 +130,19 @@ void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
 
 }
 
+TrackMidiView *TrackView::getTrackMidiView()
+{
+    return track_midi_view;
+}
+
 void TrackView::notifyMuteChange(int state)
 {
-    if(state){
+    if(state)
+    {
         plugin.host->isMuted = true;
     }
-    else{
+    else
+    {
         plugin.host->isMuted = false;
     }
 }
@@ -139,7 +152,8 @@ void TrackView::notifyRecordingChange(int state)
     if (state)
     {
         plugin.host->setCanRecord(true);
-    }else
+    }
+    else
     {
         plugin.host->setCanRecord(false);
     }
@@ -168,18 +182,15 @@ void TrackView::renameTrack()
 {
     instrumentLabel->setReadOnly(false);
     canEditLine = true;
-    instrumentLabel->setStyleSheet("* { background-color: rgba(randomRed, 50, 50, 255); }");//?? works though
+    instrumentLabel->setFocus();
+    instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(randomRed, 50, 50, 255); }");//?? works though
 }
 
 void TrackView::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    QBrush brush(Qt::lightGray);
     painter.setBrush(brush);
-    painter.drawRect(0,0,widgetWidth,height()-1);
-    brush.setColor((QColor(randomRed, randomGreen, randomBlue)));
-    painter.setBrush(brush);
-    painter.drawRect(0,0,widgetWidth,height()/3);
+    painter.drawRect(0,0,width() - 1,height()/3);
 }
 
 void TrackView::mousePressEvent(QMouseEvent *event)
@@ -191,7 +202,7 @@ void TrackView::mousePressEvent(QMouseEvent *event)
     else
     {
         instrumentLabel->setReadOnly(true);
-        instrumentLabel->setStyleSheet("* { background-color: rgba(0, 0, 0, 0); }");
+        instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(0, 0, 0, 0); }");
         canEditLine = false;
     }
 

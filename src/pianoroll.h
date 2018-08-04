@@ -44,15 +44,13 @@ public:
     void changeNotesAfterMouseDrag(QGraphicsItem *item);
     void switchViewContainer();
 
-    std::map<int,ControlChangeOverlay*> controlChangeOverlays;
     TrackView *track;
     TrackLengthView * trackLengthView;
     VelocityView *velocityView;
     QGraphicsScene *scene;
     QRectF *sceneRect;
-    QGraphicsRectItem *line;
+
     ControlChangeBridge * bridge;
-   // int cols = 60;
     int tPQN = MidiManager::TPQN;
     int totalDT = MidiManager::TPQN*g_quarterNotes;
     double colSpacing = 0;
@@ -79,16 +77,12 @@ private:
     Keyboard *keyboard;
     QGraphicsItemAnimation *animation;
     QRubberBand *rubberBand;
+    QGraphicsRectItem *line;
     QPoint origin;
     int currentTimer = 0;
     int lastYNote = 0;
-    const double minimumColSpacing = 20;
+    const double kminimumColSpacing = 20.0;
     double xscale = 1.1;
-
-
-
-
-
 };
 
 

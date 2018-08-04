@@ -22,8 +22,8 @@ PluginView::PluginView(pluginHolder *pholder)
     disableButton->setCheckable(true);
 
     QObject::connect(showButton,&QPushButton::clicked,this,&PluginView::showPlugin);
-
-    QObject::connect(showButton,&QPushButton::toggled,this,&PluginView::disablePlugin);
+    QObject::connect(disableButton,&QPushButton::toggled,this,&PluginView::disablePlugin);
+    setStyleSheet("QFrame { background-color: lightGray; border: 1px solid black; border-radius: 4px; }");
 }
 
 void PluginView::showPlugin()
@@ -31,16 +31,22 @@ void PluginView::showPlugin()
     holder->host->showPlugin();
 }
 
-
-
 void PluginView::paintEvent(QPaintEvent *event)
 {
-    QPainter painter(this);
-    painter.setBrush(QBrush(Qt::lightGray));
-    painter.drawRect(0,0,width(),height());
+   // QPainter painter(this);
+  //  painter.setBrush(QBrush(Qt::lightGray));
+  //  painter.drawRect(0,0,width() - 1,height() - 1);
 }
 
 void PluginView::disablePlugin(bool state)
 {
-     holder->host->canPlay = !holder->host->canPlay;
+    if (holder->host->isMasterPlugin)
+    {
+        holder->host->isMuted = state;
+    }
+    else
+    {
+        holder->host->canPlay = !state;
+    }
+
 }

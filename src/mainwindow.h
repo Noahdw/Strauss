@@ -1,11 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+class AudioManager;
+
 #include <QFileDialog>
 #include <QFile>
 #include <QMessageBox>
 #include <QTextStream>
 #include <QDebug>
+#include <QUrl>
 #include <src/midiplayer.h>
 #include <QtConcurrent/QtConcurrent>
 #include <src/pianoroll.h>
@@ -29,21 +32,18 @@
 #include <src/timetracker.h>
 #include <QStackedWidget>
 #include "src/plugineditorcontainer.h"
-namespace Ui {
-class MainWindow;
-}
+#include "src/settingsdialog.h"
+
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    QWidget *centralWidget;
-    QWidget *pluginEdiorCentralWidget;
-    QStackedWidget * stackedCentralWidget;
+
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     static QVector<pluginHolder*> pluginHolderVec;
-
+    AudioEngine *audio_engine;
 private slots:
     void on_PauseButton_clicked(int type);
     void on_quitButton_clicked();
@@ -54,28 +54,35 @@ private slots:
     void playSong();
     void deleteAllNotes();
     void addNewTrack();
-
+    void displaySettingsDialog();
+    void exportAudio();
 private:
     void setUpMenuBar();
     int getNoteFromKeyboard(int key);
-    PianoRollContainer     *prollContainer;
-    TrackContainer         *trackContainer;
-    FolderView             *folderView;
-    HeaderContainer        *headerContainer;
-    ControlChangeContainer *controlContainer;
-    PianoRollHelperView    *prollHelper;
+
+    PianoRollContainer     *piano_roll_container;
+    TrackContainer         *track_container;
+    FolderView             *folder_view;
+    HeaderContainer        *header_container;
+    ControlChangeContainer *control_change_container;
+    PianoRollHelperView    *piano_roll_helper;
     QVBoxLayout            *mainLayout;
-    PluginEditorContainer  *pluginEditorContainer;
+    PluginEditorContainer  *plugin_editor_container;
     QMenu   *fileMenu;
     QMenu   *editMenu;
     QAction *saveAction;
     QAction *openFileAction;
-    QAction *playSongAction;
+    QAction *exportAudioAction;
     QAction *pauseAction;
     QAction *deleteAllNotesAction;
     QAction *openVSTAction;
     QAction *addNewTrackAction;
+    QAction *settingsAction;
+    QScrollArea *trackScrollArea;
     int velocity = 70;
+    QWidget *centralWidget;
+    QWidget *pluginEdiorCentralWidget;
+    QStackedWidget * stackedCentralWidget;
 protected:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);

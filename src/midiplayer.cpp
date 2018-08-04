@@ -4,8 +4,6 @@
 #include "src/controlchangebridge.h"
 #include "src/common.h"
 
-//This class is no longer needed
-
 MidiPlayer::MidiPlayer()
 {
 
@@ -140,6 +138,8 @@ int MidiPlayer::getDevices()
     return numDevs;
 }
 
+// Midi is added after the user is finished recording. This means neither the piano roll or the
+// structure that holds midi data are altered until recording stops.
 void MidiPlayer::addMidiAfterRecording()
 {
     for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
@@ -207,7 +207,7 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
                 plugs->host->addMidiEvent(status,note,velocity);
                 if (MidiPlayer::canRecordInput)
                 {
-                    qreal currentTick =((qreal)g_timer->currentTime() / 1000.0f) * 960.0f / (60.0f / (float)g_tempo);
+                    qreal currentTick =((qreal)g_timer->currentTime() / 1000.0) * 960.0 / (60.0 / g_tempo);
                     qDebug() << currentTick;
                     if (MidiPlayer::recordingOverwrites) // not implemented yet
                     {
@@ -223,19 +223,6 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
         }
         qDebug() << "status: " << status << " Note: " << note << " Velocity: " << velocity;
     }
-    else if(status == 0xB1111) //Control mode change
-    {
-        for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
-        {
-            pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
-            if(plugs->host->canRecord()){
-
-           //  plugs->host->controlModeChange(note,velocity); // note = CC, velocity = value
- // plugs->host->addMidiEvent(note,velocity);
-            }
-        }
-    }
-
 }
 bool streamOpen = false;
 void MidiPlayer::pausePlayBack(){
@@ -304,7 +291,8 @@ void MidiPlayer::Midiman(int note,bool active){
 
 }
 
-void MidiPlayer::resumePlayBack(){
+void MidiPlayer::resumePlayBack()
+{
     int result = midiStreamRestart(outHandle);
     if (result) {
         qDebug() << "resumePlayBack error";
@@ -313,7 +301,8 @@ void MidiPlayer::resumePlayBack(){
 }
 
 //Simply calls Midiman for playback - perhaps not needed but seems to be for threading
-void MidiPlayer::playNote(int note,bool active){
+void MidiPlayer::playNote(int note,bool active)
+{
     QFuture<void> future = QtConcurrent::run(this,&MidiPlayer::Midiman,note,active);
 
 }

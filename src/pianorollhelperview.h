@@ -15,16 +15,18 @@ class PianoRollHelperView : public QFrame
 {
     Q_OBJECT
 public:
-    PianoRollHelperView();
+    PianoRollHelperView(ControlChangeContainer *controlChangeContainer);
     QComboBox *comboBox;
-    ControlChangeContainer *container;
 public slots:
     void comboBoxIdChanged(int index);
-private:
-    QVBoxLayout *vLayout;
-    void initializeComboBox();
 protected:
-   void paintEvent(QPaintEvent *event);
+    void paintEvent(QPaintEvent *event);
+private:
+    void initializeComboBox();
+    QVBoxLayout *vLayout;
+    ControlChangeContainer *control_change_container;
+
+
 };
 
 #endif // PIANOROLLHELPERVIEW_H

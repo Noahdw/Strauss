@@ -1,14 +1,12 @@
 #include "headercontainer.h"
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <src/audiomanager.h>
+#include <src/audioengine.h>
 #include <src/mainwindow.h>
-#include <src/common.h>
+
 
 const int maxWidth = 50;
-HeaderContainer::HeaderContainer()
+HeaderContainer::HeaderContainer(AudioEngine *audioManager)
 {
-    //buttonGroup = new QButtonGroup;
+    audio_manager = audioManager;
 
     auto *playButton     = new QPushButton("Play",this);
     auto *pauseButton    = new QPushButton("Pause",this);
@@ -52,10 +50,10 @@ void HeaderContainer::play()
 {
 
     if(isPaused){
-        audioManager->requestPauseOrResume(true);
+        audio_manager->requestPauseOrResume(true);
     }
     else{
-        audioManager->requestPlaybackRestart();
+        audio_manager->requestPlaybackRestart();
     }
     isPaused = false;
 
@@ -65,7 +63,7 @@ void HeaderContainer::restart()
 {
     isPaused = false;
     MidiPlayer::canRecordInput = false;
-    audioManager->requestPlaybackRestart();
+    audio_manager->requestPlaybackRestart();
     if(MidiPlayer::canRecordInput)
     {
            MidiPlayer::addMidiAfterRecording();
@@ -76,7 +74,7 @@ void HeaderContainer::restart()
 void HeaderContainer::pause()
 {
     isPaused = true;
-    audioManager->requestPauseOrResume(false);
+    audio_manager->requestPauseOrResume(false);
     if(MidiPlayer::canRecordInput)
     {
            MidiPlayer::addMidiAfterRecording();

@@ -2,21 +2,25 @@
 #define HEADERCONTAINER_H
 
 //Forward declarations
-class AudioManager;
+class AudioEngine;
 
 #include <QWidget>
 #include <QDebug>
 #include <QButtonGroup>
 #include <QGroupBox>
+#include <QHBoxLayout>
+#include <QPushButton>
 #include <QCheckBox>
+#include <src/common.h>
 
 class HeaderContainer : public QWidget
 {
     Q_OBJECT
 public:
-    HeaderContainer();
-    AudioManager * audioManager;
+    HeaderContainer(AudioEngine *audioManager);
+
 private:
+    AudioEngine *audio_manager;
     QGroupBox * groupBox;
     QButtonGroup * buttonGroup;
     QCheckBox * recordStyle;

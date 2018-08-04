@@ -6,14 +6,11 @@ TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 {
     setViewportUpdateMode(MinimalViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
-
-    //  setMinimumWidth(400);
-    setMinimumHeight(90);
-    setMaximumHeight(90);
-    //   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setMinimumHeight(100);
+    setMaximumHeight(100);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     brush = QBrush(Qt::lightGray);
-    pen   = QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    pen   = QPen(Qt::black, 1, Qt::SolidLine);
 
 }
 
@@ -23,8 +20,7 @@ void TrackMidiView::paintEvent(QPaintEvent *event)
     QPainter painter(viewport());
     painter.setBrush(brush);
     painter.setPen(pen);
- //   painter.fillRect(viewport()->rect(),painter.brush());
-    painter.drawRect(viewport()->rect());
+    painter.drawRect(0,0,width() - 3, height() - 3);
     QGraphicsView::paintEvent(event);
 
 }

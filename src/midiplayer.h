@@ -4,9 +4,9 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <QDebug>
-#include<src/midimanager.h>
 #include <cstdint>
-#include<QtConcurrent/QtConcurrent>
+#include <QtConcurrent/QtConcurrent>
+#include <src/midimanager.h>
 #pragma comment (lib, "winmm.lib")
 
 class MidiPlayer : public QObject
@@ -21,15 +21,14 @@ public:
     void openDevice(uint deviceNumber);
     int getDevices();
     QVector<int> noteVecInit;
-   // HANDLE hEvent;
     HMIDISTRM outHandle;
     bool shouldBreak;
     bool needBreak;
 
     static void addMidiAfterRecording();
-
     static bool canRecordInput;
     static bool recordingOverwrites;
+
 public slots:
     void playNote(int note,bool active);
 };

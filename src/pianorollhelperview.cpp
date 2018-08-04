@@ -1,8 +1,9 @@
 #include "pianorollhelperview.h"
 #include "src/controlchangecontainer.h"
 
-PianoRollHelperView::PianoRollHelperView()
+PianoRollHelperView::PianoRollHelperView(ControlChangeContainer *controlChangeContainer)
 {
+    control_change_container = controlChangeContainer;
     setMinimumSize(150,150);
     setMaximumSize(150,200);
     vLayout = new QVBoxLayout;
@@ -20,7 +21,7 @@ PianoRollHelperView::PianoRollHelperView()
 void PianoRollHelperView::comboBoxIdChanged(int index)
 {
     qDebug() << index;
-    container->switchControlChangeType(index);
+    control_change_container->switchControlChangeType(index);
 }
 
 void PianoRollHelperView::paintEvent(QPaintEvent *event)
@@ -28,10 +29,10 @@ void PianoRollHelperView::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     QBrush brush(Qt::lightGray);
     painter.setBrush(brush);
-    painter.drawRect(0,0,width(),height()-1);
+    painter.drawRect(0,0,width() - 1,height()-1);
     brush.setColor((QColor(100, 50, 137)));
     painter.setBrush(brush);
-    painter.drawRect(0,0,width(),height() - vLayout->contentsRect().height() + vLayout->spacing()*2);
+    painter.drawRect(0,0,width() - 1,height() - vLayout->contentsRect().height() + vLayout->spacing()*2);
 }
 
 void PianoRollHelperView::initializeComboBox()

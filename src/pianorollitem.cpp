@@ -67,7 +67,9 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (pianoroll->prefferedScaleFactor <= 0.03125)
     {
         setPos(x() + event->lastScenePos().x() - actualInitX,yPos*keyHeight);
+                xAdjust = event->lastScenePos().x() - actualInitX;
         actualInitX = event->lastScenePos().x();
+
     }
     else
     {
@@ -80,20 +82,7 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         xPos += xAdjust;
     }
 
-    if(initXPos !=  x())
-    {
-        xMove = x() - initXPos;
-        initXPos = x();
-    }
-    if(initYPos !=  y())
-    {
-        yMove = y() - initYPos;
-        initYPos = y();
-    }
-    if(yMove != 0 || xMove != 0)
-    {
-        pianoroll->notifyPianoRollItemMoved(xMove,yMove,this); //update all other selected notes
-    }
+
 
     if (xPos < 0)
     {
@@ -108,6 +97,24 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     else if(pianoroll->prefferedScaleFactor > 0.03125)
     {
         setX(xPos*scaleFactor);
+    }
+    if(initXPos*scaleFactor !=  x())
+    {
+        xMove = x() - initXPos*scaleFactor;
+        initXPos = x()/scaleFactor;
+    }
+    if(initYPos !=  y())
+    {
+        yMove = y() - initYPos;
+        initYPos = y();
+    }
+    if (pianoroll->prefferedScaleFactor <= 0.03125)
+    {
+        xMove = xAdjust;
+    }
+    if(yMove != 0 || xMove != 0)
+    {
+        pianoroll->notifyPianoRollItemMoved(xMove,yMove,this); //update all other selected notes
     }
     //Perhaps a bad idea, but if a drag changes the yPos, play the new note
     if (lastYWithSound != yPos*keyHeight) {
@@ -145,7 +152,7 @@ void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     int xPos = event->lastScenePos().x()/scaleFactor;
     lastXPos = xPos*scaleFactor;
     lastYPos = yPos*keyHeight;
-    initXPos = lastXPos;
+    initXPos = x()/scaleFactor;
     initYPos = lastYPos;
     lastYWithSound = lastYPos;
 }

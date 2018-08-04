@@ -1,5 +1,5 @@
 #include "midimanager.h"
-
+#include "src/common.h"
 MidiManager::MidiManager()
 {
 }
@@ -46,6 +46,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
         framesPerSecondSMTPE = 0;
         ticksPerQuarterNote = ((uchar)(array.at(13)) << 8) | (uchar)array.at(14);
     }
+    int highest_total_dt = TPQN * 60;
     double tpqnScale = TPQN / ticksPerQuarterNote; // Enforce 960 TPQN
     int currentPos = 15;
     // was (if format is 0), only TPQN supported for now though
@@ -270,13 +271,21 @@ mSong MidiManager::Deserialize(QByteArray &array)
             currentPos = pos - 1;
             recalculateNoteListDT(track);
             qDebug() << "TOTALDT: " << track->totalDT << " LENGTH: " << track->listOfNotes.length();
+            if (track->totalDT > highest_total_dt)
+            {
+                highest_total_dt = track->totalDT;
+            }
             song.tracks.append(track);
         }
     }
     else if (song.format == 1) {
         //Not supported
     }
-
+    for (int i = 0; i < song.tracks.size(); ++i)
+    {
+        song.tracks[i]->totalDT = highest_total_dt;
+    }
+    g_quarterNotes = (double)highest_total_dt / TPQN;
    // emit notifyTrackViewChanged(&song);
     return song;
 }

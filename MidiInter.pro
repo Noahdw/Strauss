@@ -36,7 +36,6 @@ SOURCES += src/main.cpp\
     src/pianorollcontainer.cpp \
     src/trackcontainer.cpp \
     src/vst2hostcallback.cpp \
-    src/audiomanager.cpp \
     src/velocityview.cpp \
     src/trackmidiview.cpp \
     src/velocityviewitem.cpp \
@@ -53,7 +52,10 @@ SOURCES += src/main.cpp\
     src/timetracker.cpp \
     src/plugineditorcontainer.cpp \
     src/plugintrackview.cpp \
-    src/pluginview.cpp
+    src/pluginview.cpp \
+    src/settingsdialog.cpp \
+    src/audioengine.cpp \
+    src/audiomanager.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -65,7 +67,6 @@ HEADERS  += src/mainwindow.h\
     src/pianorollcontainer.h \
     src/trackcontainer.h \
     src/vst2hostcallback.h \
-    src/audiomanager.h \
     src/velocityview.h \
     src/trackmidiview.h \
     src/velocityviewitem.h \
@@ -83,7 +84,10 @@ HEADERS  += src/mainwindow.h\
     src/timetracker.h \
     src/plugineditorcontainer.h \
     src/plugintrackview.h \
-    src/pluginview.h
+    src/pluginview.h \
+    src/settingsdialog.h \
+    src/audioengine.h \
+    src/audiomanager.h
 
 LIBS += -lwinmm
 

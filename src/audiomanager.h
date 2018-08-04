@@ -1,49 +1,33 @@
 #ifndef AUDIOMANAGER_H
 #define AUDIOMANAGER_H
-
+#include <iostream>
+#include <cstdint>
+#include <fstream>
 #include <QObject>
-#include <SDK/portaudio.h>
-#include <math.h>
-#include <src/vst2hostcallback.h>
-#include <qdebug.h>
-#include <SDK/aeffect.h>
-#include <src/mainwindow.h>
-
-struct paTestData
+#include <QFile>
+#include <src/audioengine.h>
+class AudioManager
 {
-    float left_phase;
-    float right_phase;
-};
-
-class AudioManager : public QObject
-{
-    Q_OBJECT
 public:
     AudioManager();
-    void changePlaybackPos();
-    void startPortAudio();
-    void openStream();
-    void startStream();
+    int exportAudio(QString filePath);
+    void initializePlugins();
+    int beginExporting();
+    void endExporting();
+    void writeHeader(QString filePath);
+
+private:
     void initializeIO();
-    void requestPlaybackRestart();
-    void requestPauseOrResume(bool isResume);
-
-    QVector<pluginHolder*> *plugins;
-    bool isRunning = false;
-    float sampleRate = 44100;
-
-    static void silenceChannel(float **channelData, int numChannels, long numFrames);
-    static uint blocksize;
-    static int requestedPlaybackPos;
-
-signals:
-    void changePlaybackPosSignal( int pos);
+    float** input_storage= 0;
+    float** output_storage = 0;
+    float **input = 0;
+    float **output = 0;
+    int num_outputs = 64;
+     int bits_per_sample = 24;
+     int num_samples = 0;
+     int num_channels = 2;
+     std::vector<int> samples;
 
 };
-int patestCallback( const void *inputBuffer, void *outputBuffer,
-                    unsigned long framesPerBuffer,
-                    const PaStreamCallbackTimeInfo* timeInfo,
-                    PaStreamCallbackFlags statusFlags,
-                    void *userData );
 
-#endif
+#endif // AUDIOMANAGER_H

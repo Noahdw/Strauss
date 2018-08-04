@@ -1,6 +1,6 @@
 #include "tracklengthview.h"
 #include "src/midimanager.h"
-#include "src/audiomanager.h"
+#include "src/audioengine.h"
 #include "src/common.h"
 
 /*
@@ -88,7 +88,7 @@ void TrackLengthView::mousePressEvent(QMouseEvent *event)
    qDebug() << scenePt.x();
    //This is a weird way of setting playback based on where you clicked in the scene
    //AudioManager will detect if the variable is -1 or not and will act appropriatly
-    AudioManager::requestedPlaybackPos = scenePt.x();
+    AudioEngine::requestedPlaybackPos = scenePt.x();
 }
 
 void TrackLengthView::resizeEvent(QResizeEvent *event)

@@ -6,15 +6,14 @@
 #include <src/velocityviewitem.h>
 #include <src/trackview.h>
 int viewHeight = 70;
-VelocityView::VelocityView(QWidget *parent) : QGraphicsView(parent)
+VelocityView::VelocityView(TrackView *trackView, QWidget *parent) : QGraphicsView(parent)
 {
-    //  setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Minimum );
-    //setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    track_view = trackView;
     setViewportUpdateMode(FullViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setRenderHint(QPainter::Antialiasing);
-    //setContextMenuPolicy(Qt::CustomContextMenu);
+
     setMinimumWidth(1000);
     setMinimumHeight(70);
     setMaximumHeight(70);
@@ -32,21 +31,19 @@ void VelocityView::addOrRemoveVelocityViewItem(int start, int velocity, int note
     int NewRange = (height() - 0);
     int NewValue = (((velocity - 0) * NewRange) / OldRange) + 0;
 
-    if (adding) {
-        VelocityViewItem *line = new VelocityViewItem;
+    if (adding)
+    {
+        VelocityViewItem *line = new VelocityViewItem(this);
         scene->addItem(line);
         line->velocity = velocity;
         line->note = note;
-        line->velocityView = this;
         line->viewHeight = height();
         line->setPos(start,height() - NewValue);
-        //  qDebug() << "ADD" << start << "AND" << height() - NewValue;
-        // resetTransform();
-        // scale((float)width() / (MidiManager::TPQN*50),.2);
     }
     else
     {
-        foreach (const auto& item, scene->items()) {
+        foreach (const auto& item, scene->items())
+        {
             if (floor(item->x()) == start) {
                  VelocityViewItem *line = dynamic_cast<VelocityViewItem*>(item);
                  if (line->note == note) {
@@ -61,13 +58,13 @@ void VelocityView::addOrRemoveVelocityViewItem(int start, int velocity, int note
 
 void VelocityView::changeVelocityViewItemPosition(int oldPos, int newPos, int oldNote, int newNote)
 {
-    foreach (const auto& item, scene->items()) {
+    foreach (const auto& item, scene->items())
+    {
         if (item->x() == oldPos) {
              VelocityViewItem *line = dynamic_cast<VelocityViewItem*>(item);
              if (line->note == oldNote) {
                  line->note = newNote;
                  line->setX(newPos);
-
                  return;
              }
         }
@@ -95,7 +92,7 @@ void VelocityView::setScale(float x, bool needsReset, int wheelPos)
     if (needsReset) {
         resetMatrix();
     }
-    this->scale(x,1);
+    scale(x,1);
     QScrollBar *wheel;
     wheel = this->horizontalScrollBar();
     wheel->setValue(wheelPos);
@@ -114,9 +111,13 @@ void VelocityView::paintEvent(QPaintEvent *event)
     QGraphicsView::paintEvent(event);
 }
 
-
 void VelocityView::onPianoRollResized(float x)
 {
     resetMatrix();
     scale(x,1);
+}
+
+mTrack *VelocityView::getTrack()
+{
+    return track_view->track;
 }
