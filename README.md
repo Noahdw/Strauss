@@ -28,7 +28,8 @@ MidiInter is nearly "basic feature" complete and merely needs project saving/loa
 ### Using MidiInter
 You must first build Portaudio debug and release versions and put them in ./Debug and ./Release folders of your working dir.
 see http://portaudio.com/docs/v19-doxydocs/compile_windows.html.
-It should hopefully work after that.
+Next get the VST2 SDK - download the VST3 SDK and you will find the VST2 version in there. Copy the contents to a folder called
+./SDK in your WD.
 
 Some short-cuts used to navigate:
 * Alt - swich between piano roll and plugin selector views.
