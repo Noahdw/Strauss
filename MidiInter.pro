@@ -10,7 +10,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = MidiInter
 TEMPLATE = app
-QMAKE_CXXFLAGS+=-Zi
+QMAKE_CXXFLAGS+= -Zi
 QMAKE_LFLAGS+=/DEBUG
 QMAKE_LFLAGS += /MANIFESTUAC:\"level=\'requireAdministrator\' uiAccess=\'false\'\"
 # The following define makes your compiler emit warnings if you use
@@ -55,7 +55,9 @@ SOURCES += src/main.cpp\
     src/pluginview.cpp \
     src/settingsdialog.cpp \
     src/audioengine.cpp \
-    src/audiomanager.cpp
+    src/audiomanager.cpp \
+    src/projectmanager.cpp \
+    src/midiinter.pb.cc
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -87,13 +89,18 @@ HEADERS  += src/mainwindow.h\
     src/pluginview.h \
     src/settingsdialog.h \
     src/audioengine.h \
-    src/audiomanager.h
+    src/audiomanager.h \
+    src/projectmanager.h \
+    src/midiinter.pb.h
 
-LIBS += -lwinmm
+LIBS += -lwinmm \
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lportaudio_x64
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lportaudio_x64
 
-INCLUDEPATH += $$PWD/Debug
-DEPENDPATH += $$PWD/Debug
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lportaudio_x64 -llibprotobuf
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lportaudio_x64 -llibprotobufd
+
+INCLUDEPATH += $$PWD/Debug \
+                $$PWD/Release
+DEPENDPATH += $$PWD/Debug \
+                $$PWD/Release
 

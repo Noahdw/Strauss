@@ -33,9 +33,7 @@ void PluginView::showPlugin()
 
 void PluginView::paintEvent(QPaintEvent *event)
 {
-   // QPainter painter(this);
-  //  painter.setBrush(QBrush(Qt::lightGray));
-  //  painter.drawRect(0,0,width() - 1,height() - 1);
+
 }
 
 void PluginView::disablePlugin(bool state)

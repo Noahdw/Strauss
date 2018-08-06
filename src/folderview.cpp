@@ -68,7 +68,7 @@ void FolderView::itemDoubleClicked()
     }
     else
     {
-        pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath);
+        pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath,path + pluginName);
     }
 
 

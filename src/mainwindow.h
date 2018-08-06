@@ -33,7 +33,7 @@ class AudioManager;
 #include <QStackedWidget>
 #include "src/plugineditorcontainer.h"
 #include "src/settingsdialog.h"
-
+#include "src/projectmanager.h"
 
 class MainWindow : public QMainWindow
 {
@@ -44,6 +44,9 @@ public:
     ~MainWindow();
     static QVector<pluginHolder*> pluginHolderVec;
     AudioEngine *audio_engine;
+public slots:
+    void addNewTrack();
+
 private slots:
     void on_PauseButton_clicked(int type);
     void on_quitButton_clicked();
@@ -52,9 +55,12 @@ private slots:
     void on_StartButton_clicked();
     void openFile();
     void playSong();
+    void saveProject();
+    void saveAsProject();
     void deleteAllNotes();
-    void addNewTrack();
+
     void displaySettingsDialog();
+    void loadProject();
     void exportAudio();
 private:
     void setUpMenuBar();
@@ -70,7 +76,6 @@ private:
     PluginEditorContainer  *plugin_editor_container;
     QMenu   *fileMenu;
     QMenu   *editMenu;
-    QAction *saveAction;
     QAction *openFileAction;
     QAction *exportAudioAction;
     QAction *pauseAction;
@@ -78,6 +83,9 @@ private:
     QAction *openVSTAction;
     QAction *addNewTrackAction;
     QAction *settingsAction;
+    QAction *saveAction;
+    QAction *saveAsAction;
+    QAction *loadAction;
     QScrollArea *trackScrollArea;
     int velocity = 70;
     QWidget *centralWidget;

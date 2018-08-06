@@ -25,7 +25,8 @@ class TrackView: public QFrame
 
 public:
     TrackView(mTrack *track, TrackMidiView *trackMidiView, QWidget* parent = 0);
-    void folderViewItemDoubleClicked(QString filepath, QString name);
+    void addPluginFromPath(QString filepath, QString name, QString actualPath);
+    void addPluginFromLoadProject(QString filepath);
     TrackMidiView *getTrackMidiView();
     mTrack *track;
     pluginHolder plugin;

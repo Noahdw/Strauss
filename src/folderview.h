@@ -18,13 +18,13 @@ public:
     FolderView();
     PianoRollContainer * pRollContainer;
     PluginEditorContainer * pluginContainer;
-
+    static int tempFolderID;
     bool isPluginContainerWidget = false;
 private:
     QVBoxLayout *vLayout;
     QTreeView *list;
     QString path = "C:/Program Files/Native Instruments/VSTPlugins 64 bit/";
-    static int tempFolderID;
+
 
 private slots:
    void itemDoubleClicked();

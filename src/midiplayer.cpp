@@ -204,10 +204,11 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
         {
             pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
             if(plugs->host->canRecord()){
-                plugs->host->addMidiEvent(status,note,velocity);
+                qreal currentTick =((qreal)g_timer->currentTime() / 1000.0) * 960.0 / (60.0 / g_tempo);
+                plugs->host->addMidiEvent(status,note,velocity,currentTick);
                 if (MidiPlayer::canRecordInput)
                 {
-                    qreal currentTick =((qreal)g_timer->currentTime() / 1000.0) * 960.0 / (60.0 / g_tempo);
+
                     qDebug() << currentTick;
                     if (MidiPlayer::recordingOverwrites) // not implemented yet
                     {

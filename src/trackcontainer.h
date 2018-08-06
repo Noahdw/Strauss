@@ -16,14 +16,15 @@ class PluginEditorContainer;
 #include <QKeyEvent>
 #include <QPainter>
 #include "src/plugineditorcontainer.h"
-
+#include "src/midiinter.pb.h"
 class TrackContainer : public QWidget
 {
     Q_OBJECT
 public:
     TrackContainer(PluginEditorContainer *pluginEditorContainer, PianoRollContainer * pianoRollContainer);
-
+    TrackView *addTrackFromLoadProject(const MidiTrack &midi_track, int totalDT);
     void addSingleView();
+    std::vector<const TrackView *> getTrackViews() const;
 signals:
     void switchControlChange();
 public slots:
@@ -32,7 +33,6 @@ signals:
     void addPianoRoll(TrackView *track);
     void requestTrackChange(int id);
 protected:
-   void mousePressEvent(QMouseEvent *event);
    void keyPressEvent(QKeyEvent * event);
    void paintEvent(QPaintEvent *event);
 private:

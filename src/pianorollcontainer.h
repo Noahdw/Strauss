@@ -20,7 +20,7 @@ class PianoRollContainer : public QWidget
     Q_OBJECT
 public:
     PianoRollContainer();
-    void propogateFolderViewDoubleClicked(QString pluginName,QString filePath);
+    void propogateFolderViewDoubleClicked(QString pluginName, QString filePath, QString actualPath);
     void setControlChangeContainer(ControlChangeContainer *controlChangeContainer); // must be called before use
     PianoRoll *getCurrentPianoRoll();
     QStackedLayout *stackedLayout;

@@ -21,9 +21,9 @@ public:
     void openStream();
     void startStream();
     void initializeIO();
+    void changeBlockSize(int oldSize, int newSize);
     void requestPlaybackRestart();
     void requestPauseOrResume(bool isResume);
-
     QVector<pluginHolder*> *plugins;
     bool isRunning = false;
     float sampleRate = 44100;

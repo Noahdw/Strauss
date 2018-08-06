@@ -92,7 +92,6 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         qDebug() << "audioMasterWantMidi" << opcode;
         return 1;
 
-
     case audioMasterGetVendorString:
         break;
     case audioMasterGetProductString:
@@ -104,7 +103,7 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
     case audioMasterVendorSpecific:
         return 1;
     case audioMasterGetSampleRate:
-        return sRate;
+        return g_sampleRate;
     case audioMasterCanDo:
         return 1; //I can do it all?
     case audioMasterGetLanguage: //38?
@@ -311,10 +310,17 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
     while (!midiEventQueue.empty())
     {
         EventToAdd eventStruct = midiEventQueue.front();
-
+        midiEventQueue.pop();
         VstMidiEvent* evnt = eventsHolder[pos];
+        int df = 0;
+        if (!midiEventQueue.empty())
+        {
+            midiEventQueue.front().timeInTicks -= eventStruct.timeInTicks;
+            midiEventQueue.front().timeInTicks *= samplesPerTick;
+        }
+        df = eventStruct.timeInTicks;
         evnt->byteSize        = 24;
-        evnt->deltaFrames     = 0;
+        evnt->deltaFrames     = df;
         evnt->type            = kVstMidiType;
         evnt->flags           = 0;
         evnt->detune          = 0;
@@ -331,7 +337,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
         events->events[pos] = (VstEvent*)evnt;
         ++events->numEvents;
         ++pos;
-        midiEventQueue.pop();
+
     }
 
     if (isPaused)
@@ -529,9 +535,9 @@ void Vst2HostCallback::pauseOrResumePlayback(bool isResume)
     }
 }
 
-void Vst2HostCallback::addMidiEvent(uchar status,uchar note, uchar velocity)
+void Vst2HostCallback::addMidiEvent(uchar status,uchar note, uchar velocity, qreal currentTick)
 {
-    EventToAdd evnt{status,note,false,false,0,velocity};
+    EventToAdd evnt{status,note,false,false,currentTick,velocity};
     midiEventQueue.push(evnt);
 }
 
@@ -617,6 +623,8 @@ void Vst2HostCallback::exportAudioInit()
     processLevel = kVstProcessLevelOffline;
 }
 
+
+
 int Vst2HostCallback::exportAudioBegin(AEffect *plugin,float **outputs,
                                         long numFrames)
 {
@@ -675,6 +683,11 @@ void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **out
     {
         qDebug() << "processReplacing not supported by plugin";
     }
+}
+
+void Vst2HostCallback::setBlockSize(AEffect *plugin,int blockSize)
+{
+    dispatcher(plugin, effSetBlockSize, 0, blockSize, NULL, 0.0f);
 }
 
 AEffect* Vst2HostCallback::LoadBridgedPlugin(char * szPath)

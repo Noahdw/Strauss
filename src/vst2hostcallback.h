@@ -48,12 +48,13 @@ public:
     void initializeMidiEvents();
     void restartPlayback();
     void pauseOrResumePlayback(bool isResume);
-    void addMidiEvent(uchar status, uchar note, uchar velocity);
+    void addMidiEvent(uchar status, uchar note, uchar velocity, qreal currentTick);
     void setPianoRollRef(PianoRoll *piano);
     void setCanRecord(bool canRec);
     void turnOffAllNotes(AEffect *plugin);
     void showPlugin();
     void exportAudioInit();
+    void setBlockSize(AEffect *plugin,int blockSize);
     int exportAudioBegin(AEffect *plugin, float **outputs,
                           long numFrames);
     void exportAudioEnd();
@@ -72,6 +73,7 @@ public:
     bool isMasterPlugin = false;
     int noteVecPos = 0;
     char *pluginName;
+    QString actual_url;
     PluginTrackView * masterPluginTrackView;
 
     dispatcherFuncPtr dispatcher;

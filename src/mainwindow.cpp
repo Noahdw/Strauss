@@ -21,7 +21,7 @@ double g_tempo = 90;
 double g_quarterNotes = 60;
 int g_blocksize = 64;
 int g_sampleRate = 44100;
-double g_volume = 0.333;
+double g_volume = 0.666;
 QTimeLine *g_timer = new QTimeLine((float)(60.0/(float)g_tempo)*g_quarterNotes*1000);//Song time in ms
 //end init
 
@@ -39,7 +39,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setCentralWidget(stackedCentralWidget);
     trackScrollArea = new QScrollArea;
-    //  trackScrollArea->setBackgroundRole(QPalette::Light);
     trackScrollArea->setWidgetResizable(true);
     trackScrollArea->setMinimumWidth(1000);
     trackScrollArea->setMinimumHeight(300);
@@ -182,6 +181,26 @@ void MainWindow::playSong()
     audio_engine->requestPlaybackRestart();
 }
 
+void MainWindow::saveProject()
+{
+
+}
+
+void MainWindow::saveAsProject()
+{
+    QString filePath = QFileDialog::getSaveFileName(this,tr("Save as"),QDir::currentPath(),tr("format (*.mipr)"));
+    ProjectManager project;
+    project.saveAsProject(filePath,*track_container);
+}
+
+void MainWindow::loadProject()
+{
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open project"), QDir::currentPath(),
+                                                    tr("Project files (*.mipr)"));
+    ProjectManager project;
+    project.loadProject(filePath,this,*track_container);
+}
+
 void MainWindow::on_actionPlay_triggered()
 {
     playSong();
@@ -204,6 +223,15 @@ void MainWindow::setUpMenuBar()
     exportAudioAction->setStatusTip(tr("Exports as mp3"));
     connect(exportAudioAction, &QAction::triggered, this, &MainWindow::exportAudio);
 
+    saveAction = new QAction("Save project",this);
+    connect(saveAction, &QAction::triggered, this, &MainWindow::saveProject);
+
+    saveAsAction = new QAction("Save as",this);
+    connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAsProject);
+
+    loadAction = new QAction("Load project",this);
+    connect(loadAction, &QAction::triggered, this, &MainWindow::loadProject);
+
     deleteAllNotesAction = new QAction(tr("&Delete all"),this);
     deleteAllNotesAction->setStatusTip(tr("Delete all notes from the roll"));
     connect(deleteAllNotesAction, &QAction::triggered, this, &MainWindow::deleteAllNotes);
@@ -221,6 +249,9 @@ void MainWindow::setUpMenuBar()
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(openFileAction);
     fileMenu->addAction(exportAudioAction);
+    fileMenu->addAction(saveAction);
+    fileMenu->addAction(saveAsAction);
+    fileMenu->addAction(loadAction);
 
     QMenu *toolMenu = menuBar()->addMenu(tr("&Tools"));
     toolMenu->addAction(settingsAction);
@@ -249,7 +280,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                 int note = getNoteFromKeyboard(event->key());
                 if (note)
                 {
-                    plugin->host->addMidiEvent(0x90,note,velocity);
+                    plugin->host->addMidiEvent(0x90,note,velocity,0);
                 }
             }
         }
@@ -286,7 +317,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
                 int note = getNoteFromKeyboard(event->key());
                 if (note)
                 {
-                    plugin->host->addMidiEvent(0x90,note,0);
+                    plugin->host->addMidiEvent(0x90,note,0,0);
                 }
             }
         }
@@ -300,14 +331,13 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 
 void MainWindow::addNewTrack()
 {
-
     track_container->addSingleView();
 }
 
 void MainWindow::displaySettingsDialog()
 {
-     auto settingsDialog = new SettingsDialog;
-     settingsDialog->exec();
+    auto settingsDialog = new SettingsDialog(audio_engine);
+    settingsDialog->exec();
 }
 
 void MainWindow::exportAudio()
@@ -322,7 +352,7 @@ void MainWindow::exportAudio()
     audio_engine->startPortAudio();
     audio_engine->openStream();
     audio_engine->startStream();
-  // audio_engine->requestPauseOrResume(false);
+    // audio_engine->requestPauseOrResume(false);
 }
 
 int MainWindow::getNoteFromKeyboard(int key)

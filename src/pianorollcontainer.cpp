@@ -16,10 +16,10 @@ PianoRollContainer::PianoRollContainer()
 
 // Can't load the same .dll from same folder so I copy to temp folder
 // TODO: See if changing .dll name suffices and don't need to make x copies of a plugin, just 1
-void PianoRollContainer::propogateFolderViewDoubleClicked(QString pluginName, QString filePath)
+void PianoRollContainer::propogateFolderViewDoubleClicked(QString pluginName, QString filePath, QString actualPath)
 {
     PianoRoll *roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
-    roll->track->folderViewItemDoubleClicked(filePath,pluginName);
+    roll->track->addPluginFromPath(filePath,pluginName,actualPath);
 }
 
 void PianoRollContainer::setControlChangeContainer(ControlChangeContainer *controlChangeContainer)

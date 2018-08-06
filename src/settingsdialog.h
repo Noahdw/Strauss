@@ -15,12 +15,13 @@
 #include <QLabel>
 #include <src/common.h>
 #include <QSlider>
+#include <src/audioengine.h>
 
 class SettingsDialog : public QDialog
 {
     Q_OBJECT
 public:
-   explicit SettingsDialog(QWidget *parent = 0);
+   explicit SettingsDialog(AudioEngine *audioEngine, QWidget *parent = 0);
 private:
     void accept();
     void reject();
@@ -34,6 +35,7 @@ private:
     QFrame           *audio_frame;
     QSlider          *block_size_slider;
     QLabel           *block_size_label;
+    AudioEngine *audio_engine;
 private slots:
         void listWidgetClicked();
         void blockSizeSliderChanged(int value);

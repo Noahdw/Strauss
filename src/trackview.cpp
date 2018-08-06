@@ -99,7 +99,7 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
     return false;
     // return TrackView::eventFilter(target,event);
 }
-void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
+void TrackView::addPluginFromPath(QString filepath, QString name, QString actualPath)
 {
     if (plugin.effect == NULL)
     {
@@ -126,8 +126,32 @@ void TrackView::folderViewItemDoubleClicked(QString filepath, QString name)
         pluginTrack->addPlugin(&plugin);
         plugin.host->isMasterPlugin = true;
         plugin.host->masterPluginTrackView = this->pluginTrack;
+        plugin.host->actual_url = actualPath;
     }
 
+}
+
+void TrackView::addPluginFromLoadProject(QString filepath)
+{
+    if (filepath == "")
+    {
+        return;
+    }
+    QString tempPath = QString(QDir::current().path()+"/TempPlugins/%1.dll").arg(FolderView::tempFolderID++);
+    if (QFile::exists(tempPath))
+    {
+        QFile::remove(tempPath);
+    }
+
+    if (!QFile::copy(filepath, tempPath))
+    {
+        qDebug() << QDir::current().path();
+        qDebug() << "Could not copy plugin";
+        return;
+    }
+    int last = filepath.lastIndexOf("/") + 1;
+    QString name = filepath.right(filepath.length() - last);
+    addPluginFromPath(tempPath,name,filepath);
 }
 
 TrackMidiView *TrackView::getTrackMidiView()

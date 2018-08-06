@@ -1,7 +1,7 @@
 #include "settingsdialog.h"
 
-SettingsDialog::SettingsDialog(QWidget *parent)
-    : QDialog(parent)
+SettingsDialog::SettingsDialog(AudioEngine *audioEngine, QWidget *parent)
+    :audio_engine(audioEngine), QDialog(parent)
 {
     setFixedSize(600,600);
     midi_frame = new QFrame;
@@ -40,15 +40,16 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     audio_layout->setSpacing(0);
     audio_layout->setContentsMargins(0,0,0,0);
     audio_frame->setLayout(audio_layout);
-    auto midi_text1 = new QLabel(tr("Input buffer size:"));
-    block_size_label = new QLabel("Input Latency: " + QString::number(getLatency(g_blocksize),'g',1));
+    auto midi_text1 = new QLabel(tr("Output buffer size:"));
+    block_size_label = new QLabel("Output Latency: " + QString::number(getLatency(g_blocksize),'g',1));
     audio_layout->addWidget(midi_text1);
     audio_layout->addWidget(block_size_slider);
     audio_layout->addWidget(block_size_label);
 
     connect(block_size_slider, &QSlider::valueChanged,this,&SettingsDialog::blockSizeSliderChanged);
-    block_size_slider->setRange(64,131072);
+    block_size_slider->setRange(64,8192);
     block_size_slider->setOrientation(Qt::Horizontal);
+    block_size_slider->setValue(g_blocksize);
 
     // MIDI VIEW
     stacked_widget->addWidget(midi_frame);
@@ -61,7 +62,14 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
 void SettingsDialog::accept()
 {
-    //Has to stop audio engine or it will crash
+    if (g_blocksize != block_size_slider->value())
+    {
+        audio_engine->stopPortAudio();
+        audio_engine->changeBlockSize(g_blocksize,block_size_slider->value());
+        audio_engine->startPortAudio();
+        audio_engine->openStream();
+        audio_engine->startStream();
+    }
 
    done(1);
 }

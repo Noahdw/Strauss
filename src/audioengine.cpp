@@ -10,9 +10,9 @@ bool isPaused = false;
 float** inputss = 0;
 float** outputss = 0;
 
-float** inputStorage= 0;
-float** outputStorage = 0;
-int numOutputs = 64;
+float** input_storage= 0;
+float** output_storage = 0;
+int num_outputs = 64;
 AudioEngine::AudioEngine()
 {
 
@@ -28,8 +28,8 @@ void AudioEngine::startPortAudio()
     }
     isRunning = true;
     initializeIO();
-    AudioEngine::silenceChannel(outputss,numOutputs,g_blocksize);
-    AudioEngine::silenceChannel(outputStorage,numOutputs,g_blocksize);
+    AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
+    AudioEngine::silenceChannel(output_storage,num_outputs,g_blocksize);
 }
 
 void AudioEngine::stopPortAudio()
@@ -73,21 +73,44 @@ void AudioEngine::initializeIO() {
     // inputs and outputs are assumed to be float** and are declared elsewhere,
     // most likely the are fields owned by this class. numChannels and blocksize
     // are also fields, both should be size_t (or unsigned int, if you prefer).
-    inputss = (float**)malloc(sizeof(float**) * numOutputs);
-    outputss = (float**)malloc(sizeof(float**) * numOutputs);
-    for(int channel = 0; channel < numOutputs; channel++)
+    inputss = (float**)malloc(sizeof(float**) * num_outputs);
+    outputss = (float**)malloc(sizeof(float**) * num_outputs);
+    for(int channel = 0; channel < num_outputs; channel++)
     {
         inputss[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
         outputss[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
     }
 
-    inputStorage = (float**)malloc(sizeof(float**) * numOutputs);
-    outputStorage = (float**)malloc(sizeof(float**) * numOutputs);
-    for(int channel = 0; channel < numOutputs; channel++)
+    input_storage = (float**)malloc(sizeof(float**) * num_outputs);
+    output_storage = (float**)malloc(sizeof(float**) * num_outputs);
+    for(int channel = 0; channel < num_outputs; channel++)
     {
-        inputStorage[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
-        outputStorage[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
+        input_storage[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
+        output_storage[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
     }
+}
+// Must end audio engine before calling and start again after
+// blocksize is provided through common variable g_blockSize
+void AudioEngine::changeBlockSize(int oldSize, int newSize)
+{
+    for (int i = 0; i < oldSize; ++i)
+    {
+        delete(input_storage[i]);
+        delete(output_storage[i]);
+        delete(outputss[i]);
+        delete(inputss[i]);
+    }
+    for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
+    {
+        auto holder = MainWindow::pluginHolderVec.at(i);
+        holder->host->setBlockSize(holder->effect,newSize);
+    }
+    delete(input_storage);
+    delete(output_storage);
+    delete(outputss);
+    delete(inputss);
+    g_blocksize = newSize;
+    initializeIO();
 }
 
 void AudioEngine::requestPlaybackRestart()
@@ -196,16 +219,16 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         }
         if(plugs->host->isMuted)
         {
-            AudioEngine::silenceChannel(outputss,numOutputs,g_blocksize);
+            AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
         }
         else
         {
             for (int i = 0; i < g_blocksize; ++i)
             {
-                outputStorage[0][i] += outputss[0][i] * g_volume;
-                outputStorage[1][i] += outputss[1][i] * g_volume;
+                output_storage[0][i] += outputss[0][i] * g_volume;
+                output_storage[1][i] += outputss[1][i] * g_volume;
             }
-            AudioEngine::silenceChannel(outputss,numOutputs,g_blocksize);
+            AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
         }
     }
     if (customPlayback)
@@ -215,11 +238,11 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     isPaused = false;
     for( i=0; i<framesPerBuffer; i++ )
     {
-        *out++ =outputStorage[0][i] ;  /* left */
-        *out++ =outputStorage[1][i]; /* right */
+        *out++ =output_storage[0][i] ;  /* left */
+        *out++ =output_storage[1][i]; /* right */
     }
 
-    AudioEngine::silenceChannel(outputStorage,numOutputs,g_blocksize);
+    AudioEngine::silenceChannel(output_storage,num_outputs,g_blocksize);
     return 0;
 }
 

@@ -36,6 +36,31 @@ TrackContainer::TrackContainer(PluginEditorContainer *pluginEditorContainer, Pia
 
 }
 
+TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track, int totalDT)
+{
+    mTrack *track = new mTrack;
+    qDebug() << "track Size from load: " << midi_track.midi_data_size();
+    for (int i = 0; i < midi_track.midi_data_size(); ++i)
+    {
+        auto midi_data = midi_track.midi_data(i);
+        track->noteMap[midi_data.total_dt()].push_back(midi_data.event());
+    }
+    track->totalDT = totalDT;
+    MidiManager::recalculateNoteListDT(track);
+    auto *midiView = new TrackMidiView;
+    track->instrumentName = QString::fromStdString(midi_track.name());
+    TrackView *view = new TrackView(track,midiView);
+    view->id = ID++;
+
+    emit addPianoRoll(view);
+    QObject::connect(view,&TrackView::trackClickedOn,piano_roll_container,&PianoRollContainer::switchPianoRoll);
+
+    vLayout->addWidget(midiView);
+    vSplitter->addWidget(view);
+    view->pluginTrack = plugin_editor_container->addTrack(view);
+    return view;
+}
+
 void TrackContainer::addTrackView(const mSong &song)
 {
     foreach (const auto &track, song.tracks)
@@ -79,10 +104,21 @@ void TrackContainer::addSingleView()
     view->pluginTrack = plugin_editor_container->addTrack(view);
 
 }
-void TrackContainer::mousePressEvent(QMouseEvent *event)
-{
 
+std::vector<const TrackView *> TrackContainer::getTrackViews() const
+{
+    std::vector<const TrackView *> tracks;
+    for (int var = 0; var < vSplitter->children().size(); ++var)
+    {
+        auto track_view = dynamic_cast<TrackView*>(vSplitter->children().at(var));
+        if (track_view)
+        {
+            tracks.push_back(track_view);
+        }
+    }
+    return tracks;
 }
+
 
 void TrackContainer::keyPressEvent(QKeyEvent *event)
 {
