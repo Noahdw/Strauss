@@ -21,7 +21,7 @@ MidiInter is  "basic feature" complete and is fully capable of producing music w
 * VST2 instrument playback
 * VST2 effect chaining (reverb, compression, etc)
 * Midi device recording
-* Export audio was .WAV file
+* Export audio as .WAV file
 * saving and loading project
 
 
