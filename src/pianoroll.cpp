@@ -70,6 +70,11 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     animation->setPosAt(1.0, QPointF(scene->width(), 0));
 
 }
+
+PianoRoll::~PianoRoll()
+{
+    this->parentWidget()->deleteLater();
+}
 /*Double clicking an empty part of the Pianoroll adds a note.
  *Double clicking an existing note will remove it from the PianoRoll.
  */
@@ -170,7 +175,7 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
 
 void PianoRoll::mouseMoveEvent(QMouseEvent *event)
 {
-   // rubberBand->setGeometry(QRect(origin,event->pos()).normalized());
+    // rubberBand->setGeometry(QRect(origin,event->pos()).normalized());
     QGraphicsView::mouseMoveEvent(event);
 }
 
@@ -293,7 +298,7 @@ void PianoRoll::updateSongTrackerPos(bool isPauseOrResume, bool isResume, int cu
         }
     }
 }
-
+// Called when a group of items is moved
 void PianoRoll::notifyPianoRollItemMoved(int xMove, int yMove, QGraphicsItem *item)
 {
     foreach (auto note, scene->selectedItems()) {
@@ -340,6 +345,17 @@ void PianoRoll::switchViewContainer()
 {
 
 }
+
+void PianoRoll::forceResize()
+{
+    resetMatrix();
+    float x = (float)width() / (tPQN*g_quarterNotes);
+    scale(x,1);
+    velocityView->onPianoRollResized(x);
+    track->getTrackMidiView()->onPianoRollResized(x);
+    horizontalScrollBar()->setValue(0);
+
+}
 /*!
   \fn PianoRoll::playKeyboardNote(int note, bool active)
   Given a piano note, either queue for the note to be played
@@ -347,9 +363,11 @@ void PianoRoll::switchViewContainer()
 */
 void PianoRoll::playKeyboardNote(int note, bool active)
 {
-    track->plugin.host->eventToAdd.hasEventToAdd = true;
-    track->plugin.host->eventToAdd.eventOn = active;
-    track->plugin.host->eventToAdd.note = note;
+    auto velocity =  (active ? 70 : 0);
+    track->plugin.host->addMidiEvent(0x90,note,velocity,g_timer->currentValue());
+   // track->plugin.host->eventToAdd.hasEventToAdd = true;
+   // track->plugin.host->eventToAdd.eventOn = active;
+  //  track->plugin.host->eventToAdd.note = note;
 }
 
 void PianoRoll::deleteAllNotes()
@@ -549,6 +567,10 @@ void PianoRoll::wheelEvent(QWheelEvent *event)
 
 void PianoRoll::resizeEvent(QResizeEvent *event)
 {
+    if (!isInitialized)
+    {
+        return;
+    }
     resetMatrix();
     float x = (float)width() / (tPQN*g_quarterNotes);
     scale(x,1);

@@ -2,14 +2,14 @@
 #include "src/trackview.h"
 #include "src/plugintrackview.h"
 #include "src/pluginview.h"
-PluginEditorContainer::PluginEditorContainer()
+PluginEditorContainer::PluginEditorContainer(QFileSystemModel *model)
 {
     vLayout         = new QVBoxLayout;
     hlayout         = new QHBoxLayout;
     hTopLayout      = new QHBoxLayout;
     hBotttomLayout  = new QHBoxLayout;
     trackScrollArea = new QScrollArea;
-    folderView      = new FolderView;
+    folderView      = new FolderView(model);
     vLayout->addWidget(trackScrollArea);
     vLayout->addLayout(hBotttomLayout);
     hlayout->addWidget(folderView);
@@ -43,7 +43,7 @@ PluginEditorContainer::PluginEditorContainer()
 PluginTrackView* PluginEditorContainer::addTrack(TrackView *track)
 {
     PluginTrackView * pluginTrack = new PluginTrackView(track);
-    pluginTrack->container = this;
+    pluginTrack->plugin_editor_container = this;
     hTopLayout->addWidget(pluginTrack);
     switchPluginViews(pluginTrack);
     return pluginTrack;

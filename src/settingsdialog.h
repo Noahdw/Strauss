@@ -2,10 +2,12 @@
 #define SETTINGSDIALOG_H
 
 #include <QWidget>
+#include <QGroupBox>
 #include <QDialog>
 #include <QStackedWidget>
 #include <QListWidget>
 #include <QHBoxLayout>
+#include <QPushButton>
 #include <QAction>
 #include <QStringListModel>
 #include <QDialogButtonBox>
@@ -13,6 +15,7 @@
 #include <QFrame>
 #include <QComboBox>
 #include <QLabel>
+#include <QSettings>
 #include <src/common.h>
 #include <QSlider>
 #include <src/audioengine.h>
@@ -35,10 +38,14 @@ private:
     QFrame           *audio_frame;
     QSlider          *block_size_slider;
     QLabel           *block_size_label;
-    AudioEngine *audio_engine;
+    AudioEngine      *audio_engine;
+    QListWidget      *plugin_list_widget;
+    QGroupBox        *plugin_group_box;
 private slots:
         void listWidgetClicked();
         void blockSizeSliderChanged(int value);
+        void addPluginFolder();
+        void removePluginFolder();
 
 };
     double getLatency(int sampleSize);

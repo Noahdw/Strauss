@@ -4,6 +4,7 @@
 PaStream *stream;
 
 int AudioEngine::requestedPlaybackPos;
+bool AudioEngine::shouldDeleteTrack = false;
 bool isPaused = false;
 
 
@@ -174,6 +175,7 @@ void AudioEngine::startStream()
 }
 
 int num = 0;
+
 int patestCallback( const void *inputBuffer, void *outputBuffer,
                     unsigned long framesPerBuffer,
                     const PaStreamCallbackTimeInfo* timeInfo,
@@ -185,6 +187,26 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     unsigned int i;
     int numPlugs = MainWindow::pluginHolderVec.length();
     (void) inputBuffer; /* Prevent unused variable warning. */
+    if (AudioEngine::shouldDeleteTrack)
+    {
+        qDebug() <<"I was called";
+        for (int var = 0; var < numPlugs ; ++var)
+        {
+            pluginHolder *plugs = MainWindow::pluginHolderVec.at(var);
+            if (plugs->effect == NULL) {
+                continue;
+            }
+            if (plugs->host->shouldDelete)
+            {
+                MainWindow::pluginHolderVec.remove(var);
+                plugs->host->unloadPlugin(plugs->effect);
+                delete plugs->host;
+                numPlugs--;
+                break;
+            }
+        }
+        AudioEngine::shouldDeleteTrack = false;
+    }
     if (AudioEngine::requestedPlaybackPos != -1)
     {
         AudioEngine *audio = (AudioEngine*)userData;
@@ -223,11 +245,14 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         }
         else
         {
+
             for (int i = 0; i < g_blocksize; ++i)
             {
-                output_storage[0][i] += outputss[0][i] * g_volume;
-                output_storage[1][i] += outputss[1][i] * g_volume;
+                output_storage[0][i] += outputss[0][i] * g_volume ;
+                output_storage[1][i] += outputss[1][i] * g_volume ;
+
             }
+       \
             AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
         }
     }

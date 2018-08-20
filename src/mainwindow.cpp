@@ -30,12 +30,18 @@ QVector<pluginHolder*> MainWindow::pluginHolderVec;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
+    model = new QFileSystemModel;
     centralWidget = new QWidget(this);
     pluginEdiorCentralWidget = new QWidget(this);
     stackedCentralWidget = new QStackedWidget;
     audio_engine     = new AudioEngine;
     manager          = new MidiManager;
     timeTracker      = new TimeTracker;
+
+    model->setRootPath(QDir::currentPath());
+    model->setFilter(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot);
+    model->setNameFilters(QStringList() << "*.dll");
+    model->setNameFilterDisables(false);
 
     setCentralWidget(stackedCentralWidget);
     trackScrollArea = new QScrollArea;
@@ -46,10 +52,10 @@ MainWindow::MainWindow(QWidget *parent) :
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
-    folder_view              = new FolderView;
+    folder_view              = new FolderView(model);
     header_container         = new HeaderContainer(audio_engine);
     piano_roll_container     = new PianoRollContainer;
-    plugin_editor_container  = new PluginEditorContainer;
+    plugin_editor_container  = new PluginEditorContainer(model);
     track_container          = new TrackContainer(plugin_editor_container,piano_roll_container);
     control_change_container = new ControlChangeContainer(piano_roll_container);
     piano_roll_helper        = new PianoRollHelperView(control_change_container);
@@ -101,6 +107,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QDir dir(QDir::current().path()+"/TempPlugins");
     dir.removeRecursively();
     dir.mkdir(QDir::current().path()+"/TempPlugins");
+    dir.setPath(QDir::current().path()+"/ProgramBanks");
+    if (!dir.exists())
+    {
+          dir.mkdir(QDir::current().path()+"/ProgramBanks");
+    }
 
     trackScrollArea->setStyleSheet("QScrollArea {background-color: rgb(170,170,170); border: 2px solid grey }");
 

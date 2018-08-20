@@ -5,8 +5,9 @@
 
 int FolderView::tempFolderID = 0;
 
-FolderView::FolderView()
+FolderView::FolderView(QFileSystemModel *qmodel)
 {
+    model = qmodel;
     vLayout = new QVBoxLayout;
     vLayout->setSpacing(0);
     vLayout->setContentsMargins(0,0,0,0);
@@ -16,12 +17,7 @@ FolderView::FolderView()
     setBaseSize(300,150);
     setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
     setLayout(vLayout);
-    QFileSystemModel *model = new QFileSystemModel;
 
-    model->setRootPath(QDir::currentPath());
-    model->setFilter(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot);
-    model->setNameFilters(QStringList() << "*.dll");
-    model->setNameFilterDisables(false);
     list = new QTreeView();
 
     list->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -56,9 +52,9 @@ void FolderView::itemDoubleClicked()
         QFile::remove(tempPath);
     }
 
-    if (!QFile::copy(path + pluginName, tempPath))
+    if (!QFile::copy(model->filePath(index), tempPath))
     {
-        qDebug() << QDir::current().path();
+        qDebug() << model->filePath(index);
         qDebug() << "Could not copy plugin";
         return;
     }
@@ -68,7 +64,7 @@ void FolderView::itemDoubleClicked()
     }
     else
     {
-        pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath,path + pluginName);
+        pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath,model->filePath(index));
     }
 
 

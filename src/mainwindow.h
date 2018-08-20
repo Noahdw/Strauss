@@ -91,6 +91,7 @@ private:
     QWidget *centralWidget;
     QWidget *pluginEdiorCentralWidget;
     QStackedWidget * stackedCentralWidget;
+    QFileSystemModel *model;
 protected:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);

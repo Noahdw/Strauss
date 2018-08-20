@@ -11,8 +11,9 @@
 std::default_random_engine generator;
 std::uniform_int_distribution<int> distribution(80,255);
 
-TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView, QWidget *parent) : QFrame(parent)
+TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer *trackContainer, QWidget *parent) : QFrame(parent)
 {
+    track_container = trackContainer;
     setStyleSheet("QFrame { background-color: lightGray; border: 1px solid black; }");
     this->track = track;
     track_midi_view = trackMidiView;
@@ -20,18 +21,18 @@ TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView, QWidget *paren
     setMaximumWidth(widgetWidth);
     setMinimumHeight(100);
     setMaximumHeight(100);
-    instrumentName = track->instrumentName;
-    if (instrumentName == "")
-    {
-        instrumentName = "new track";
-    }
-    instrumentLabel = new QLineEdit(instrumentName);
+
+    instrumentLabel = new QLineEdit(track->instrumentName);
     instrumentLabel->setReadOnly(true);
     instrumentLabel->setMaximumWidth(widgetWidth-10);
     instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(0, 0, 0, 0); }");
     instrumentLabel->setFrame(false);
     instrumentLabel->installEventFilter(this);
-
+    instrumentLabel->setContextMenuPolicy(Qt::CustomContextMenu);
+    if (instrumentLabel->text() == "")
+    {
+        instrumentLabel->setText("new track");
+    }
     muteBox    = new QCheckBox("Mute",this);
     recordBox  = new QCheckBox("Record",this);
     showButton = new QPushButton("Show",this);
@@ -51,7 +52,7 @@ TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView, QWidget *paren
     randomRed = distribution(generator);
     randomGreen = distribution(generator);
     randomBlue = distribution(generator);
-
+    connect(instrumentLabel, &QLineEdit::customContextMenuRequested,this,&TrackView::ShowContextMenu);
     QObject::connect(recordBox,&QCheckBox::stateChanged,this,&TrackView::notifyRecordingChange);
     QObject::connect(muteBox,  &QCheckBox::stateChanged,this,&TrackView::notifyMuteChange);
     QObject::connect(showButton,&QPushButton::clicked,this,&TrackView::showPlugin);
@@ -64,17 +65,28 @@ TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView, QWidget *paren
 }
 bool TrackView::eventFilter(QObject *target, QEvent *event)
 {
-    //idk how to do this
-    //qDebug() << event->type();
+    // qDebug() << event->type();
     if(target == instrumentLabel)
     {
-        if (canEditLine)
+        if (event->type() == QEvent::FocusOut)
         {
+            instrumentLabel->setReadOnly(true);
+            instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(0, 0, 0, 0); }");
+            canEditLine = false;
+            instrumentLabel->clearFocus();
             return false;
         }
-        else
+        if (canEditLine)
         {
-
+            auto keyPress = dynamic_cast<QKeyEvent*>(event);
+            if (keyPress && ((keyPress->key() == Qt::Key_Enter) || (keyPress->key() == Qt::Key_Return)))
+            {
+                instrumentLabel->setReadOnly(true);
+                instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(0, 0, 0, 0); }");
+                canEditLine = false;
+                instrumentLabel->clearFocus();
+            }
+            return false;
         }
         if (event->type() == QEvent::MouseButtonPress )
         {
@@ -84,14 +96,9 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
             }
             else
             {
-                // event->ignore();
-                emit trackClickedOn(id);
+                emit trackClickedOn(this);
                 return true;
             }
-        }
-        if (!canEditLine && (event->type() == QEvent::ToolTip || event->type() == QEvent::MouseButtonPress ))
-        {
-            //return true;
         }
 
     }
@@ -154,6 +161,22 @@ void TrackView::addPluginFromLoadProject(QString filepath)
     addPluginFromPath(tempPath,name,filepath);
 }
 
+
+// Will delete this class. Do not call any member variables/functions after container call.
+void TrackView::deleteTrack()
+{
+    pluginTrack->deleteLater();
+    plugin.host->markForDeletion();
+    //track_midi_view->deleteLater();
+    //delete this;
+    track_container->deleteTrack(this,track_midi_view);
+}
+
+QString TrackView::getTrackName() const
+{
+    return instrumentLabel->text();
+}
+
 TrackMidiView *TrackView::getTrackMidiView()
 {
     return track_midi_view;
@@ -187,10 +210,12 @@ void TrackView::ShowContextMenu(const QPoint &pos)
 {
     QMenu contextMenu(("Context menu"), this);
     QAction renameAction("Rename", this);
-
+    QAction deleteAction("Delete track",this);
     connect(&renameAction,&QAction::triggered,this,&TrackView::renameTrack);
+    connect(&deleteAction,&QAction::triggered,this,&TrackView::deleteTrack);
 
     contextMenu.addAction(&renameAction);
+    contextMenu.addAction(&deleteAction);
     contextMenu.exec(mapToGlobal(pos));
 }
 
@@ -223,14 +248,9 @@ void TrackView::mousePressEvent(QMouseEvent *event)
     {
         ShowContextMenu(event->pos());
     }
-    else
-    {
-        instrumentLabel->setReadOnly(true);
-        instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(0, 0, 0, 0); }");
-        canEditLine = false;
-    }
 
-    emit trackClickedOn(id);
+
+    emit trackClickedOn(this);
     QFrame::mousePressEvent(event);
 }
 

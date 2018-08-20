@@ -1,6 +1,7 @@
 #ifndef AUDIOENGINE_H
 #define AUDIOENGINE_H
 
+#include <math.h>
 #include <QObject>
 #include <SDK/portaudio.h>
 #include <math.h>
@@ -31,6 +32,7 @@ public:
     static void silenceChannel(float **channelData, int numChannels, long numFrames);
     static uint blocksize;
     static int requestedPlaybackPos;
+    static bool shouldDeleteTrack;
 
 signals:
     void changePlaybackPosSignal( int pos);

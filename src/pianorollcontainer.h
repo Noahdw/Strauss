@@ -22,10 +22,11 @@ public:
     PianoRollContainer();
     void propogateFolderViewDoubleClicked(QString pluginName, QString filePath, QString actualPath);
     void setControlChangeContainer(ControlChangeContainer *controlChangeContainer); // must be called before use
+    void deletePianoRoll();
     PianoRoll *getCurrentPianoRoll();
     QStackedLayout *stackedLayout;
 public slots:
-    void switchPianoRoll(int id);
+    void switchPianoRoll(TrackView *track_view);
     void addPianoRolls(TrackView *trackView);
 protected:
     void paintEvent(QPaintEvent * event);

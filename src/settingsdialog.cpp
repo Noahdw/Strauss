@@ -40,9 +40,9 @@ SettingsDialog::SettingsDialog(AudioEngine *audioEngine, QWidget *parent)
     audio_layout->setSpacing(0);
     audio_layout->setContentsMargins(0,0,0,0);
     audio_frame->setLayout(audio_layout);
-    auto midi_text1 = new QLabel(tr("Output buffer size:"));
+    auto audio_text1 = new QLabel(tr("Output buffer size:"));
     block_size_label = new QLabel("Output Latency: " + QString::number(getLatency(g_blocksize),'g',1));
-    audio_layout->addWidget(midi_text1);
+    audio_layout->addWidget(audio_text1);
     audio_layout->addWidget(block_size_slider);
     audio_layout->addWidget(block_size_label);
 
@@ -58,6 +58,30 @@ SettingsDialog::SettingsDialog(AudioEngine *audioEngine, QWidget *parent)
     midi_layout->setSpacing(0);
     midi_layout->setContentsMargins(0,0,0,0);
     midi_frame->setLayout(midi_layout);
+    auto midi_text1 = new QLabel(tr("Plugin folders"));
+    plugin_list_widget = new QListWidget;
+    plugin_group_box = new QGroupBox;
+    QVBoxLayout *plugin_vbox = new QVBoxLayout;
+    QPushButton *plugin_add_button = new QPushButton("Add");
+    QPushButton *plugin_remove_button = new QPushButton("Remove");
+    plugin_vbox->addWidget(plugin_add_button);
+    plugin_vbox->addWidget(plugin_remove_button);
+    plugin_group_box->setLayout(plugin_vbox);
+    midi_layout->addWidget(midi_text1);
+    midi_layout->addWidget(plugin_list_widget);
+    midi_layout->addWidget(plugin_group_box);
+    connect(plugin_add_button,&QPushButton::clicked,this,&SettingsDialog::addPluginFolder);
+    connect(plugin_remove_button,&QPushButton::clicked,this,&SettingsDialog::removePluginFolder);
+    QSettings settings;
+    settings.beginGroup("folders");
+    int fcount = settings.beginReadArray("paths");
+    for (int i = 0; i < fcount; ++i)
+    {
+        settings.setArrayIndex(i);
+        plugin_list_widget->addItem(settings.value("path").toString());
+    }
+    settings.endArray();
+    settings.endGroup();
 }
 
 void SettingsDialog::accept()
@@ -70,8 +94,17 @@ void SettingsDialog::accept()
         audio_engine->openStream();
         audio_engine->startStream();
     }
-
-   done(1);
+    QSettings settings;
+    settings.beginGroup("folders");
+    settings.beginWriteArray("paths");
+    for (int i = 0; i < plugin_list_widget->count(); ++i)
+    {
+        settings.setArrayIndex(i);
+        settings.setValue("path",plugin_list_widget->item(i)->text());
+    }
+    settings.endArray();
+    settings.endGroup();
+    done(1);
 }
 
 void SettingsDialog::reject()
@@ -88,6 +121,27 @@ void SettingsDialog::listWidgetClicked()
 void SettingsDialog::blockSizeSliderChanged(int value)
 {
     block_size_label->setText("Latency: " + QString::number(getLatency(value),'f',1) + " ms");
+}
+
+void SettingsDialog::addPluginFolder()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Select plugin folder"),
+                                                    "/home",
+                                                    QFileDialog::ShowDirsOnly
+                                                    | QFileDialog::DontResolveSymlinks);
+    if (dir != "")
+    {
+        plugin_list_widget->addItem(dir);
+    }
+}
+
+void SettingsDialog::removePluginFolder()
+{
+    QList<QListWidgetItem*> items = plugin_list_widget->selectedItems();
+    foreach(QListWidgetItem* item, items){
+        plugin_list_widget->removeItemWidget(item);
+        delete item;
+    }
 }
 
 double getLatency(int sampleSize)

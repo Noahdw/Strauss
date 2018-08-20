@@ -3,6 +3,7 @@
 
 class TrackMidiView;
 class PluginTrackView;
+class TrackContainer;
 
 #include <QWidget>
 #include <QPainter>
@@ -24,9 +25,11 @@ class TrackView: public QFrame
     Q_OBJECT
 
 public:
-    TrackView(mTrack *track, TrackMidiView *trackMidiView, QWidget* parent = 0);
+    TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer *trackContainer, QWidget* parent = 0);
     void addPluginFromPath(QString filepath, QString name, QString actualPath);
     void addPluginFromLoadProject(QString filepath);
+    void deleteTrack();
+    QString getTrackName() const;
     TrackMidiView *getTrackMidiView();
     mTrack *track;
     pluginHolder plugin;
@@ -41,18 +44,20 @@ protected:
     void mousePressEvent(QMouseEvent *event);
     bool eventFilter(QObject *target, QEvent *event);
 private:
+
     QLineEdit *instrumentLabel;
     QVBoxLayout *vlayout;
     QCheckBox *muteBox;
     QCheckBox *recordBox;
     QPushButton * showButton;
     TrackMidiView *track_midi_view;
+    TrackContainer * track_container;
     QBrush brush;
     bool canEditLine = false;
     const int widgetWidth = 100;
 
 signals:
-    void trackClickedOn(int id);
+    void trackClickedOn(TrackView *track_View);
 
 private slots:
     void notifyMuteChange(int state);

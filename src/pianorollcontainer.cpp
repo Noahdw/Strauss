@@ -18,6 +18,10 @@ PianoRollContainer::PianoRollContainer()
 // TODO: See if changing .dll name suffices and don't need to make x copies of a plugin, just 1
 void PianoRollContainer::propogateFolderViewDoubleClicked(QString pluginName, QString filePath, QString actualPath)
 {
+    if (stackedLayout->count() == 0)
+    {
+        return;
+    }
     PianoRoll *roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
     roll->track->addPluginFromPath(filePath,pluginName,actualPath);
 }
@@ -25,6 +29,10 @@ void PianoRollContainer::propogateFolderViewDoubleClicked(QString pluginName, QS
 void PianoRollContainer::setControlChangeContainer(ControlChangeContainer *controlChangeContainer)
 {
     control_change_container = controlChangeContainer;
+    for (int i = 0; i < stackedLayout->count(); ++i)
+    {
+        //  auto p =   dynamic_cast<PianoRoll*>(stackedLayout->->children().at(3))
+    }
 }
 
 PianoRoll *PianoRollContainer::getCurrentPianoRoll()
@@ -32,24 +40,38 @@ PianoRoll *PianoRollContainer::getCurrentPianoRoll()
     return dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
 }
 
-void PianoRollContainer::switchPianoRoll(int id)
+void PianoRollContainer::switchPianoRoll(TrackView * track_view)
 {
-    if (stackedLayout->currentIndex() != id) {
-        stackedLayout->setCurrentIndex(id);
-        control_change_container->sLayout2->setCurrentIndex(id);
-        for (int i = 0; i < stackedLayout->count(); i++)
-        {
-            QWidget *w = stackedLayout->itemAt(i)->widget();
-            if (w)
-            {
-                auto proll = dynamic_cast<PianoRoll*>(w->children().at(3));
-                proll->track->getTrackMidiView()->clickedOn(false);
-            }
-
-        }
-        auto roll = getCurrentPianoRoll();
-        roll->track->getTrackMidiView()->clickedOn(true);
+    if (getCurrentPianoRoll()->track == track_view)
+    {
+        return;
     }
+    for (int i = 0; i < stackedLayout->count(); ++i)
+    {
+        auto p = dynamic_cast<PianoRoll*>(stackedLayout->widget(i)->children().at(3));
+        if (p->track == track_view)
+        {
+            stackedLayout->setCurrentIndex(i);
+            control_change_container->sLayout2->setCurrentIndex(i);
+            break;
+        }
+    }
+
+
+
+    for (int i = 0; i < stackedLayout->count(); i++)
+    {
+        QWidget *w = stackedLayout->itemAt(i)->widget();
+        if (w)
+        {
+            auto proll = dynamic_cast<PianoRoll*>(w->children().at(3));
+            proll->track->getTrackMidiView()->clickedOn(false);
+        }
+
+    }
+    auto roll = getCurrentPianoRoll();
+    roll->track->getTrackMidiView()->clickedOn(true);
+
 }
 
 void PianoRollContainer::addPianoRolls(TrackView *trackView)
@@ -102,6 +124,8 @@ void PianoRollContainer::addPianoRolls(TrackView *trackView)
     velocityView->populateVelocityViewFromTrack(trackView);
     trackView->getTrackMidiView()->shareScene(pianoRoll->scene);
     control_change_container->addControlChangeView(pianoRoll);
+    pianoRoll->isInitialized = true;
+    pianoRoll->forceResize();
 }
 
 void PianoRollContainer::paintEvent(QPaintEvent *event)

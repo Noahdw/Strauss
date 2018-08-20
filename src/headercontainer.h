@@ -6,7 +6,6 @@ class AudioEngine;
 
 #include <QWidget>
 #include <QDebug>
-#include <QButtonGroup>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -22,7 +21,6 @@ public:
 private:
     AudioEngine *audio_manager;
     QGroupBox * groupBox;
-    QButtonGroup * buttonGroup;
     QCheckBox * recordStyle;
     bool isPaused = false;
 private slots:

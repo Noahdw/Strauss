@@ -21,7 +21,6 @@ class ControlChangeBridge;
 #include "src/tracklengthview.h"
 #include <QRubberBand>
 #include <QKeyEvent>
-#include <map>
 #include <src/controlchangeoverlay.h>
 #include <src/common.h>
 #include <src/timetracker.h>
@@ -30,6 +29,7 @@ class PianoRoll : public QGraphicsView{
     Q_OBJECT
 public:
     PianoRoll(QWidget* parent = 0);
+    ~PianoRoll();
     Keyboard* getKeyboard();
     void setKeyboard(Keyboard *kboard);
     void setVelocityView(VelocityView *view);
@@ -43,7 +43,7 @@ public:
     void addNoteToScene(int note, int position, int length, int velocity);
     void changeNotesAfterMouseDrag(QGraphicsItem *item);
     void switchViewContainer();
-
+    void forceResize();
     TrackView *track;
     TrackLengthView * trackLengthView;
     VelocityView *velocityView;
@@ -56,6 +56,7 @@ public:
     double colSpacing = 0;
     double scaleFactor = 1;
     double prefferedScaleFactor = 1.0;
+    bool isInitialized = false;
 
 public slots:
     void ShowContextMenu(const QPoint &pos);

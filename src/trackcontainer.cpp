@@ -49,7 +49,7 @@ TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track, 
     MidiManager::recalculateNoteListDT(track);
     auto *midiView = new TrackMidiView;
     track->instrumentName = QString::fromStdString(midi_track.name());
-    TrackView *view = new TrackView(track,midiView);
+    TrackView *view = new TrackView(track,midiView,this);
     view->id = ID++;
 
     emit addPianoRoll(view);
@@ -67,7 +67,7 @@ void TrackContainer::addTrackView(const mSong &song)
     {
         QWidget *widget = new QWidget;
         auto *midiView = new TrackMidiView;
-        auto *view = new TrackView(track,midiView);
+        auto *view = new TrackView(track,midiView,this);
         auto *hlayout = new QHBoxLayout;
         hlayout->setAlignment(Qt::AlignTop);
         hlayout->setSpacing(0);
@@ -93,7 +93,7 @@ void TrackContainer::addSingleView()
     mTrack *track = new mTrack;
     auto *midiView = new TrackMidiView;
     track->instrumentName = "New Track";
-    TrackView *view = new TrackView(track,midiView);
+    TrackView *view = new TrackView(track,midiView,this);
     view->id = ID++;
 
     emit addPianoRoll(view);
@@ -105,9 +105,21 @@ void TrackContainer::addSingleView()
 
 }
 
-std::vector<const TrackView *> TrackContainer::getTrackViews() const
+void TrackContainer::deleteTrack(TrackView *trackView, TrackMidiView *midiView)
 {
-    std::vector<const TrackView *> tracks;
+    trackView->hide();
+    midiView->hide();
+    vLayout->removeWidget(midiView);
+    trackView->setParent(NULL);
+    midiView->deleteLater();
+    // vSplitter->
+    // delete trackView;
+    // midiView->hide();
+}
+
+std::vector<TrackView *> TrackContainer::getTrackViews() const
+{
+    std::vector<TrackView *> tracks;
     for (int var = 0; var < vSplitter->children().size(); ++var)
     {
         auto track_view = dynamic_cast<TrackView*>(vSplitter->children().at(var));
@@ -142,3 +154,16 @@ void TrackContainer::paintEvent(QPaintEvent *event)
     painter.drawRect(0,0,width() - 1,height() - 1);
 }
 
+int TrackContainer::getNumTracks() const
+{
+    return vSplitter->children().size();
+}
+
+void TrackContainer::deleteAllTracks()
+{
+    auto tracks = getTrackViews();
+    for (int var = 0; var < tracks.size(); ++var)
+    {
+        tracks.at(var)->deleteTrack();
+    }
+}

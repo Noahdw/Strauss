@@ -2,6 +2,8 @@
 #include <Windows.h>
 #include <qdebug.h>
 #include <SDK/audioeffectx.h>
+#include <SDK/vstfxstore.h>
+
 #include <qdatetime.h>
 #include <src/pianoroll.h>
 #include <src/audioengine.h>
@@ -20,6 +22,8 @@
 #define PROXY_REGVAL        "Proxy32"  //use this for x86 builds
 #endif
 
+LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
+
 VstTimeInfo vtime;
 float sRate;
 double sPos = 0;
@@ -35,6 +39,24 @@ Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
 
 }
 
+Vst2HostCallback::~Vst2HostCallback()
+{
+    if (actual_url != "")
+    {
+        for (int i = 0; i < maxNotes; ++i)
+        {
+            delete eventsHolder[i];
+        }
+        delete events;
+
+        SendMessageA(editor,WM_QUIT,(WPARAM)hinst,0);
+        FreeLibrary(hinst);
+
+    }
+    delete track;
+
+}
+
 
 
 extern "C"{
@@ -44,10 +66,11 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
 {
     if (opcode != 7)
     {
-        // qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
+        //  qDebug() << "DEBUG OPCODE ALWAYS CALLED: " << opcode;
     }
 
     //http://jdmcox.com/PianoRollComposer.cpp for opcodes
+    // or http://www.bass.radio42.com/help/html/6aa9c7ce-730a-9dac-1c3f-d362b08158a1.htm
     switch (opcode) {
     case audioMasterVersion:
         return 2400;
@@ -108,6 +131,7 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         return 1; //I can do it all?
     case audioMasterGetLanguage: //38?
         return 1;
+
     case audioMasterUpdateDisplay: //42
         if (!firstRun) {
             effect->dispatcher(effect, effEditIdle, 0, 0, NULL, 0.0f);
@@ -201,6 +225,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CLOSE:
         ShowWindow(hWnd,SW_HIDE);
         return true;
+    case WM_QUIT:
+        DestroyWindow(hWnd);
+        if (!UnregisterClassA(APPLICATION_CLASS_NAME,(HINSTANCE)wParam))
+        {
+            qDebug() << "Could not unregister class: " << GetLastError();
+        }
+
     }
     return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
@@ -626,7 +657,7 @@ void Vst2HostCallback::exportAudioInit()
 
 
 int Vst2HostCallback::exportAudioBegin(AEffect *plugin,float **outputs,
-                                        long numFrames)
+                                       long numFrames)
 {
     processMidi(plugin);
     processAudio(plugin,outputs,outputs,numFrames);
@@ -636,6 +667,14 @@ int Vst2HostCallback::exportAudioBegin(AEffect *plugin,float **outputs,
         return 0;
     }
     return 1;
+}
+
+void Vst2HostCallback::unloadPlugin(AEffect *plugin)
+{
+    dispatcher(plugin,effEditClose,0,0,NULL,0);
+    dispatcher(plugin,effMainsChanged,0, 0, NULL, 0);
+    dispatcher(plugin,effClose, 0, 0, NULL, 0.0f);
+
 }
 
 void Vst2HostCallback::exportAudioEnd()
@@ -653,11 +692,77 @@ void Vst2HostCallback::exportAudioEnd()
     processLevel = kVstProcessLevelRealtime;
 }
 
+std::string Vst2HostCallback::savePluginState(AEffect *plugin) const
+{
+    std::string empty = "";
+    if (plugin->flags & effFlagsProgramChunks)
+    {
+        void *data;
+        auto dataSize = dispatcher(plugin,effGetChunk,0,0,&data,0.0);
+        if (dataSize == 0 || data == nullptr)
+        {
+            return empty;
+        }
+
+      //  char *t = (char*)data;
+       // t[dataSize] = '\0';
+        std::string strData((char*)data,dataSize);
+        return strData;
+//        QString path = QDir::current().path()+"/ProgramBanks/"+plugin->uniqueID + ".fxb";
+//        std::fstream output(path.toUtf8().constData(),std::ios::out | std::ios::trunc | std::ios::binary);
+//        if (!output.is_open())
+//        {
+//            qDebug() << "Could not open output program bank file";
+//            qDebug() << path;
+//            return;
+//        }
+//        output.write((char*)data,dataSize);
+//        output.close();
+    }
+    return empty;
+}
+
+void Vst2HostCallback::setPluginState(AEffect *plugin,const std::string &chunk)
+{
+    if (chunk.length() == 0)
+    {
+        return;
+    }
+     dispatcher(plugin,effSetChunk,0,chunk.length(),(void*)&chunk.c_str()[0],0);
+//    QFileInfo file(QDir::currentPath() + "/ProgramBanks/"+ plugin->uniqueID  + ".fxb");
+//    if (file.exists() && file.isFile())
+//    {
+//        std::ifstream input(file.absoluteFilePath().toUtf8().constData(), std::ios::binary);
+//        input.unsetf(std::ios::skipws);
+//        if (!input.is_open())
+//        {
+//            qDebug() << "Could not open input program bank file";
+//            qDebug() << file.absoluteFilePath();
+//            return;
+//        }
+//        std::vector<char> data;
+//        std::streampos fileSize;
+//        input.seekg(0, std::ios::end);
+//        fileSize = input.tellg();
+//        input.seekg(0, std::ios::beg);
+
+//        data.resize(fileSize);
+//        qDebug() << "Data size is: " << fileSize;
+//        data.insert(data.begin(),
+//                    std::istream_iterator<char>(input),
+//                    std::istream_iterator<char>());
+
+//        dispatcher(plugin,effSetChunk,0,fileSize,(void*)&data[0],0);
+//        input.close();
+//    }
+}
+
 void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **outputs,
                                     long numFrames)
 {
     if (!canPlay)
     {
+
         return;
     }
     if (plugin->flags & effFlagsCanReplacing)
@@ -676,7 +781,6 @@ void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **out
             {
                 p->holder->host->processAudio(p->holder->effect,outputs,outputs,numFrames);
             }
-
         }
     }
     else
@@ -688,6 +792,19 @@ void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **out
 void Vst2HostCallback::setBlockSize(AEffect *plugin,int blockSize)
 {
     dispatcher(plugin, effSetBlockSize, 0, blockSize, NULL, 0.0f);
+}
+
+void Vst2HostCallback::markForDeletion()
+{
+    pianoroll->deleteLater();
+    if (actual_url != "")
+    {
+        shouldDelete = true;
+        AudioEngine::shouldDeleteTrack = true;
+        return;
+    }
+    else
+        delete this;
 }
 
 AEffect* Vst2HostCallback::LoadBridgedPlugin(char * szPath)

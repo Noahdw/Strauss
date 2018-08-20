@@ -24,7 +24,10 @@ public:
     TrackContainer(PluginEditorContainer *pluginEditorContainer, PianoRollContainer * pianoRollContainer);
     TrackView *addTrackFromLoadProject(const MidiTrack &midi_track, int totalDT);
     void addSingleView();
-    std::vector<const TrackView *> getTrackViews() const;
+    void deleteTrack(TrackView *trackView, TrackMidiView *midiView);
+    int getNumTracks() const;
+    void deleteAllTracks();
+    std::vector<TrackView *> getTrackViews() const;
 signals:
     void switchControlChange();
 public slots:
@@ -42,8 +45,6 @@ private:
     QVBoxLayout *vLayout;
     QHBoxLayout *hLayout;
     QScrollArea *scrollArea;
-
-
 };
 
 #endif // TRACKCONTAINER_H

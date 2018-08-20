@@ -12,7 +12,8 @@ TARGET = MidiInter
 TEMPLATE = app
 QMAKE_CXXFLAGS+= -Zi
 QMAKE_LFLAGS+=/DEBUG
-QMAKE_LFLAGS += /MANIFESTUAC:\"level=\'requireAdministrator\' uiAccess=\'false\'\"
+#Uncomment below is force running app as admin
+#QMAKE_LFLAGS += /MANIFESTUAC:\"level=\'requireAdministrator\' uiAccess=\'false\'\"
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the

@@ -3,14 +3,18 @@
 
 class PianoRoll;
 class PluginTrackView;
-
+#include <string>
+#include <iostream>
+#include <fstream>
 #include "SDK/aeffectx.h"
 #include <SDK/aeffect.h>
 #include <SDK/vstfxstore.h>
 #include <src/midimanager.h>
+#include <src/midiinter.pb.h>
 #include <qvector.h>
 #include <QObject>
 #include <queue>
+
 typedef VstIntPtr (*dispatcherFuncPtr)(AEffect *effect, VstInt32 opCode,
                                        VstInt32 index, VstInt32 value, void *ptr, float opt);
 struct Rect {
@@ -36,6 +40,7 @@ class Vst2HostCallback : public QObject
 public:
     Vst2HostCallback();
     Vst2HostCallback(mTrack *track);
+    ~Vst2HostCallback();
     AEffect* loadPlugin(char* fileName, char *pluginName);
     AEffect* LoadBridgedPlugin(char * szPath);
     bool canRecord();
@@ -55,9 +60,13 @@ public:
     void showPlugin();
     void exportAudioInit();
     void setBlockSize(AEffect *plugin,int blockSize);
+    void markForDeletion();
     int exportAudioBegin(AEffect *plugin, float **outputs,
-                          long numFrames);
+                         long numFrames);
+    void unloadPlugin(AEffect *plugin);
     void exportAudioEnd();
+    std::string savePluginState(AEffect *plugin) const;
+    void setPluginState(AEffect *plugin, const std::string &chunk);
     EventToAdd eventToAdd;
     std::queue<EventToAdd> midiEventQueue;
     std::deque<EventToAdd> recordedMidiEventDeque;
@@ -71,9 +80,11 @@ public:
     bool isMuted = false;
     bool isPaused = true;
     bool isMasterPlugin = false;
+    bool shouldDelete = false;
     int noteVecPos = 0;
     char *pluginName;
     QString actual_url;
+    QString unique_plugin_id;
     PluginTrackView * masterPluginTrackView;
 
     dispatcherFuncPtr dispatcher;
@@ -82,7 +93,7 @@ private:
     VstEvents *events;
 
     QVector<int> *noteList;
-    LPCSTR APPLICATION_CLASS_NAME = (LPCSTR)"MIDIHOST";
+
     HMODULE hinst;
     bool canRecording = false;
     bool hasReachedEnd = false;

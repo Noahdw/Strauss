@@ -20,17 +20,18 @@ void ProjectManager::saveAsProject(QString path, const TrackContainer &track_con
     app->set_blocksize(g_blocksize);
     app->set_sample_rate(g_sampleRate);
     app->set_total_dt(g_quarterNotes * 960);
-    std::vector<const TrackView *> track_views = track_container.getTrackViews();
+    std::vector<TrackView *> track_views = track_container.getTrackViews();
 
     for (int i = 0; i < track_views.size(); ++i)
     {
         const TrackView *track_view = track_views.at(i);
         auto midi_track = app->add_midi_track();
 
-        midi_track->set_name(track_view->instrumentName.toUtf8().constData());
+        midi_track->set_name(track_view->getTrackName().toUtf8().constData());
 
         auto plugin = midi_track->mutable_master_plugin();
         plugin->set_plugin_url(track_view->plugin.host->actual_url.toUtf8().constData());
+        plugin->set_program_bank(track_view->plugin.host->savePluginState(track_view->plugin.effect));
         for(const auto& item : track_view->track->noteMap)
         {
             for (int j = 0; j < item.second.size(); ++j)
@@ -68,6 +69,7 @@ void ProjectManager::loadProject(QString path, MainWindow * main_window,TrackCon
         delete app;
         return;
     }
+    track_container.deleteAllTracks();
     g_quarterNotes = app->total_dt() / 960;
     main_window->audio_engine->changeBlockSize(g_blocksize,app->blocksize());
     for (int i = 0; i < app->midi_track_size(); ++i)
@@ -79,9 +81,9 @@ void ProjectManager::loadProject(QString path, MainWindow * main_window,TrackCon
         if (master_plugin.IsInitialized())
         {
             track_view->addPluginFromLoadProject( QString::fromStdString(master_plugin.plugin_url()));
+            track_view->plugin.host->setPluginState(track_view->plugin.effect,master_plugin.program_bank());
         }
     }
-
     delete app;
     google::protobuf::ShutdownProtobufLibrary();
 }

@@ -149,6 +149,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::MidiTrack_Plugin, plugin_url_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::MidiTrack_Plugin, program_bank_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::MidiTrack_CCData, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -181,9 +182,9 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::MidiTrack_MidiData)},
   { 7, -1, sizeof(::MidiTrack_Plugin)},
-  { 13, -1, sizeof(::MidiTrack_CCData)},
-  { 21, -1, sizeof(::MidiTrack)},
-  { 31, -1, sizeof(::Application)},
+  { 14, -1, sizeof(::MidiTrack_CCData)},
+  { 22, -1, sizeof(::MidiTrack)},
+  { 32, -1, sizeof(::Application)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -215,21 +216,22 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\017midiinter.proto\"\300\002\n\tMidiTrack\022\014\n\004name\030"
+      "\n\017midiinter.proto\"\326\002\n\tMidiTrack\022\014\n\004name\030"
       "\001 \001(\t\022(\n\rmaster_plugin\030\003 \001(\0132\021.MidiTrack"
       ".Plugin\022\'\n\014child_plugin\030\004 \003(\0132\021.MidiTrac"
       "k.Plugin\022&\n\tmidi_data\030\005 \003(\0132\023.MidiTrack."
       "MidiData\022\"\n\007cc_data\030\006 \003(\0132\021.MidiTrack.CC"
       "Data\032+\n\010MidiData\022\020\n\010total_dt\030\001 \001(\005\022\r\n\005ev"
-      "ent\030\002 \001(\005\032\034\n\006Plugin\022\022\n\nplugin_url\030\001 \001(\t\032"
-      ";\n\006CCData\022\017\n\007cc_type\030\001 \001(\005\022\017\n\007x_value\030\002 "
-      "\001(\005\022\017\n\007y_value\030\003 \001(\005\"u\n\013Application\022\014\n\004n"
-      "ame\030\001 \001(\t\022\020\n\010total_dt\030\002 \001(\005\022\036\n\nmidi_trac"
-      "k\030\003 \003(\0132\n.MidiTrack\022\021\n\tblockSize\030\004 \001(\005\022\023"
-      "\n\013sample_rate\030\005 \001(\005b\006proto3"
+      "ent\030\002 \001(\005\0322\n\006Plugin\022\022\n\nplugin_url\030\001 \001(\t\022"
+      "\024\n\014program_bank\030\002 \001(\014\032;\n\006CCData\022\017\n\007cc_ty"
+      "pe\030\001 \001(\005\022\017\n\007x_value\030\002 \001(\005\022\017\n\007y_value\030\003 \001"
+      "(\005\"u\n\013Application\022\014\n\004name\030\001 \001(\t\022\020\n\010total"
+      "_dt\030\002 \001(\005\022\036\n\nmidi_track\030\003 \003(\0132\n.MidiTrac"
+      "k\022\021\n\tblockSize\030\004 \001(\005\022\023\n\013sample_rate\030\005 \001("
+      "\005b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 467);
+      descriptor, 489);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "midiinter.proto", &protobuf_RegisterTypes);
 }
@@ -517,6 +519,7 @@ void MidiTrack_Plugin::InitAsDefaultInstance() {
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int MidiTrack_Plugin::kPluginUrlFieldNumber;
+const int MidiTrack_Plugin::kProgramBankFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 MidiTrack_Plugin::MidiTrack_Plugin()
@@ -534,11 +537,16 @@ MidiTrack_Plugin::MidiTrack_Plugin(const MidiTrack_Plugin& from)
   if (from.plugin_url().size() > 0) {
     plugin_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.plugin_url_);
   }
+  program_bank_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.program_bank().size() > 0) {
+    program_bank_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.program_bank_);
+  }
   // @@protoc_insertion_point(copy_constructor:MidiTrack.Plugin)
 }
 
 void MidiTrack_Plugin::SharedCtor() {
   plugin_url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  program_bank_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 MidiTrack_Plugin::~MidiTrack_Plugin() {
@@ -548,6 +556,7 @@ MidiTrack_Plugin::~MidiTrack_Plugin() {
 
 void MidiTrack_Plugin::SharedDtor() {
   plugin_url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  program_bank_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 void MidiTrack_Plugin::SetCachedSize(int size) const {
@@ -571,6 +580,7 @@ void MidiTrack_Plugin::Clear() {
   (void) cached_has_bits;
 
   plugin_url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  program_bank_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   _internal_metadata_.Clear();
 }
 
@@ -594,6 +604,18 @@ bool MidiTrack_Plugin::MergePartialFromCodedStream(
             this->plugin_url().data(), static_cast<int>(this->plugin_url().length()),
             ::google::protobuf::internal::WireFormatLite::PARSE,
             "MidiTrack.Plugin.plugin_url"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bytes program_bank = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_program_bank()));
         } else {
           goto handle_unusual;
         }
@@ -636,6 +658,12 @@ void MidiTrack_Plugin::SerializeWithCachedSizes(
       1, this->plugin_url(), output);
   }
 
+  // bytes program_bank = 2;
+  if (this->program_bank().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      2, this->program_bank(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -661,6 +689,13 @@ void MidiTrack_Plugin::SerializeWithCachedSizes(
         1, this->plugin_url(), target);
   }
 
+  // bytes program_bank = 2;
+  if (this->program_bank().size() > 0) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        2, this->program_bank(), target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
@@ -683,6 +718,13 @@ size_t MidiTrack_Plugin::ByteSizeLong() const {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::StringSize(
         this->plugin_url());
+  }
+
+  // bytes program_bank = 2;
+  if (this->program_bank().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
+        this->program_bank());
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -716,6 +758,10 @@ void MidiTrack_Plugin::MergeFrom(const MidiTrack_Plugin& from) {
 
     plugin_url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.plugin_url_);
   }
+  if (from.program_bank().size() > 0) {
+
+    program_bank_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.program_bank_);
+  }
 }
 
 void MidiTrack_Plugin::CopyFrom(const ::google::protobuf::Message& from) {
@@ -743,6 +789,8 @@ void MidiTrack_Plugin::Swap(MidiTrack_Plugin* other) {
 void MidiTrack_Plugin::InternalSwap(MidiTrack_Plugin* other) {
   using std::swap;
   plugin_url_.Swap(&other->plugin_url_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  program_bank_.Swap(&other->program_bank_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
 }

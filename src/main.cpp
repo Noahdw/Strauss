@@ -66,7 +66,8 @@ int main(int argc, char *argv[])
                           "}"
                           ));
 
-
+    QCoreApplication::setOrganizationName("MyDaw");
+    QCoreApplication::setApplicationName("MidiInter");
     MainWindow window;
     window.show();
     return app.exec();
