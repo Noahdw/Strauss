@@ -36,7 +36,6 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setViewportUpdateMode(MinimalViewportUpdate);
-
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     setContextMenuPolicy(Qt::CustomContextMenu);
@@ -68,7 +67,6 @@ PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
     animation->setTimeLine(g_timer);
     animation->setPosAt(0.0, QPointF(0, 0));
     animation->setPosAt(1.0, QPointF(scene->width(), 0));
-
 }
 
 PianoRoll::~PianoRoll()
@@ -84,7 +82,7 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
     {
         QGraphicsItem *item = itemAt(event->pos());
 
-        if (item!=0) {
+        if (item!=NULL) {
             //deletes an existing note from song
             PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
             int note = 127 - (pItem->y()/keyHeight);
@@ -93,7 +91,6 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
             MidiManager::removeMidiNote(pItem->noteStart,pItem->noteEnd,note,track->track);
             scene->removeItem(item);
             delete item;
-            item=nullptr;
             clearActiveNotes();
 
         }
@@ -101,7 +98,7 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
             //Adds a new note to song
             QPointF mousePos = mapToScene(event->pos());
 
-            int length = tPQN*scaleFactor - 1;
+            int length = tPQN * scaleFactor - 1; // -1 because reasons
             int quadrant = (mousePos.x()/(tPQN * scaleFactor));
             quadrant *=scaleFactor*tPQN;;
             int note = 128 - mousePos.y() / keyHeight;
@@ -111,7 +108,6 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
             pNote->pianoroll = this;
             pNote->setInitalPosition(quadrant,length,note);
             pNote->setBoundingRect(length);
-            //   track->trackMidiView->addViewItem(quadrant,length,newY);
             scene->update(0,0,tPQN*g_quarterNotes,keyHeight*128);
             velocityView->addOrRemoveVelocityViewItem(quadrant,70,note,true);
 
@@ -129,7 +125,6 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
 
 void PianoRoll::mousePressEvent(QMouseEvent *event)
 {
-
     if (event->button()==Qt::RightButton)
     {
         ShowContextMenu(event->pos());
@@ -138,9 +133,9 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
     QGraphicsItem *pNote = itemAt(event->pos());
 
     //If a note was clicked on
-    if(pNote!=0) {
+    if(pNote != NULL) {
         //Shift allows multiple selection of notes
-        if (!event->modifiers().testFlag(Qt::ShiftModifier)) {
+        if (!event->modifiers().testFlag(Qt::ShiftModifier) && !last_selected_items.contains(pNote)) {
             clearActiveNotes();
 
         }
@@ -154,9 +149,10 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
         QTimer::singleShot(400,[=](){
             turnNoteOff(note);
         });
-        if (!scene->selectedItems().contains(pNote))
+        if (!last_selected_items.contains(pNote))
         {
             pNote->setSelected(true);
+            last_selected_items.push_back(pNote);
         }
 
     }
@@ -165,6 +161,8 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
         if (!event->modifiers().testFlag(Qt::ShiftModifier)) {
             clearActiveNotes();
         }
+        else
+            last_selected_items = scene->selectedItems();
         origin = event->pos();
         setDragMode(QGraphicsView::RubberBandDrag);
         rubberBand->setGeometry(QRect(origin,QSize()));
@@ -181,11 +179,13 @@ void PianoRoll::mouseMoveEvent(QMouseEvent *event)
 
 void PianoRoll::mouseReleaseEvent(QMouseEvent *event)
 {
-
     foreach (auto var, scene->selectedItems()) {
         PianoRollItem *castNote = dynamic_cast<PianoRollItem*>(var);
         castNote->brush = QBrush(Qt::darkCyan);
         castNote->update(castNote->boundingRect());
+        if (!last_selected_items.contains(var)) {
+            last_selected_items.push_back(var);
+        }
     }
     rubberBand->hide();
     QGraphicsView::mouseReleaseEvent(event);
@@ -193,7 +193,7 @@ void PianoRoll::mouseReleaseEvent(QMouseEvent *event)
 
 void PianoRoll::clearActiveNotes()
 {
-    foreach (auto note, scene->selectedItems()) {
+    foreach (auto note, last_selected_items) {
         PianoRollItem *castNote = dynamic_cast<PianoRollItem*>(note);
         if (castNote==0) {
             continue;
@@ -202,6 +202,7 @@ void PianoRoll::clearActiveNotes()
         castNote->update(castNote->boundingRect());
     }
     scene->clearSelection();
+    last_selected_items.clear();
 }
 
 //Takes track (midi) data and converts to notes on a Pianoroll
@@ -301,7 +302,7 @@ void PianoRoll::updateSongTrackerPos(bool isPauseOrResume, bool isResume, int cu
 // Called when a group of items is moved
 void PianoRoll::notifyPianoRollItemMoved(int xMove, int yMove, QGraphicsItem *item)
 {
-    foreach (auto note, scene->selectedItems()) {
+    foreach (auto note, last_selected_items) {
         if(item == note)
             continue;
         note->setX(note->x() + xMove);
@@ -323,7 +324,7 @@ void PianoRoll::addNoteToScene(int note, int position, int length, int velocity)
 
 void PianoRoll::changeNotesAfterMouseDrag(QGraphicsItem *item)
 {
-    for(const auto& note : scene->selectedItems())
+    for(const auto& note : last_selected_items)
     {
         if (item == note)
         {
@@ -365,9 +366,9 @@ void PianoRoll::playKeyboardNote(int note, bool active)
 {
     auto velocity =  (active ? 70 : 0);
     track->plugin.host->addMidiEvent(0x90,note,velocity,g_timer->currentValue());
-   // track->plugin.host->eventToAdd.hasEventToAdd = true;
-   // track->plugin.host->eventToAdd.eventOn = active;
-  //  track->plugin.host->eventToAdd.note = note;
+    // track->plugin.host->eventToAdd.hasEventToAdd = true;
+    // track->plugin.host->eventToAdd.eventOn = active;
+    //  track->plugin.host->eventToAdd.note = note;
 }
 
 void PianoRoll::deleteAllNotes()
@@ -381,7 +382,7 @@ void PianoRoll::deleteAllNotes()
 
 void PianoRoll::deleteSelectedNotes()
 {
-    for(const auto& var : scene->selectedItems())
+    for(const auto& var : last_selected_items)
     {
         PianoRollItem *item = dynamic_cast<PianoRollItem*>(var);
         scene->removeItem(var);
@@ -393,6 +394,7 @@ void PianoRoll::deleteSelectedNotes()
         item=nullptr;
     }
     scene->selectedItems().clear();
+    last_selected_items.clear();
 }
 
 void PianoRoll::setScrollWheelValue(int value)
@@ -464,8 +466,8 @@ void PianoRoll::drawBackground(QPainter * painter, const QRectF & rect)
     painter->eraseRect(*sceneRect); //does this even matter?
     painter->resetMatrix();
     painter->fillRect(viewport()->rect(),QBrush(QColor(250,250,250)));
-    //Draws the horizontals lines
 
+    //Draws the horizontals lines
     for (int var = 0; var <= 128; ++var)
     {
         painter->drawLine(0,var*keyHeight-verticalScrollBar()->value(),
@@ -492,7 +494,7 @@ void PianoRoll::drawBackground(QPainter * painter, const QRectF & rect)
     }
 }
 
-
+// Called after mouse scrolling
 void PianoRoll::scaleFactorChanged(double scale)
 {
     scaleFactor = scale;
@@ -507,7 +509,6 @@ void PianoRoll::scaleFactorChanged(double scale)
 
 void PianoRoll::wheelEvent(QWheelEvent *event)
 {
-
     int yscroller = 0;
     QScrollBar* wheelPos;
     if(event->modifiers().testFlag(Qt::ControlModifier))
@@ -524,8 +525,8 @@ void PianoRoll::wheelEvent(QWheelEvent *event)
         {
             scaleFactor*=2;
         }
-        int zoom = event->angleDelta().y() /120;
-        yscroller=event->angleDelta().y() /120*11;
+        int zoom  = event->angleDelta().y() /120;
+        yscroller = event->angleDelta().y() /120*11;
 
         wheelPos = this->horizontalScrollBar();
         if (zoom > 0)
@@ -600,6 +601,17 @@ void PianoRoll::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Delete:
             deleteSelectedNotes();
             break;
+        case Qt::Key_Up:
+            notifyPianoRollItemMoved(0,keyHeight * -1,NULL);
+            changeNotesAfterMouseDrag(NULL);
+            return;
+        case Qt::Key_Down:
+            notifyPianoRollItemMoved(0,keyHeight,NULL);
+            changeNotesAfterMouseDrag(NULL);
+            return;
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+            return;
         default:
             break;
         }

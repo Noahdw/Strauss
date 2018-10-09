@@ -15,7 +15,7 @@ class PluginEditorContainer : public QWidget
 {
     Q_OBJECT
 public:
-    PluginEditorContainer(QFileSystemModel *model);
+    PluginEditorContainer(FolderViewAbstractModel *model);
     PluginTrackView* addTrack(TrackView *track);
     void addPlugin(PluginTrackView *pluginTrack,Vst2HostCallback *vst2);
     void switchPluginViews(PluginTrackView *pluginTrack);

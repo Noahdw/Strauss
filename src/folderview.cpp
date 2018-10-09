@@ -5,7 +5,7 @@
 
 int FolderView::tempFolderID = 0;
 
-FolderView::FolderView(QFileSystemModel *qmodel)
+FolderView::FolderView(FolderViewAbstractModel *qmodel)
 {
     model = qmodel;
     vLayout = new QVBoxLayout;
@@ -22,8 +22,6 @@ FolderView::FolderView(QFileSystemModel *qmodel)
 
     list->setSelectionMode(QAbstractItemView::SingleSelection);
     list->setModel(model);
-    list->setRootIndex(model->index(path));
-
 
     QPalette pal = palette();
     setAutoFillBackground(true);
@@ -44,7 +42,9 @@ FolderView::FolderView(QFileSystemModel *qmodel)
 void FolderView::itemDoubleClicked()
 {
     QModelIndex index = list->currentIndex();
-    QString pluginName = index.data(Qt::DisplayRole).toString();
+    QString pluginName = index.data(0).toString();
+    QString absPath = index.data(0x0100).toString();
+    qDebug() << index.data(1);
     QString tempPath = QString(QDir::current().path()+"/TempPlugins/%1.dll").arg(FolderView::tempFolderID++);
     qDebug() << tempPath;
     if (QFile::exists(tempPath))
@@ -52,9 +52,9 @@ void FolderView::itemDoubleClicked()
         QFile::remove(tempPath);
     }
 
-    if (!QFile::copy(model->filePath(index), tempPath))
+    if (!QFile::copy(absPath, tempPath))
     {
-        qDebug() << model->filePath(index);
+        qDebug() << absPath;
         qDebug() << "Could not copy plugin";
         return;
     }
@@ -64,7 +64,7 @@ void FolderView::itemDoubleClicked()
     }
     else
     {
-        pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath,model->filePath(index));
+        pRollContainer->propogateFolderViewDoubleClicked(pluginName,tempPath,absPath);
     }
 
 

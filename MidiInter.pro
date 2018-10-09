@@ -58,7 +58,8 @@ SOURCES += src/main.cpp\
     src/audioengine.cpp \
     src/audiomanager.cpp \
     src/projectmanager.cpp \
-    src/midiinter.pb.cc
+    src/midiinter.pb.cc \
+    src/folderviewabstractmodel.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -92,7 +93,8 @@ HEADERS  += src/mainwindow.h\
     src/audioengine.h \
     src/audiomanager.h \
     src/projectmanager.h \
-    src/midiinter.pb.h
+    src/midiinter.pb.h \
+    src/folderviewabstractmodel.h
 
 LIBS += -lwinmm \
 

@@ -58,7 +58,7 @@ private slots:
     void saveProject();
     void saveAsProject();
     void deleteAllNotes();
-
+    void acceptSettingsDialog(int accept);
     void displaySettingsDialog();
     void loadProject();
     void exportAudio();
@@ -91,7 +91,8 @@ private:
     QWidget *centralWidget;
     QWidget *pluginEdiorCentralWidget;
     QStackedWidget * stackedCentralWidget;
-    QFileSystemModel *model;
+    FolderViewAbstractModel *model;
+    QList<QString> getFoldersFromSettings();
 protected:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);

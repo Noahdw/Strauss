@@ -695,7 +695,7 @@ void Vst2HostCallback::exportAudioEnd()
 std::string Vst2HostCallback::savePluginState(AEffect *plugin) const
 {
     std::string empty = "";
-    if (plugin->flags & effFlagsProgramChunks)
+    if (plugin && (plugin->flags & effFlagsProgramChunks))
     {
         void *data;
         auto dataSize = dispatcher(plugin,effGetChunk,0,0,&data,0.0);

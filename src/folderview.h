@@ -11,11 +11,12 @@ class PluginEditorContainer;
 #include <QListView>
 #include <QTreeView>
 #include "pianorollcontainer.h"
+#include "src/folderviewabstractmodel.h"
 class FolderView : public QWidget
 {
     Q_OBJECT
 public:
-    FolderView(QFileSystemModel *qmodel);
+    FolderView(FolderViewAbstractModel *qmodel);
     PianoRollContainer * pRollContainer;
     PluginEditorContainer * pluginContainer;
     static int tempFolderID;
@@ -23,7 +24,7 @@ public:
 private:
     QVBoxLayout *vLayout;
     QTreeView *list;
-    QFileSystemModel *model;
+    FolderViewAbstractModel *model;
     QString path = "C:/Program Files/Native Instruments/VSTPlugins 64 bit/";
 
 

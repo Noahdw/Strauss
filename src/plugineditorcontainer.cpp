@@ -2,7 +2,7 @@
 #include "src/trackview.h"
 #include "src/plugintrackview.h"
 #include "src/pluginview.h"
-PluginEditorContainer::PluginEditorContainer(QFileSystemModel *model)
+PluginEditorContainer::PluginEditorContainer(FolderViewAbstractModel *model)
 {
     vLayout         = new QVBoxLayout;
     hlayout         = new QHBoxLayout;

@@ -80,6 +80,7 @@ private:
     QRubberBand *rubberBand;
     QGraphicsRectItem *line;
     QPoint origin;
+    QList<QGraphicsItem*> last_selected_items;
     int currentTimer = 0;
     int lastYNote = 0;
     const double kminimumColSpacing = 20.0;

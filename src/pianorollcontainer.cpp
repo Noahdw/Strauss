@@ -44,7 +44,7 @@ void PianoRollContainer::switchPianoRoll(TrackView * track_view)
 {
     if (getCurrentPianoRoll()->track == track_view)
     {
-        return;
+        //return;
     }
     for (int i = 0; i < stackedLayout->count(); ++i)
     {

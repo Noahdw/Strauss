@@ -30,7 +30,7 @@ QVector<pluginHolder*> MainWindow::pluginHolderVec;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
 {
-    model = new QFileSystemModel;
+    model = new FolderViewAbstractModel(getFoldersFromSettings());
     centralWidget = new QWidget(this);
     pluginEdiorCentralWidget = new QWidget(this);
     stackedCentralWidget = new QStackedWidget;
@@ -38,10 +38,6 @@ MainWindow::MainWindow(QWidget *parent) :
     manager          = new MidiManager;
     timeTracker      = new TimeTracker;
 
-    model->setRootPath(QDir::currentPath());
-    model->setFilter(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot);
-    model->setNameFilters(QStringList() << "*.dll");
-    model->setNameFilterDisables(false);
 
     setCentralWidget(stackedCentralWidget);
     trackScrollArea = new QScrollArea;
@@ -84,6 +80,8 @@ MainWindow::MainWindow(QWidget *parent) :
     stackedCentralWidget->addWidget(plugin_editor_container);
     QObject::connect(track_container,&TrackContainer::switchControlChange,control_change_container,
                      &ControlChangeContainer::switchControlChangeContainer);
+
+
 
 
     addNewTrack();
@@ -222,6 +220,14 @@ void MainWindow::deleteAllNotes()
     //  prollContainer->pianoRoll->deleteAllNotes();
 }
 
+void MainWindow::acceptSettingsDialog(int accept)
+{
+    if (accept == QDialog::Accepted) {
+        auto list = getFoldersFromSettings();
+        model->setModel(list);
+    }
+}
+
 void MainWindow::setUpMenuBar()
 {
 
@@ -348,7 +354,9 @@ void MainWindow::addNewTrack()
 void MainWindow::displaySettingsDialog()
 {
     auto settingsDialog = new SettingsDialog(audio_engine);
+    connect(settingsDialog,&SettingsDialog::finished,this,&MainWindow::acceptSettingsDialog);
     settingsDialog->exec();
+
 }
 
 void MainWindow::exportAudio()
@@ -397,4 +405,20 @@ int MainWindow::getNoteFromKeyboard(int key)
     default:
         return 0;
     }
+}
+
+QList<QString> MainWindow::getFoldersFromSettings()
+{
+    QList<QString> list;
+    QSettings settings;
+    settings.beginGroup("folders");
+    int fcount = settings.beginReadArray("paths");
+    for (int i = 0; i < fcount; ++i)
+    {
+        settings.setArrayIndex(i);
+        list.append(settings.value("path").toString());
+    }
+    settings.endArray();
+    settings.endGroup();
+   return list;
 }
