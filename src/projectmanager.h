@@ -10,6 +10,8 @@ class MainWindow;
 #include "src/midiinter.pb.h"
 #include "trackcontainer.h"
 #include "src/trackview.h"
+#include "src/plugintrackview.h"
+
 class ProjectManager
 {
 public:

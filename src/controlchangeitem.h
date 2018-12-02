@@ -16,6 +16,7 @@ public:
     ControlChangeItem();
     QRectF boundingRect() const;
     QPainterPath shape() const;
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
     void setInitalPos(QPointF pos);
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
     int value = 0;
@@ -27,6 +28,7 @@ private:
     int leftValue;
     int rightValue;
     bool firstEvent = true;
+    QBrush brush;
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);

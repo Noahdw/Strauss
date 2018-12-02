@@ -340,7 +340,7 @@ void MidiManager::removeMidiNote(int start, int length, int note, mTrack *track)
             break;
         }
     }
-    MidiManager::recalculateNoteListDT(track);
+   // MidiManager::recalculateNoteListDT(track);
 }
 
 void MidiManager::changeMidiVelocity(int start, int note, int velocity, mTrack *track)

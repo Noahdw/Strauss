@@ -17,7 +17,7 @@ int AudioManager::exportAudio(QString filePath)
     while (beginExporting())
     {
     }
-        num_samples = samples.size();
+    num_samples = samples.size();
     qDebug() << "Finished plugin processing";
     writeHeader(filePath);
     endExporting();

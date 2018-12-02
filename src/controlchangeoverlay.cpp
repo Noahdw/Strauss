@@ -115,8 +115,6 @@ void ControlChangeOverlay::fitIntoView()
     setUpdatesEnabled(true);
 }
 
-
-
 bool ControlChangeOverlay::eventFilter(QObject *target, QEvent *event)
 {
 
@@ -262,6 +260,15 @@ void ControlChangeOverlay::mouseReleaseEvent(QMouseEvent *event)
     {
         recalculateDT();
     }
+
+//    foreach (const auto& item, scene->selectedItems())
+//    {
+//        ControlChangeItem *cItem = dynamic_cast<ControlChangeItem*>(item);
+//        if (cItem)
+//        {
+//            cItem->
+//        }
+//    }
     QGraphicsView::mouseReleaseEvent(event);
 }
 
@@ -361,6 +368,7 @@ void ControlChangeOverlay::switchDrawModes()
     canDraw = !canDraw;
     if (canDraw)
     {
+        setCursor(Qt::CrossCursor);
         for(const auto& item : activeItems)
         {
             item.second->hide();
@@ -368,6 +376,7 @@ void ControlChangeOverlay::switchDrawModes()
     }
     else
     {
+        setCursor(Qt::ArrowCursor);
         for(const auto& item : activeItems)
         {
             if (item.second == leftItem || item.second == rightItem)
@@ -376,6 +385,7 @@ void ControlChangeOverlay::switchDrawModes()
             }
             item.second->show();
         }
+        viewport()->update();
     }
 }
 

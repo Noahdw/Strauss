@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
     trackScrollArea = new QScrollArea;
     trackScrollArea->setWidgetResizable(true);
     trackScrollArea->setMinimumWidth(1000);
-    trackScrollArea->setMinimumHeight(300);
+    trackScrollArea->setMinimumHeight(200);
     trackScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
@@ -57,22 +57,27 @@ MainWindow::MainWindow(QWidget *parent) :
     piano_roll_helper        = new PianoRollHelperView(control_change_container);
     piano_roll_container->setControlChangeContainer(control_change_container);
     folder_view->pRollContainer = piano_roll_container;
-
     trackScrollArea->setWidget(track_container);
-    mainLayout   = new QVBoxLayout;
+
+    mainLayout                  = new QVBoxLayout;
     QHBoxLayout *helperLayout   = new QHBoxLayout;
     QSplitter   *trackSplitter  = new QSplitter;
     QSplitter   *prollSplitter  = new QSplitter;
 
     prollSplitter->setOrientation(Qt::Vertical);
-    helperLayout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    helperLayout->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
     helperLayout->setContentsMargins(0,0,0,0);
     trackSplitter->addWidget(trackScrollArea);
     trackSplitter->addWidget(folder_view);
     mainLayout->addWidget(header_container);
     prollSplitter->addWidget(trackSplitter);
     prollSplitter->addWidget(control_change_container);
-    helperLayout->addWidget(piano_roll_helper);
+    QVBoxLayout *pSpacerLayout = new QVBoxLayout();
+    //  pSpacerLayout->addSpacing(500); // force it to bottom
+    pSpacerLayout->addSpacerItem(new QSpacerItem(0,100,QSizePolicy::Fixed,QSizePolicy::Expanding));
+    pSpacerLayout->addWidget(piano_roll_helper);
+    helperLayout->addLayout(pSpacerLayout);
+    //  helperLayout->addWidget(piano_roll_helper);
     helperLayout->addWidget(prollSplitter);
     mainLayout->addLayout(helperLayout);
     centralWidget->setLayout(mainLayout);
@@ -108,7 +113,7 @@ MainWindow::MainWindow(QWidget *parent) :
     dir.setPath(QDir::current().path()+"/ProgramBanks");
     if (!dir.exists())
     {
-          dir.mkdir(QDir::current().path()+"/ProgramBanks");
+        dir.mkdir(QDir::current().path()+"/ProgramBanks");
     }
 
     trackScrollArea->setStyleSheet("QScrollArea {background-color: rgb(170,170,170); border: 2px solid grey }");
@@ -420,5 +425,5 @@ QList<QString> MainWindow::getFoldersFromSettings()
     }
     settings.endArray();
     settings.endGroup();
-   return list;
+    return list;
 }

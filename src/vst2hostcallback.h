@@ -43,6 +43,8 @@ public:
     ~Vst2HostCallback();
     AEffect* loadPlugin(char* fileName, char *pluginName);
     AEffect* LoadBridgedPlugin(char * szPath);
+    const int numParams(AEffect *plugin);
+    QString getParamName(AEffect *plugin,int index);
     bool canRecord();
     int configurePluginCallbacks(AEffect *plugin);
     void startPlugin(AEffect *plugin);
@@ -55,7 +57,7 @@ public:
     void pauseOrResumePlayback(bool isResume);
     void addMidiEvent(uchar status, uchar note, uchar velocity, qreal currentTick);
     void setPianoRollRef(PianoRoll *piano);
-    void setCanRecord(bool canRec);
+    void setCanRecord(bool canRecord);
     void turnOffAllNotes(AEffect *plugin);
     void showPlugin();
     void exportAudioInit();
@@ -74,7 +76,7 @@ public:
     int ccFramesTillBlock[128];
     int ccVecPos[128];
     PianoRoll *pianoroll;
-
+    double trackVolume = 0.5;
     float sampleRate = 44100.0f;
     bool canPlay = false;
     bool isMuted = false;

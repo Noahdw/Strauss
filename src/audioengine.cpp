@@ -252,7 +252,7 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
                 output_storage[1][i] += outputss[1][i] * g_volume ;
 
             }
-       \
+
             AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
         }
     }

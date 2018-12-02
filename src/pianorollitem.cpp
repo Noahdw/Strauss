@@ -114,7 +114,8 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
     if(yMove != 0 || xMove != 0)
     {
-        pianoroll->notifyPianoRollItemMoved(xMove,yMove,this); //update all other selected notes
+        //update all other selected notes, the actual notes won't change until user is done dragging
+        pianoroll->notifyPianoRollItemMoved(xMove,yMove,this);
     }
     //Perhaps a bad idea, but if a drag changes the yPos, play the new note
     if (lastYWithSound != yPos*keyHeight) {
@@ -183,12 +184,11 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         int velocity = MidiManager::getVelocityFromNote(noteStart,note,pianoroll->track->track);
         MidiManager::removeMidiNote(noteStart,noteEnd,note,pianoroll->track->track);
         pianoroll->velocityView->changeVelocityViewItemPosition(noteStart,x(),note,127-yPos);
-        //pianoroll->track->trackMidiView->deleteViewItem(noteStart,lastYPos);
-        // pianoroll->track->trackMidiView->addViewItem(x(),width,yPos*keyHeight);
         note = 127 - yPos;
         MidiManager::addMidiNote(note,velocity,x(),noteEnd,pianoroll->track->track);
         noteStart = x();
         MidiManager::recalculateNoteListDT(pianoroll->track->track);
+      //  pianoroll->issueMoveCommand();
         pianoroll->changeNotesAfterMouseDrag(this);
     }
 }

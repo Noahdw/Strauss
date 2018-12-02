@@ -10,7 +10,7 @@ class ControlChangeContainer;
 #include <QPainter>
 #include <QVBoxLayout>
 #include <QComboBox>
-
+#include <QPushButton>
 class PianoRollHelperView : public QFrame
 {
     Q_OBJECT
@@ -23,7 +23,9 @@ protected:
     void paintEvent(QPaintEvent *event);
 private:
     void initializeComboBox();
+    void switchView();
     QVBoxLayout *vLayout;
+    QPushButton *switch_layout_button;
     ControlChangeContainer *control_change_container;
 
 

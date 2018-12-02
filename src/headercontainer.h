@@ -11,7 +11,7 @@ class AudioEngine;
 #include <QPushButton>
 #include <QCheckBox>
 #include <src/common.h>
-
+#include "src/qdraggingwidget.h"
 class HeaderContainer : public QWidget
 {
     Q_OBJECT
@@ -29,6 +29,9 @@ private slots:
     void pause();
     void record();
     void keyboardMode(bool enabled);
+    void masterTempoChanged(int tempo);
 };
 
 #endif // HEADERCONTAINER_H
+
+

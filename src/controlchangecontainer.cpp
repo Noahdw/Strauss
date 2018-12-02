@@ -51,6 +51,11 @@ void ControlChangeContainer::switchControlChangeType(int index)
 }
 void ControlChangeContainer::keyPressEvent(QKeyEvent *event)
 {
+    if (event->modifiers() && Qt::ControlModifier)
+    {
+        QWidget::keyPressEvent(event);
+        return;
+    }
     switch (event->key())
     {
     case Qt::Key_C:

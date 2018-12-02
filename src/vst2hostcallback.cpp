@@ -76,6 +76,7 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
         return 2400;
     case audioMasterIdle:
         effect->dispatcher(effect, effEditIdle, 0, 0, 0, 0);
+
         break;
     case audioMasterCurrentId:
         qDebug() << "audioMasterCurrentId" << opcode;
@@ -288,6 +289,9 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
 
     initializeMidiEvents();
     canPlay = true;
+
+
+
 }
 
 void Vst2HostCallback::silenceChannel(float **channelData, int numChannels, long numFrames)
@@ -310,7 +314,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
     bool canSkip = false;
     int df =0;
     int velocity;
-    // These are events from the keyboard to the right of the pianoRoll. in the future this might be
+    // These are events from the keyboard to the left of the pianoRoll. in the future this might be
     // merged into the queue below.
     if (eventToAdd.hasEventToAdd) {
 
@@ -383,7 +387,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
      * e.g. 48000/256 = 187 times per second. Our midi data is stored in a vector by its delta ticks since the last
      * midi note. If the TicksPerQuarterNote is 980 and the BPM is 120, then there are 1960 ticks per second. This tells us that
      * each tick corresponds to 22.9 samples of audio. A single quarter note that starts at the very beginning of a song will have
-     * its note off a DT of 960 from its note on. The note on is added instantly as an event as it has a DT of 0, but the note off
+     * its note-off a DT of 960 from its note-on. The note-on is added instantly as an event as it has a DT of 0, but the note-off
      * is 960 * 22.9 (21984) samples away. We can subract the block size from this every time the function is called until we are in
      * the range [0,block size] at which point it is added as an event. Delta frames are the samples since the start of a block,
      * or in our case the value our FramesTillBLock is at when it is in the range to add an event. Delta frames only really matter when
@@ -595,9 +599,9 @@ void Vst2HostCallback::setPianoRollRef(PianoRoll * piano)
     pianoroll = piano;
 }
 
-void Vst2HostCallback::setCanRecord(bool canRec)
+void Vst2HostCallback::setCanRecord(bool canRecord)
 {
-    canRecording = canRec;
+    canRecording = canRecord;
 }
 
 bool Vst2HostCallback::canRecord()
@@ -703,21 +707,9 @@ std::string Vst2HostCallback::savePluginState(AEffect *plugin) const
         {
             return empty;
         }
-
-      //  char *t = (char*)data;
-       // t[dataSize] = '\0';
         std::string strData((char*)data,dataSize);
         return strData;
-//        QString path = QDir::current().path()+"/ProgramBanks/"+plugin->uniqueID + ".fxb";
-//        std::fstream output(path.toUtf8().constData(),std::ios::out | std::ios::trunc | std::ios::binary);
-//        if (!output.is_open())
-//        {
-//            qDebug() << "Could not open output program bank file";
-//            qDebug() << path;
-//            return;
-//        }
-//        output.write((char*)data,dataSize);
-//        output.close();
+
     }
     return empty;
 }
@@ -728,43 +720,16 @@ void Vst2HostCallback::setPluginState(AEffect *plugin,const std::string &chunk)
     {
         return;
     }
-     dispatcher(plugin,effSetChunk,0,chunk.length(),(void*)&chunk.c_str()[0],0);
-//    QFileInfo file(QDir::currentPath() + "/ProgramBanks/"+ plugin->uniqueID  + ".fxb");
-//    if (file.exists() && file.isFile())
-//    {
-//        std::ifstream input(file.absoluteFilePath().toUtf8().constData(), std::ios::binary);
-//        input.unsetf(std::ios::skipws);
-//        if (!input.is_open())
-//        {
-//            qDebug() << "Could not open input program bank file";
-//            qDebug() << file.absoluteFilePath();
-//            return;
-//        }
-//        std::vector<char> data;
-//        std::streampos fileSize;
-//        input.seekg(0, std::ios::end);
-//        fileSize = input.tellg();
-//        input.seekg(0, std::ios::beg);
+    dispatcher(plugin,effSetChunk,0,chunk.length(),(void*)&chunk.c_str()[0],0);
 
-//        data.resize(fileSize);
-//        qDebug() << "Data size is: " << fileSize;
-//        data.insert(data.begin(),
-//                    std::istream_iterator<char>(input),
-//                    std::istream_iterator<char>());
-
-//        dispatcher(plugin,effSetChunk,0,fileSize,(void*)&data[0],0);
-//        input.close();
-//    }
 }
 
 void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **outputs,
                                     long numFrames)
 {
     if (!canPlay)
-    {
-
         return;
-    }
+    samplesPerTick = sampleRate/(float)(MidiManager::TPQN * (g_tempo/60.0f));
     if (plugin->flags & effFlagsCanReplacing)
     {
 
@@ -774,6 +739,13 @@ void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **out
             return;
         }
         plugin->processReplacing(plugin, inputs, outputs, numFrames);
+
+        for (int i = 0; i < g_blocksize; ++i)
+        {
+            outputs[0][i] *= trackVolume;
+            outputs[1][i] *= trackVolume;
+        }
+
         for (int i = 1; i < masterPluginTrackView->plugins.size(); ++i)
         {
             auto p = masterPluginTrackView->plugins.at(i);
@@ -848,4 +820,20 @@ AEffect* Vst2HostCallback::LoadBridgedPlugin(char * szPath)
     hinst = hModuleProxy;
     return pfnBridgeMain((audioMasterCallback)hostCallback,szPath);
 
+}
+
+const int Vst2HostCallback::numParams(AEffect *plugin)
+{
+    if (plugin)
+    {
+        return plugin->numParams;
+    }
+    return -1;
+}
+
+QString Vst2HostCallback::getParamName(AEffect *plugin,int index)
+{
+    char n[100];
+    dispatcher(plugin,effGetParamName,index,0,n,0.0f);
+    return QString(n);
 }

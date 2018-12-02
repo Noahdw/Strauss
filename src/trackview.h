@@ -18,8 +18,8 @@ class TrackContainer;
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QPushButton>
-
-
+#include <QSlider>
+#include <QComboBox>
 class TrackView: public QFrame
 {
     Q_OBJECT
@@ -52,6 +52,7 @@ private:
     QPushButton * showButton;
     TrackMidiView *track_midi_view;
     TrackContainer * track_container;
+    QComboBox *comboBox;
     QBrush brush;
     bool canEditLine = false;
     const int widgetWidth = 100;
@@ -65,6 +66,7 @@ private slots:
     void ShowContextMenu(const QPoint &pos);
     void showPlugin();
     void renameTrack();
+    void comboBoxIdChanged(int index);
 
 };
 

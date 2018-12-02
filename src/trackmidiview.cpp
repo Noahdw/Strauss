@@ -1,13 +1,17 @@
 #include "trackmidiview.h"
 #include <src/trackview.h>
 #include <src/pianorollitem.h>
-
+/*
+This class is a view of a midi track, it does not edit any midi data and is only for show.
+Instances of this class belong to the TrackContainer which is located above the PianoRoll.
+The TrackView class is composed with this one to represent a midi track for some given midi/plugin
+*/
 TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 {
     setViewportUpdateMode(MinimalViewportUpdate);
     setRenderHint(QPainter::Antialiasing);
-    setMinimumHeight(100);
-    setMaximumHeight(100);
+    setMinimumHeight(115);
+    setMaximumHeight(115);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     brush = QBrush(Qt::lightGray);
     pen   = QPen(Qt::black, 1, Qt::SolidLine);

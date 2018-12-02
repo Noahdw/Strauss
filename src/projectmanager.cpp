@@ -72,16 +72,16 @@ void ProjectManager::loadProject(QString path, MainWindow * main_window,TrackCon
     track_container.deleteAllTracks();
     g_quarterNotes = app->total_dt() / 960;
     main_window->audio_engine->changeBlockSize(g_blocksize,app->blocksize());
-    for (int i = 0; i < app->midi_track_size(); ++i)
+    for (int i = app->midi_track_size()-1; i >= 0; --i)
     {
 
-        auto track_view = track_container.addTrackFromLoadProject(app->midi_track(i),app->total_dt());
+        TrackView *track = track_container.addTrackFromLoadProject(app->midi_track(i),app->total_dt());
         auto master_plugin = app->midi_track(i).master_plugin();
-        qDebug() << QString::fromStdString(master_plugin.plugin_url());
         if (master_plugin.IsInitialized())
         {
-            track_view->addPluginFromLoadProject( QString::fromStdString(master_plugin.plugin_url()));
-            track_view->plugin.host->setPluginState(track_view->plugin.effect,master_plugin.program_bank());
+            track->addPluginFromLoadProject( QString::fromStdString(master_plugin.plugin_url()));
+            track->plugin.host->setPluginState(track->plugin.effect,master_plugin.program_bank());
+            //track->pluginTrack->addPlugin(&track->plugin);
         }
     }
     delete app;

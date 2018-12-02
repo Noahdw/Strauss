@@ -2,6 +2,13 @@
 #include "src/trackview.h"
 #include "src/plugintrackview.h"
 #include "src/pluginview.h"
+
+/*
+This class represents the base screen that will be shown when user presses ALT.
+It shows all the tracks and their corresponding plugins.
+It is simillar to the screen shown when you press TAB in Abelton.
+*/
+
 PluginEditorContainer::PluginEditorContainer(FolderViewAbstractModel *model)
 {
     vLayout         = new QVBoxLayout;

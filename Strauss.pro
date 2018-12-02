@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = MidiInter
+TARGET = Strauss
 TEMPLATE = app
 QMAKE_CXXFLAGS+= -Zi
 QMAKE_LFLAGS+=/DEBUG
@@ -59,7 +59,9 @@ SOURCES += src/main.cpp\
     src/audiomanager.cpp \
     src/projectmanager.cpp \
     src/midiinter.pb.cc \
-    src/folderviewabstractmodel.cpp
+    src/folderviewabstractmodel.cpp \
+    src/command.cpp \
+    src/qdraggingwidget.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -94,7 +96,9 @@ HEADERS  += src/mainwindow.h\
     src/audiomanager.h \
     src/projectmanager.h \
     src/midiinter.pb.h \
-    src/folderviewabstractmodel.h
+    src/folderviewabstractmodel.h \
+    src/command.h \
+    src/qdraggingwidget.h
 
 LIBS += -lwinmm \
 
@@ -106,4 +110,7 @@ INCLUDEPATH += $$PWD/Debug \
                 $$PWD/Release
 DEPENDPATH += $$PWD/Debug \
                 $$PWD/Release
+
+RESOURCES += \
+    graphics.qrc
 

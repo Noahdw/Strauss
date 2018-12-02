@@ -26,9 +26,9 @@ void PianoRollContainer::propogateFolderViewDoubleClicked(QString pluginName, QS
     roll->track->addPluginFromPath(filePath,pluginName,actualPath);
 }
 
-void PianoRollContainer::setControlChangeContainer(ControlChangeContainer *controlChangeContainer)
+void PianoRollContainer::setControlChangeContainer(ControlChangeContainer *_controlChangeContainer)
 {
-    control_change_container = controlChangeContainer;
+    controlChangeContainer = _controlChangeContainer;
     for (int i = 0; i < stackedLayout->count(); ++i)
     {
         //  auto p =   dynamic_cast<PianoRoll*>(stackedLayout->->children().at(3))
@@ -52,7 +52,7 @@ void PianoRollContainer::switchPianoRoll(TrackView * track_view)
         if (p->track == track_view)
         {
             stackedLayout->setCurrentIndex(i);
-            control_change_container->sLayout2->setCurrentIndex(i);
+            controlChangeContainer->sLayout2->setCurrentIndex(i);
             break;
         }
     }
@@ -80,7 +80,11 @@ void PianoRollContainer::addPianoRolls(TrackView *trackView)
     auto *keyboard      = new Keyboard(pianoRoll);
     auto *velocityView  = new VelocityView(trackView);
     auto *trackLength   = new TrackLengthView;
-
+    trackLength->pianoRoll = pianoRoll;
+    pianoRoll->setKeyboard(keyboard);
+    pianoRoll->setVelocityView(velocityView);
+    pianoRoll->trackLengthView = trackLength;
+    trackLength->initTrackLengthView(QRectF(0,0,trackView->track->totalDT,0),((float)trackLength->width() / (960*g_quarterNotes)));
     g_timer->setDuration(((float)(60.0/g_tempo)*g_quarterNotes*1000));
     qDebug() <<"Time: " << g_timer->duration();
     pianoRoll->track = trackView;
@@ -114,16 +118,13 @@ void PianoRollContainer::addPianoRolls(TrackView *trackView)
     initview->setLayout(vlayout);
     stackedLayout->addWidget(initview);
 
-    pianoRoll->setKeyboard(keyboard);
-    pianoRoll->setVelocityView(velocityView);
-    pianoRoll->trackLengthView = trackLength;
-    trackLength->initTrackLengthView(QRectF(0,0,trackView->track->totalDT,0),((float)trackLength->width() / (960*g_quarterNotes)));
+
 
     trackView->plugin.host->setPianoRollRef(pianoRoll);
     velocityView->setSceneRect(0,0,pianoRoll->totalDT,velocityView->height());
     velocityView->populateVelocityViewFromTrack(trackView);
     trackView->getTrackMidiView()->shareScene(pianoRoll->scene);
-    control_change_container->addControlChangeView(pianoRoll);
+    controlChangeContainer->addControlChangeView(pianoRoll);
     pianoRoll->isInitialized = true;
     pianoRoll->forceResize();
 }

@@ -6,9 +6,10 @@ int ID = 0;
 /*This class represents a container for the tracks, located above the Pianoroll.
  *
  *
- **/
+ */
 TrackContainer::TrackContainer(PluginEditorContainer *pluginEditorContainer, PianoRollContainer *pianoRollContainer)
 {
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     plugin_editor_container = pluginEditorContainer;
     piano_roll_container = pianoRollContainer;
     vSplitter = new QSplitter(this);
@@ -39,7 +40,6 @@ TrackContainer::TrackContainer(PluginEditorContainer *pluginEditorContainer, Pia
 TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track, int totalDT)
 {
     mTrack *track = new mTrack;
-    qDebug() << "track Size from load: " << midi_track.midi_data_size();
     for (int i = 0; i < midi_track.midi_data_size(); ++i)
     {
         auto midi_data = midi_track.midi_data(i);
@@ -48,8 +48,9 @@ TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track, 
     track->totalDT = totalDT;
     MidiManager::recalculateNoteListDT(track);
     auto *midiView = new TrackMidiView;
-    track->instrumentName = QString::fromStdString(midi_track.name());
     TrackView *view = new TrackView(track,midiView,this);
+    track->instrumentName = QString::fromStdString(midi_track.name());
+
     view->id = ID++;
 
     emit addPianoRoll(view);
@@ -75,8 +76,7 @@ void TrackContainer::addTrackView(const mSong &song)
         widget->setLayout(hlayout);
         hlayout->addWidget(view);
 
-        view->id = ID;
-        ID++;
+        view->id = ID++;
 
         emit addPianoRoll(view);
         QObject::connect(view,&TrackView::trackClickedOn,piano_roll_container,&PianoRollContainer::switchPianoRoll);
@@ -134,6 +134,8 @@ std::vector<TrackView *> TrackContainer::getTrackViews() const
 
 void TrackContainer::keyPressEvent(QKeyEvent *event)
 {
+
+
     switch (event->key())
     {
     case Qt::Key_C:
@@ -142,6 +144,7 @@ void TrackContainer::keyPressEvent(QKeyEvent *event)
     default:
         break;
     }
+
     QWidget::keyPressEvent(event);
 }
 

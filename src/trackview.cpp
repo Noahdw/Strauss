@@ -13,14 +13,15 @@ std::uniform_int_distribution<int> distribution(80,255);
 
 TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer *trackContainer, QWidget *parent) : QFrame(parent)
 {
+    setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
     track_container = trackContainer;
     setStyleSheet("QFrame { background-color: lightGray; border: 1px solid black; }");
     this->track = track;
     track_midi_view = trackMidiView;
     setMinimumWidth(widgetWidth);
     setMaximumWidth(widgetWidth);
-    setMinimumHeight(100);
-    setMaximumHeight(100);
+    setMinimumHeight(115);
+    setMaximumHeight(115);
 
     instrumentLabel = new QLineEdit(track->instrumentName);
     instrumentLabel->setReadOnly(true);
@@ -36,16 +37,19 @@ TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer 
     muteBox    = new QCheckBox("Mute",this);
     recordBox  = new QCheckBox("Record",this);
     showButton = new QPushButton("Show",this);
-    vlayout    = new QVBoxLayout;
-    recordBox->setChecked(true);
+    comboBox = new QComboBox;
+    showButton->setCheckable(true);
 
+    QVBoxLayout *vlayout = new QVBoxLayout;
+    recordBox->setChecked(true);
+    vlayout->setContentsMargins(10,5,10,5);
     vlayout->setAlignment(Qt::AlignTop);
     vlayout->addWidget(instrumentLabel,0,Qt::AlignTop|Qt::AlignLeft);
-    vlayout->addSpacing(5);
     vlayout->addWidget(muteBox);
     vlayout->addWidget(recordBox);
     vlayout->addWidget(showButton);
     showButton->setFixedSize(50,20);
+    vlayout->addWidget(comboBox);
     setLayout(vlayout);
 
     plugin.host = new Vst2HostCallback(track);
@@ -58,9 +62,13 @@ TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer 
     QObject::connect(showButton,&QPushButton::clicked,this,&TrackView::showPlugin);
     QObject::connect(this, &QWidget::customContextMenuRequested,
                      this,&TrackView::ShowContextMenu);
+    connect(comboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            [=](int index){ comboBoxIdChanged(index);}); // wtf
     plugin.host->setCanRecord(true);
 
     brush = QBrush(QColor(randomRed, randomGreen, randomBlue));
+    comboBox->addItem("None");
+    comboBox->setMaxCount(24);
 
 }
 bool TrackView::eventFilter(QObject *target, QEvent *event)
@@ -74,6 +82,7 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
             instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(0, 0, 0, 0); }");
             canEditLine = false;
             instrumentLabel->clearFocus();
+            pluginTrack->setTrackName(instrumentLabel->text());
             return false;
         }
         if (canEditLine)
@@ -134,6 +143,12 @@ void TrackView::addPluginFromPath(QString filepath, QString name, QString actual
         plugin.host->isMasterPlugin = true;
         plugin.host->masterPluginTrackView = this->pluginTrack;
         plugin.host->actual_url = actualPath;
+
+        for (int i = 0; i <  plugin.host->numParams(plugin.effect); ++i)
+        {
+            QString name = plugin.host->getParamName(plugin.effect,i);
+            comboBox->addItem(name);
+        }
     }
 
 }
@@ -235,11 +250,16 @@ void TrackView::renameTrack()
     instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(randomRed, 50, 50, 255); }");//?? works though
 }
 
+void TrackView::comboBoxIdChanged(int index)
+{
+
+}
+
 void TrackView::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.setBrush(brush);
-    painter.drawRect(0,0,width() - 1,height()/3);
+    painter.drawRect(0,0,width() - 1,instrumentLabel->height() + 5);
 }
 
 void TrackView::mousePressEvent(QMouseEvent *event)

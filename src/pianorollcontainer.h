@@ -21,7 +21,7 @@ class PianoRollContainer : public QWidget
 public:
     PianoRollContainer();
     void propogateFolderViewDoubleClicked(QString pluginName, QString filePath, QString actualPath);
-    void setControlChangeContainer(ControlChangeContainer *controlChangeContainer); // must be called before use
+    void setControlChangeContainer(ControlChangeContainer *_controlChangeContainer); // must be called before class can be used
     void deletePianoRoll();
     PianoRoll *getCurrentPianoRoll();
     QStackedLayout *stackedLayout;
@@ -32,7 +32,7 @@ protected:
     void paintEvent(QPaintEvent * event);
 private:
     QHBoxLayout *layout;
-    ControlChangeContainer *control_change_container;
+    ControlChangeContainer *controlChangeContainer;
 
 };
 

@@ -5,8 +5,9 @@ ControlChangeItem::ControlChangeItem()
 {
     setCacheMode(QGraphicsItem::NoCache);
     setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
-   // setFlag(QGraphicsItem::ItemIsMovable, true);
+    // setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable,true);
+    brush.setColor(QColor(102, 179, 255));
 }
 
 QRectF ControlChangeItem::boundingRect() const
@@ -21,13 +22,31 @@ QPainterPath ControlChangeItem::shape() const
     return path;
 }
 
+QVariant ControlChangeItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+    if ( change == QGraphicsItem::ItemSelectedChange )
+    {
+
+        if (value == true)
+        {
+            brush.setColor(Qt::blue);
+        }
+        else
+        {
+            brush.setColor(QColor(102, 179, 255));
+        }
+        brush.setStyle(Qt::SolidPattern);
+    }
+    return QGraphicsItem::itemChange(change, value);
+}
+
 void ControlChangeItem::setInitalPos(QPointF pos)
 {
-      setY(pos.y());
-       setX(pos.x());
+    setY(pos.y());
+    setX(pos.x());
     if (pos.y() < 0)
     {
-       setY(0);
+        setY(0);
     }
     else if(pos.y() > scene()->height())
     {
@@ -47,8 +66,8 @@ void ControlChangeItem::setInitalPos(QPointF pos)
 void ControlChangeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     QRectF rect = boundingRect();
-    Qt::BrushStyle style = Qt::SolidPattern;
-    QBrush brush(Qt::blue,style);
+
+    //QBrush brush(QColor(102, 179, 255),style);
     painter->setBrush(brush);
     painter->drawPath(shape());
 }
@@ -72,7 +91,7 @@ void ControlChangeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     if (leftValue > event->lastScenePos().x())
     {
-       setX(leftValue + 1);
+        setX(leftValue + 1);
     }
     else if(rightValue < event->lastScenePos().x())
     {
@@ -80,7 +99,7 @@ void ControlChangeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
     else
     {
-    setX(event->lastScenePos().x());
+        setX(event->lastScenePos().x());
     }
 
     if (event->lastScenePos().y() < 0)
@@ -135,6 +154,6 @@ void ControlChangeItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void ControlChangeItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-QGraphicsItem::mouseDoubleClickEvent(event);
+    QGraphicsItem::mouseDoubleClickEvent(event);
 }
 

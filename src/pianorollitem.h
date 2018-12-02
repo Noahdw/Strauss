@@ -28,7 +28,8 @@ public:
     int noteEnd;
     int note;
     bool canMove = true;
-
+    int velocity;
+    int width;
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
@@ -37,7 +38,7 @@ protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event);
 
 private:
-    int width;
+
     int lastXPos;
     int lastYPos;
     int initXPos;
@@ -45,6 +46,7 @@ private:
     int initWidth;
     int lastYWithSound;
     int actualInitX;
+
     const int noteResizeThreshold = 10; // in percent, so first x% and last x% allows resizing
     bool canResizeRight = false;
     bool canResizeLeft = false;

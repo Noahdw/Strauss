@@ -3,19 +3,22 @@
 
 PianoRollHelperView::PianoRollHelperView(ControlChangeContainer *controlChangeContainer)
 {
+    setSizePolicy(QSizePolicy::Fixed , QSizePolicy::Fixed );
+    setMinimumHeight(200);
     control_change_container = controlChangeContainer;
-    setMinimumSize(150,150);
-    setMaximumSize(150,200);
+
     vLayout = new QVBoxLayout;
     comboBox = new QComboBox;
+    switch_layout_button = new QPushButton("Switch view");
     comboBox->setMaxVisibleItems(16);
     setLayout(vLayout);
     initializeComboBox();
     vLayout->setAlignment(Qt::AlignTop | Qt::AlignCenter);
     vLayout->addWidget(comboBox);
-
+    vLayout->addWidget(switch_layout_button);
     connect(comboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [=](int index){ comboBoxIdChanged(index);}); // wtf
+    connect(switch_layout_button,&QPushButton::clicked,this,&PianoRollHelperView::switchView);
 }
 
 void PianoRollHelperView::comboBoxIdChanged(int index)
@@ -83,4 +86,9 @@ void PianoRollHelperView::initializeComboBox()
         }
         comboBox->addItem(QString::number(i) + " " + type);
     }
+}
+
+void PianoRollHelperView::switchView()
+{
+    control_change_container->switchControlChangeContainer();
 }
