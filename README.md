@@ -1,12 +1,11 @@
-# MidiInter
+# Strauss
 
 
 
-MidiInter is the beginning of what will hopefully one day be a Digital Audio Workstation that focuses
-on composer workflow through the integration of both notation software such as Musescore as well as traditional DAWS such as Abelton. This DAW does not aim to support many of the features of live recording that exist in most DAWs, but to instead create an efficient and practical workflow for composers who either compose with notation software or directly into the piano roll.
+Strauss is the beginning of what will hopefully one day be a Digital Audio Workstation that focuses
+on efficient composer workflow through the integration of both notation software such as Musescore as well as traditional DAWS such as Abelton. This DAW does not aim to support many of the features of live recording that exist in most DAWs, but to instead create an efficient and practical workflow for composers who either compose with notation software or directly into the piano roll.
 
-Excuse the terrible name, it is temporary until I can think of something better.
-MidiInter is  "basic feature" complete and is fully capable of producing music with.
+Strauss is  "basic feature" complete and is fully capable of producing music with.
 
 ![midiinter_2018-08-04_14-06-05](https://user-images.githubusercontent.com/1783601/43680436-a784b32c-97ef-11e8-959e-e2b187a42ee4.png)
 
@@ -25,7 +24,7 @@ MidiInter is  "basic feature" complete and is fully capable of producing music w
 * saving and loading project
 
 
-### Using MidiInter
+### Using Strauss
 You must first build Portaudio debug and release versions and put them in ./Debug and ./Release folders of your working dir.
 see http://portaudio.com/docs/v19-doxydocs/compile_windows.html.
 Then build protobuf as a dynamic linked library and put the produced protobuf.lib files in the respective ./Release and ./Debug folders.
