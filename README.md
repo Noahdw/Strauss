@@ -7,7 +7,7 @@ on efficient composer workflow through the integration of both notation software
 
 Strauss is  "basic feature" complete and is fully capable of producing music with.
 
-![midiinter_2018-08-04_14-06-05](https://user-images.githubusercontent.com/1783601/43680436-a784b32c-97ef-11e8-959e-e2b187a42ee4.png)
+![image](https://user-images.githubusercontent.com/1783601/49343473-a0154380-f61e-11e8-9b70-cf87d9424567.png)
 
 
 
