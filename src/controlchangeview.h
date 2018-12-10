@@ -19,10 +19,7 @@ public:
      PianoRoll * pRoll;
 
 protected:
-     void mousePressEvent(QMouseEvent *event);
-     void mouseDoubleClickEvent(QMouseEvent *event);
      void showEvent(QShowEvent *event);
-     void paintEvent(QPaintEvent *event);
      void resizeEvent(QResizeEvent *event);
 private:
 

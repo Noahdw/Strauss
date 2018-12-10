@@ -144,42 +144,42 @@ void MidiPlayer::addMidiAfterRecording()
 {
     for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
     {
-        pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
-        if (!plugs->host->recordedMidiEventDeque.empty())
+        auto plugin =  MainWindow::pluginHolderVec.at(var);
+        if (!plugin->recordedMidiEventDeque.empty())
         {
-            while(!plugs->host->recordedMidiEventDeque.empty())
+            while(!plugin->recordedMidiEventDeque.empty())
             {
-                EventToAdd event = plugs->host->recordedMidiEventDeque.front();
-                plugs->host->recordedMidiEventDeque.pop_front();
+                EventToAdd event = plugin->recordedMidiEventDeque.front();
+                plugin->recordedMidiEventDeque.pop_front();
                 if (event.status != 0x90 || event.velocity == 0)
                 {
                     if (event.status == 0xB0)
                     {
-                        plugs->host->pianoroll->bridge->verifyOverlayExists(event.note);
-                        plugs->host->pianoroll->bridge->overlays[event.note]->addPoint(event.timeInTicks,event.velocity);
+                        plugin->pianoroll->bridge->verifyOverlayExists(event.note);
+                        plugin->pianoroll->bridge->overlays[event.note]->addPoint(event.timeInTicks,event.velocity);
                     }
                     continue;
                 }
-                for(const auto& e : plugs->host->recordedMidiEventDeque)
+                for(const auto& e : plugin->recordedMidiEventDeque)
                 {
                     if (e.note == event.note)
                     {
                         int length = e.timeInTicks - event.timeInTicks;
-                        MidiManager::addMidiNote(event.note,event.velocity,event.timeInTicks,length,plugs->host->track);
+                        MidiManager::addMidiNote(event.note,event.velocity,event.timeInTicks,length,plugin->track);
                           qDebug() << "ADDING MIDI. NOTE: " << event.note << " VELOCITY: " << event.velocity << " TotalTime: " << event.timeInTicks
                                    << " Length: " << length;
-                          plugs->host->pianoroll->addNoteToScene(event.note,event.timeInTicks,length,event.velocity);
+                          plugin->pianoroll->addNoteToScene(event.note,event.timeInTicks,length,event.velocity);
                         break;
                     }
                 }
             //    MidiManager::addUnfinishedNote(event.note,event.velocity,event.timeInTicks,plugs->host->track);
             }
-            MidiManager::recalculateNoteListDT(plugs->host->track);
+            MidiManager::recalculateNoteListDT(plugin->track);
             for (int i = 0; i < 128; ++i)
             {
-                if (plugs->host->pianoroll->bridge->overlays[i] != NULL)
+                if (plugin->pianoroll->bridge->overlays[i] != NULL)
                 {
-                    plugs->host->pianoroll->bridge->overlays[i]->recalculateDT();
+                    plugin->pianoroll->bridge->overlays[i]->recalculateDT();
                 }
             }
 
@@ -202,20 +202,20 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
     {
         for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
         {
-            pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
-            if(plugs->host->canRecord()){
+            auto plugin = MainWindow::pluginHolderVec.at(var);
+            if(plugin->canRecord()){
                 qreal currentTick =((qreal)g_timer->currentTime() / 1000.0) * 960.0 / (60.0 / g_tempo);
-                plugs->host->addMidiEvent(status,note,velocity,currentTick);
+                plugin->addMidiEvent(status,note,velocity,currentTick);
                 if (MidiPlayer::canRecordInput)
                 {
 
                     qDebug() << currentTick;
                     if (MidiPlayer::recordingOverwrites) // not implemented yet
                     {
-                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,currentTick,velocity});
+                        plugin->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,currentTick,velocity});
                     }else
                     {
-                        plugs->host->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,currentTick,velocity});
+                        plugin->recordedMidiEventDeque.push_back(EventToAdd{status,note,false,false,currentTick,velocity});
 
                     }
                 }

@@ -4,7 +4,7 @@
 class TrackView;
 class PluginView;
 class PluginEditorContainer;
-
+class TrackMidi;
 #include <QObject>
 #include <QFrame>
 #include <QLineEdit>
@@ -19,11 +19,12 @@ public:
     PluginTrackView(TrackView *track);
     ~PluginTrackView();
     std::vector<PluginView*> plugins;
-    void addPlugin(pluginHolder *holder);
+    void addPlugin(Vst2HostCallback *vst2Plugin);
     void clickedOn(bool state);
     void setTrackName(QString name);
-    PluginEditorContainer * plugin_editor_container;
+    PluginEditorContainer * pluginEditorContainer;
     TrackView * trackView;
+    TrackMidi *midiTrack;
 public slots:
     void volumeChanged();
 protected:
@@ -41,7 +42,6 @@ private:
     int red;
     int green;
     int blue;
-
 };
 
 #endif // PLUGINTRACKVIEW_H

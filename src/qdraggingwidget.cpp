@@ -26,9 +26,8 @@ void QDraggingWidget::setOrientation(Qt::Orientation orientation)
 
 void QDraggingWidget::paintEvent(QPaintEvent *event)
 {
-
     QPainter painter(this);
-    painter.setBrush(QColor(100,100,100));
+    painter.setBrush(QColor(125,125,125));
     painter.drawRect(0,0,width(),height());
 }
 

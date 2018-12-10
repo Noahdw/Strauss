@@ -14,15 +14,12 @@ class PluginView : public QFrame
 {
     Q_OBJECT
 public:
-    PluginView(pluginHolder *pholder);
+    PluginView(Vst2HostCallback *vst2Plugin);
     void showPlugin();
     void disablePlugin(bool state);
-    pluginHolder *holder;
-protected:
-    void paintEvent(QPaintEvent *event);
+    Vst2HostCallback *plugin;
 private:
     QVBoxLayout *vLayout;
-    Vst2HostCallback * plugin;
     QString pluginName;
     QLabel * pluginNameLabel;
     QPushButton *showButton;

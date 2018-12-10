@@ -1,6 +1,8 @@
 #include "projectmanager.h"
 #include "src/mainwindow.h"
 #include "src/common.h"
+#include "trackmidi.h"
+#include "trackview.h"
 //./protoc -I=C:/Users/Puter/Documents/MidiInter --cpp_out=./ C:/Users/Puter/Documents/MidiInter/midiinter.proto
 ProjectManager::ProjectManager()
 {
@@ -12,7 +14,7 @@ void ProjectManager::saveProject()
 
 }
 
-void ProjectManager::saveAsProject(QString path, const TrackContainer &track_container)
+void ProjectManager::saveAsProject(QString path, const MasterTrack *masterTrack)
 {
 
     Application *app = new Application;
@@ -20,29 +22,27 @@ void ProjectManager::saveAsProject(QString path, const TrackContainer &track_con
     app->set_blocksize(g_blocksize);
     app->set_sample_rate(g_sampleRate);
     app->set_total_dt(g_quarterNotes * 960);
-    std::vector<TrackView *> track_views = track_container.getTrackViews();
 
-    for (int i = 0; i < track_views.size(); ++i)
-    {
-        const TrackView *track_view = track_views.at(i);
+    for (const auto &track : masterTrack->midiTracks) {
+
         auto midi_track = app->add_midi_track();
 
-        midi_track->set_name(track_view->getTrackName().toUtf8().constData());
+        midi_track->set_name( track->trackView()->getTrackName().toUtf8().constData());
 
         auto plugin = midi_track->mutable_master_plugin();
-        plugin->set_plugin_url(track_view->plugin.host->actual_url.toUtf8().constData());
-        plugin->set_program_bank(track_view->plugin.host->savePluginState(track_view->plugin.effect));
-        for(const auto& item : track_view->track->noteMap)
+        plugin->set_plugin_url(track->masterPlugin()->actual_url.toUtf8().constData());
+        plugin->set_program_bank(track->masterPlugin()->savePluginState(track->masterPlugin()->effect));
+        for(auto& item : track->midiData()->noteMap)
         {
-            for (int j = 0; j < item.second.size(); ++j)
+            for (uint j = 0; j < item.second.size(); ++j)
             {
                 auto midi_data = midi_track->add_midi_data();
                 midi_data->set_total_dt(item.first);
-
                 midi_data->set_event(item.second.at(j));
             }
 
         }
+
     }
 
     std::fstream output(path.toUtf8().constData(),std::ios::out | std::ios::trunc | std::ios::binary);
@@ -71,19 +71,10 @@ void ProjectManager::loadProject(QString path, MainWindow * main_window,TrackCon
     }
     track_container.deleteAllTracks();
     g_quarterNotes = app->total_dt() / 960;
+    g_totalDt = app->total_dt();
     main_window->audio_engine->changeBlockSize(g_blocksize,app->blocksize());
-    for (int i = app->midi_track_size()-1; i >= 0; --i)
-    {
+    main_window->masterTrack->addMidiTrackFromProject(app->midi_track());
 
-        TrackView *track = track_container.addTrackFromLoadProject(app->midi_track(i),app->total_dt());
-        auto master_plugin = app->midi_track(i).master_plugin();
-        if (master_plugin.IsInitialized())
-        {
-            track->addPluginFromLoadProject( QString::fromStdString(master_plugin.plugin_url()));
-            track->plugin.host->setPluginState(track->plugin.effect,master_plugin.program_bank());
-            //track->pluginTrack->addPlugin(&track->plugin);
-        }
-    }
     delete app;
     google::protobuf::ShutdownProtobufLibrary();
 }

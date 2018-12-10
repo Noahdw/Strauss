@@ -5,7 +5,7 @@
 class Keyboard;
 class VelocityView;
 class ControlChangeBridge;
-
+class TrackMidi;
 #include <QWidget>
 #include <QPainter>
 #include <QGraphicsView>
@@ -29,7 +29,7 @@ class ControlChangeBridge;
 class PianoRoll : public QGraphicsView{
     Q_OBJECT
 public:
-    PianoRoll(QWidget* parent = 0);
+    PianoRoll(TrackMidi *trackMidi);
     ~PianoRoll();
     Keyboard* getKeyboard();
     void setKeyboard(Keyboard *kboard);
@@ -48,12 +48,13 @@ public:
     void issueMoveCommand(int xMove, int yMove, QGraphicsItem* item);
     void copyItems();
     void pasteItems();
+    bool hasPlugin();
     TrackView *track;
     TrackLengthView * trackLengthView;
     VelocityView *velocityView;
     QGraphicsScene *scene;
     QRectF *sceneRect;
-
+    TrackMidi *midiTrack;
     ControlChangeBridge * bridge;
     int tPQN = MidiManager::TPQN;
     int totalDT = MidiManager::TPQN*g_quarterNotes;
@@ -79,6 +80,7 @@ protected:
     void resizeEvent(QResizeEvent *event);
     void keyPressEvent(QKeyEvent *event);
 private:
+
     Keyboard *keyboard;
     QGraphicsItemAnimation *animation;
     QRubberBand *rubberBand;

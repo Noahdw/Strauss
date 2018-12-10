@@ -54,7 +54,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
         //Runs for amount of tracks in a song
         for (int var = 0; var < trackChunks; ++var) {
 
-            mTrack *track = new mTrack;
+            MidiData *track = new MidiData;
             track->trackName = "";
             track->instrumentName = "";
             currentPos += 4; //should put on first byte of Length
@@ -133,9 +133,6 @@ mSong MidiManager::Deserialize(QByteArray &array)
                         continue;
                     }
                     uchar dataByte1 = (uchar)array.at(pos);
-                    uchar channel = lastChannel;
-                    uchar status = lastStatus;
-
                     uchar dataByte2 = (uchar)array.at(++pos);
                     if (dataByte2 == 0) {
                         // event.noteOn = false;
@@ -293,7 +290,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
 //call MidiManager::recalculateNoteListDT after this in order to create the necessary
 //midi structure. The map contains totalDeltaTime -> midiEvent pairs and the listOfNotes,
 //which is the actual structure used for playback, is groups of deltaTime, midiEvents.
-void MidiManager::addMidiNote(int note,int velocity, int start, int length,mTrack *track)
+void MidiManager::addMidiNote(int note,int velocity, int start, int length,MidiData *track)
 {
     DWORD event =( velocity << 16 |
                    note << 8  |
@@ -302,14 +299,14 @@ void MidiManager::addMidiNote(int note,int velocity, int start, int length,mTrac
     track->noteMap[start+length].push_back(event & 0x00FFFF);
 }
 
-void MidiManager::addPartialMidiNote(DWORD event, int start, mTrack *track)
+void MidiManager::addPartialMidiNote(DWORD event, int start, MidiData *track)
 {
     track->noteMap[start].push_back(event);
 }
 
-void MidiManager::removeMidiNote(int start, int length, int note, mTrack *track)
+void MidiManager::removeMidiNote(int start, int length, int note, MidiData *track)
 {
-    for (int var = 0; var < track->noteMap.at(start).size(); ++var)
+    for (uint var = 0; var < track->noteMap.at(start).size(); ++var)
     {
         if (((track->noteMap.at(start).at(var) >> 8) & 0xFF) == note)
         {
@@ -325,7 +322,7 @@ void MidiManager::removeMidiNote(int start, int length, int note, mTrack *track)
             break;
         }
     }
-    for (int var = 0; var < track->noteMap.at(start+length).size(); ++var)
+    for (uint var = 0; var < track->noteMap.at(start+length).size(); ++var)
     {
         if (((track->noteMap.at(start+length).at(var) >> 8) & 0xFF) == note)
         {
@@ -343,9 +340,9 @@ void MidiManager::removeMidiNote(int start, int length, int note, mTrack *track)
    // MidiManager::recalculateNoteListDT(track);
 }
 
-void MidiManager::changeMidiVelocity(int start, int note, int velocity, mTrack *track)
+void MidiManager::changeMidiVelocity(int start, int note, int velocity, MidiData *track)
 {
-    for (int var = 0; var < track->noteMap.at(start).size(); ++var)
+    for (uint var = 0; var < track->noteMap.at(start).size(); ++var)
     {
         if (((track->noteMap.at(start).at(var) >> 8) & 0xFF) == note)
         {
@@ -360,7 +357,7 @@ void MidiManager::changeMidiVelocity(int start, int note, int velocity, mTrack *
 
 
 
-void MidiManager::recalculateNoteListDT(mTrack *track)
+void MidiManager::recalculateNoteListDT(MidiData *track)
 {
     track->listOfNotes.clear();
     track->listOfNotes.reserve(track->noteMap.size()*2);
@@ -368,7 +365,7 @@ void MidiManager::recalculateNoteListDT(mTrack *track)
     int last = 0;
     for(const auto& var : track->noteMap)
     {
-        for (int i = 0; i < var.second.size(); ++i)
+        for (uint i = 0; i < var.second.size(); ++i)
         {
             if (counter == 0)
             {
@@ -387,9 +384,9 @@ void MidiManager::recalculateNoteListDT(mTrack *track)
     }
 }
 
-int MidiManager::getVelocityFromNote(int start, int note, mTrack *track)
+int MidiManager::getVelocityFromNote(int start, int note, MidiData *track)
 {
-    for (int var = 0; var < track->noteMap.at(start).size(); ++var)
+    for (uint var = 0; var < track->noteMap.at(start).size(); ++var)
     {
         qDebug() << "ORIG NOTE: " << note << " OTHER NOTE: " << ((track->noteMap.at(start).at(var) >> 8) & 0xFF);
         if (((track->noteMap.at(start).at(var) >> 8) & 0xFF) == note)

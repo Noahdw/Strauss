@@ -1,7 +1,7 @@
 #include "pluginview.h"
 #include "src/vst2hostcallback.h"
 
-PluginView::PluginView(pluginHolder *pholder)
+PluginView::PluginView(Vst2HostCallback *vst2Plugin)
 {
     setMaximumSize(150,150);
     setMinimumSize(150,150);
@@ -12,8 +12,8 @@ PluginView::PluginView(pluginHolder *pholder)
     setLayout(vLayout);
 
     vLayout->setAlignment(Qt::AlignTop);
-    holder = pholder;
-    pluginName.sprintf("%s",pholder->host->pluginName);
+    plugin = vst2Plugin;
+    pluginName.sprintf("%s",plugin->pluginName);
     pluginNameLabel->setText(pluginName);
     vLayout->addWidget(pluginNameLabel);
     vLayout->addWidget(showButton);
@@ -23,28 +23,22 @@ PluginView::PluginView(pluginHolder *pholder)
 
     QObject::connect(showButton,&QPushButton::clicked,this,&PluginView::showPlugin);
     QObject::connect(disableButton,&QPushButton::toggled,this,&PluginView::disablePlugin);
-    setStyleSheet("QFrame { background-color: lightGray; border: 1px solid black; border-radius: 4px; }");
 }
 
 void PluginView::showPlugin()
 {
-    holder->host->showPlugin();
-}
-
-void PluginView::paintEvent(QPaintEvent *event)
-{
-
+    plugin->showPlugin();
 }
 
 void PluginView::disablePlugin(bool state)
 {
-    if (holder->host->isMasterPlugin)
+    if (plugin->isMasterPlugin)
     {
-        holder->host->isMuted = state;
+        plugin->isMuted = state;
     }
     else
     {
-        holder->host->canPlay = !state;
+        plugin->canPlay = !state;
     }
 
 }

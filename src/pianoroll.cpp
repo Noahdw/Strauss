@@ -8,7 +8,7 @@
 #include <src/midimanager.h>
 #include <src/keyboard.h>
 #include <src/velocityview.h>
-
+#include "src/trackmidi.h"
 
 QList<QGraphicsItem*> activeNotes;
 
@@ -31,8 +31,9 @@ QList<QGraphicsItem*> activeNotes;
 // Use this from a cmd line within the dir of qdoc.exe to create an html
 //./qhelpgenerator C:/Users/Puter/Documents/MidiInter/doc/midiinter.qph -o midiinter.qch
 //  use this to create a qch from our qph
-PianoRoll::PianoRoll(QWidget *parent) : QGraphicsView(parent)
+PianoRoll::PianoRoll(TrackMidi *trackMidi)
 {
+    midiTrack = trackMidi;
     setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setViewportUpdateMode(MinimalViewportUpdate);
@@ -87,7 +88,6 @@ void PianoRoll::mouseDoubleClickEvent(QMouseEvent  *event)
 
 void PianoRoll::mousePressEvent(QMouseEvent *event)
 {
-
     QGraphicsItem *currentItem = itemAt(event->pos());
     if(currentItem == NULL)
     {
@@ -219,7 +219,7 @@ void PianoRoll::clearActiveNotes()
 //Takes track (midi) data and converts to notes on a Pianoroll
 void PianoRoll::convertTrackToItems()
 {
-    int dw =track->track->totalDT;
+    int dw =midiTrack->midiData()->totalDT;
     totalDT = dw;
     //update the playback animation
 
@@ -236,17 +236,17 @@ void PianoRoll::convertTrackToItems()
     int elapsedDT = 0;
     int noteEnd = 0;
 
-    for(int i = 0; i < track->track->listOfNotes.length(); i+=2){
-        elapsedDT += track->track->listOfNotes.at(i);
+    for(int i = 0; i < midiTrack->midiData()->listOfNotes.length(); i+=2){
+        elapsedDT += midiTrack->midiData()->listOfNotes.at(i);
         //indicates a note. ignore other junk for now
-        int velocity = (uchar)(track->track->listOfNotes.at(i+1) >> 16);
-        if(velocity != 0){ // previously (track->track->listOfNotes.at(i+1)& 0xF0) == 0x90
-            curNote = (track->track->listOfNotes.at(i+1) >> 8) & 127;
+        int velocity = (uchar)(midiTrack->midiData()->listOfNotes.at(i+1) >> 16);
+        if(velocity != 0){ // previously (midiTrack->midiData()->listOfNotes.at(i+1)& 0xF0) == 0x90
+            curNote = (midiTrack->midiData()->listOfNotes.at(i+1) >> 8) & 127;
             //now I need to find its note off
 
-            for(int j = i+2; j < track->track->listOfNotes.length(); j+=2){
-                noteEnd += track->track->listOfNotes.at(j );
-                if(((track->track->listOfNotes.at(j+1) >> 8) & 127) == curNote ){
+            for(int j = i+2; j < midiTrack->midiData()->listOfNotes.length(); j+=2){
+                noteEnd += midiTrack->midiData()->listOfNotes.at(j );
+                if(((midiTrack->midiData()->listOfNotes.at(j+1) >> 8) & 127) == curNote ){
 
                     PianoRollItem *pNote = new PianoRollItem;
                     scene->addItem(pNote);
@@ -332,7 +332,7 @@ void PianoRoll::addNoteToScene(int note, int position, int length, int velocity)
     pNote->pianoroll = this;
     pNote->setInitalPosition(position,length,note);
     pNote->setBoundingRect(length);
-    //track->trackMidiView->addViewItem(position,length,note*keyHeight);
+    //midiTrack->midiData()MidiView->addViewItem(position,length,note*keyHeight);
     scene->update(0,0,tPQN*g_quarterNotes,keyHeight*128);
     velocityView->addOrRemoveVelocityViewItem(position,velocity,note,true);
 
@@ -347,15 +347,15 @@ void PianoRoll::changeNotesAfterMouseDrag(QGraphicsItem *item)
             continue;
         }
         PianoRollItem *pNote = dynamic_cast<PianoRollItem*>(note);
-        int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,track->track);
+        int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,midiTrack->midiData());
         velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,false);
-        MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,track->track);
+        MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,midiTrack->midiData());
         pNote->noteStart = pNote->x();
         pNote->note = 127 - pNote->y()/keyHeight;
-        MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,track->track);
+        MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,midiTrack->midiData());
         velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,true);
     }
-    MidiManager::recalculateNoteListDT(track->track);
+    MidiManager::recalculateNoteListDT(midiTrack->midiData());
 }
 
 void PianoRoll::switchViewContainer()
@@ -391,11 +391,16 @@ void PianoRoll::copyItems()
 
 void PianoRoll::pasteItems()
 {
-    for(const auto &item : copied_items)
-    {
-        auto *pitem = new PianoRollItem;
+//    for(const auto &item : copied_items)
+//    {
+//        auto *pitem = new PianoRollItem;
 
-    }
+//    }
+}
+
+bool PianoRoll::hasPlugin()
+{
+    return  midiTrack->masterPlugin()->effect != NULL;
 }
 /*!
   \fn PianoRoll::playKeyboardNote(int note, bool active)
@@ -405,10 +410,7 @@ void PianoRoll::pasteItems()
 void PianoRoll::playKeyboardNote(int note, bool active)
 {
     auto velocity =  (active ? 45 : 0);
-    track->plugin.host->addMidiEvent(0x90,note,velocity,g_timer->currentValue());
-    // track->plugin.host->eventToAdd.hasEventToAdd = true;
-    // track->plugin.host->eventToAdd.eventOn = active;
-    //  track->plugin.host->eventToAdd.note = note;
+    midiTrack->masterPlugin()->addMidiEvent(0x90,note,velocity,g_timer->currentValue());
 }
 
 void PianoRoll::deleteAllNotes()
@@ -504,7 +506,7 @@ void PianoRoll::drawBackground(QPainter * painter, const QRectF & rect)
     painter->setPen(pen);
     painter->eraseRect(*sceneRect); //does this even matter?
     painter->resetMatrix();
-    painter->fillRect(viewport()->rect(),QBrush(QColor(250,250,250)));
+   // painter->fillRect(viewport()->rect(),QBrush(QColor(250,250,250)));
 
     //Draws the horizontals lines
     for (int var = 0; var <= 128; ++var)
@@ -685,7 +687,7 @@ I encapsulated many functions into classes so that I can undo actions on the pia
 */
 
 PianoRollMoveCommand::PianoRollMoveCommand(PianoRoll *pianoRoll, QList<QGraphicsItem*> items, int x, int y, QGraphicsItem *skipItem)
-    :_pianoRoll(pianoRoll),xPos(x),yPos(y),skippedItem(skipItem), items(items)
+    :skippedItem(skipItem), items(items),xPos(x),yPos(y),_pianoRoll(pianoRoll)
 {
 
 }
@@ -706,15 +708,15 @@ void PianoRollMoveCommand::execute()
             continue;
         }
         PianoRollItem *pNote = dynamic_cast<PianoRollItem*>(note);
-        int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,_pianoRoll->track->track);
+        int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,_pianoRoll->midiTrack->midiData());
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,false);
-        MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,_pianoRoll->track->track);
+        MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,_pianoRoll->midiTrack->midiData());
         pNote->noteStart = pNote->x();
         pNote->note = 127 - pNote->y()/keyHeight;
-        MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,_pianoRoll->track->track);
+        MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,_pianoRoll->midiTrack->midiData());
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,true);
     }
-    MidiManager::recalculateNoteListDT(_pianoRoll->track->track);
+    MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
 }
 
 
@@ -734,20 +736,20 @@ void PianoRollMoveCommand::undo()
             continue;
         }
         PianoRollItem *pNote = dynamic_cast<PianoRollItem*>(note);
-        int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,_pianoRoll->track->track);
+        int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,_pianoRoll->midiTrack->midiData());
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,false);
-        MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,_pianoRoll->track->track);
+        MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,_pianoRoll->midiTrack->midiData());
         pNote->noteStart = pNote->x();
         pNote->note = 127 - pNote->y()/keyHeight;
-        MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,_pianoRoll->track->track);
+        MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,_pianoRoll->midiTrack->midiData());
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,true);
     }
-    MidiManager::recalculateNoteListDT(_pianoRoll->track->track);
+    MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
 }
 
 
 PianoRollAddCommand::PianoRollAddCommand(PianoRoll *pianoRoll, QList<ItemData> items)
-    : _pianoRoll(pianoRoll), items(items)
+    : items(items),_pianoRoll(pianoRoll)
 {
 
 }
@@ -761,13 +763,13 @@ void PianoRollAddCommand::execute()
         pNote->setInitalPosition(item.xPos,item.length,item.yPos);
         pNote->setBoundingRect(item.length);
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(item.xPos,70,item.yPos,true);
-        MidiManager::addMidiNote(item.yPos,70,item.xPos,item.length,_pianoRoll->track->track);
+        MidiManager::addMidiNote(item.yPos,70,item.xPos,item.length,_pianoRoll->midiTrack->midiData());
         newItems.append(pNote);
     }
 
 
 
-    MidiManager::recalculateNoteListDT(_pianoRoll->track->track);
+    MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
 }
 
 
@@ -778,10 +780,10 @@ void PianoRollAddCommand::undo()
         PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
         int note = 127 - (pItem->y()/keyHeight);
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pItem->noteStart,0,note,false);
-        MidiManager::removeMidiNote(pItem->x(),pItem->width,note,_pianoRoll->track->track);
+        MidiManager::removeMidiNote(pItem->x(),pItem->width,note,_pianoRoll->midiTrack->midiData());
         _pianoRoll->scene->removeItem(item);
     }
-    MidiManager::recalculateNoteListDT(_pianoRoll->track->track);
+    MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
 }
 
 PianoRollAddCommand::~PianoRollAddCommand()
@@ -791,7 +793,7 @@ PianoRollAddCommand::~PianoRollAddCommand()
 
 
 PianoRollRemoveCommand::PianoRollRemoveCommand(PianoRoll *pianoRoll, QList<QGraphicsItem *> items)
-    : _pianoRoll(pianoRoll), removedItems(items)
+    : removedItems(items),_pianoRoll(pianoRoll)
 {
 
 }
@@ -802,12 +804,12 @@ void PianoRollRemoveCommand::execute()
     {
         PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
         int note = 127 - (pItem->y()/keyHeight);
-        pItem->velocity = MidiManager::getVelocityFromNote(pItem->x(),note,_pianoRoll->track->track);
+        pItem->velocity = MidiManager::getVelocityFromNote(pItem->x(),note,_pianoRoll->midiTrack->midiData());
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pItem->noteStart,pItem->velocity,note,false);
-        MidiManager::removeMidiNote(pItem->x(),pItem->width,note,_pianoRoll->track->track);
+        MidiManager::removeMidiNote(pItem->x(),pItem->width,note,_pianoRoll->midiTrack->midiData());
         _pianoRoll->scene->removeItem(item);
     }
-    MidiManager::recalculateNoteListDT(_pianoRoll->track->track);
+    MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
 }
 
 void PianoRollRemoveCommand::undo()
@@ -817,9 +819,9 @@ void PianoRollRemoveCommand::undo()
         PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
 
         int note = 127 - (pItem->y()/keyHeight);
-        MidiManager::addMidiNote(note,pItem->velocity,pItem->x(),pItem->width,_pianoRoll->track->track);
+        MidiManager::addMidiNote(note,pItem->velocity,pItem->x(),pItem->width,_pianoRoll->midiTrack->midiData());
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pItem->x(),pItem->velocity,note,true);
         _pianoRoll->scene->addItem(item);
     }
-    MidiManager::recalculateNoteListDT(_pianoRoll->track->track);
+    MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
 }

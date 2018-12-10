@@ -103,8 +103,8 @@ void AudioEngine::changeBlockSize(int oldSize, int newSize)
     }
     for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
     {
-        auto holder = MainWindow::pluginHolderVec.at(i);
-        holder->host->setBlockSize(holder->effect,newSize);
+        auto plugin = MainWindow::pluginHolderVec.at(i);
+        plugin->setBlockSize(plugin->effect,newSize);
     }
     delete(input_storage);
     delete(output_storage);
@@ -118,8 +118,8 @@ void AudioEngine::requestPlaybackRestart()
 {
     for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
     {
-        pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
-        plugs->host->restartPlayback();
+        auto plugin=  MainWindow::pluginHolderVec.at(var);
+        plugin->restartPlayback();
     }
 }
 
@@ -127,14 +127,14 @@ void AudioEngine::requestPauseOrResume(bool isResume)
 {
     for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
     {
-        pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
+        auto plugin =  MainWindow::pluginHolderVec.at(var);
         if(isResume){
-            plugs->host->pauseOrResumePlayback(true);
+            plugin->pauseOrResumePlayback(true);
             isPaused = false;
         }
         else
         {
-            plugs->host->pauseOrResumePlayback(false);
+            plugin->pauseOrResumePlayback(false);
             //plugs->host->turnOffAllNotes(plugs->effect);
             isPaused = true;
         }
@@ -147,12 +147,12 @@ void AudioEngine::changePlaybackPos()
     for (int var = 0; var < numPlugs ; ++var)
     {
 
-        pluginHolder* plugs=  MainWindow::pluginHolderVec.at(var);
-        if (plugs->effect ==NULL) {
+        auto plugin =  MainWindow::pluginHolderVec.at(var);
+        if (plugin->effect == NULL) {
             //   qDebug() <<"Plugin not set in Audiomanager";
             continue;
         }
-        QObject::connect(this,&AudioEngine::changePlaybackPosSignal,plugs->host,&Vst2HostCallback::setCustomPlackbackPos);
+        QObject::connect(this,&AudioEngine::changePlaybackPosSignal,plugin,&Vst2HostCallback::setCustomPlackbackPos);
         emit changePlaybackPosSignal(requestedPlaybackPos);
     }
 }
@@ -192,15 +192,15 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         qDebug() <<"I was called";
         for (int var = 0; var < numPlugs ; ++var)
         {
-            pluginHolder *plugs = MainWindow::pluginHolderVec.at(var);
-            if (plugs->effect == NULL) {
+            auto plugin = MainWindow::pluginHolderVec.at(var);
+            if (plugin->effect == NULL) {
                 continue;
             }
-            if (plugs->host->shouldDelete)
+            if (plugin->shouldDelete)
             {
                 MainWindow::pluginHolderVec.remove(var);
-                plugs->host->unloadPlugin(plugs->effect);
-                delete plugs->host;
+                plugin->unloadPlugin(plugin->effect);
+                delete plugin;
                 numPlugs--;
                 break;
             }
@@ -217,18 +217,18 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     for (int var = 0; var < numPlugs ; ++var)
     {
 
-        pluginHolder *plugs = MainWindow::pluginHolderVec.at(var);
-        if (plugs->effect == NULL) {
+        auto plugin = MainWindow::pluginHolderVec.at(var);
+        if (plugin->effect == NULL) {
             //   qDebug() <<"Plugin not set in Audiomanager";
             continue;
         }
-        if (!plugs->host->canPlay) {
+        if (!plugin->canPlay) {
             continue;
         }
         if (isPaused)
         {
-            plugs->host->turnOffAllNotes(plugs->effect);
-            plugs->host->processAudio(plugs->effect,inputss,outputss,g_blocksize);
+            plugin->turnOffAllNotes();
+            plugin->processAudio(plugin->effect,inputss,outputss,g_blocksize);
         }
         else
         {
@@ -236,10 +236,10 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
             {
                 //plugs->host->setCustomPlackbackPos(AudioManager::requestedPlaybackPos);
             }
-            plugs->host->processMidi(plugs->effect);
-            plugs->host->processAudio(plugs->effect,inputss,outputss,g_blocksize);
+            plugin->processMidi(plugin->effect);
+            plugin->processAudio(plugin->effect,inputss,outputss,g_blocksize);
         }
-        if(plugs->host->isMuted)
+        if(plugin->isMuted)
         {
             AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
         }

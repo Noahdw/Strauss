@@ -18,17 +18,6 @@ TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 
 }
 
-
-void TrackMidiView::paintEvent(QPaintEvent *event)
-{
-    QPainter painter(viewport());
-    painter.setBrush(brush);
-    painter.setPen(pen);
-    painter.drawRect(0,0,width() - 3, height() - 3);
-    QGraphicsView::paintEvent(event);
-
-}
-
 void TrackMidiView::resizeEvent(QResizeEvent *event)
 {
     fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
@@ -37,7 +26,6 @@ void TrackMidiView::onPianoRollResized(float x)
 {
     fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
 }
-
 
 void TrackMidiView::shareScene(QGraphicsScene *scene)
 {

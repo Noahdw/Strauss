@@ -20,6 +20,7 @@ public:
     Keyboard(PianoRoll *pianoRoll,QWidget* parent = 0);
     PianoRoll *getPianoRoll(){return piano_roll;}
     void setScrollWheelValue(int value);
+    void setNoteColors();
     int noteWidth = 24;
 private:
     void addNotesToScene();
@@ -27,8 +28,10 @@ private:
     PianoRoll *piano_roll;
     QGraphicsRectItem *activeNote;
     QBrush activeBrush;
+    int lastNote;
 protected:
     void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseDoubleClickEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);

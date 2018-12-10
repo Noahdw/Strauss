@@ -61,7 +61,9 @@ SOURCES += src/main.cpp\
     src/midiinter.pb.cc \
     src/folderviewabstractmodel.cpp \
     src/command.cpp \
-    src/qdraggingwidget.cpp
+    src/qdraggingwidget.cpp \
+    src/mastertrack.cpp \
+    src/trackmidi.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -98,7 +100,9 @@ HEADERS  += src/mainwindow.h\
     src/midiinter.pb.h \
     src/folderviewabstractmodel.h \
     src/command.h \
-    src/qdraggingwidget.h
+    src/qdraggingwidget.h \
+    src/mastertrack.h \
+    src/trackmidi.h
 
 LIBS += -lwinmm \
 
@@ -113,4 +117,3 @@ DEPENDPATH += $$PWD/Debug \
 
 RESOURCES += \
     graphics.qrc
-

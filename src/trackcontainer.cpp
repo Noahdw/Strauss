@@ -2,16 +2,19 @@
 #include <QWidget>
 #include <src/trackmidiview.h>
 #include "src/plugineditorcontainer.h"
+#include "src/trackmidi.h"
+#include "src/mastertrack.h"
 int ID = 0;
 /*This class represents a container for the tracks, located above the Pianoroll.
  *
  *
  */
-TrackContainer::TrackContainer(PluginEditorContainer *pluginEditorContainer, PianoRollContainer *pianoRollContainer)
+TrackContainer::TrackContainer(PluginEditorContainer *pluginEditorContainer, PianoRollContainer *pianoRollContainer, MasterTrack *masterTrack)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    plugin_editor_container = pluginEditorContainer;
-    piano_roll_container = pianoRollContainer;
+    this->pluginEditorContainer = pluginEditorContainer;
+    this->pianoRollContainer = pianoRollContainer;
+    this->masterTrack = masterTrack;
     vSplitter = new QSplitter(this);
     vSplitter->setOrientation(Qt::Vertical);
     vSplitter->setContentsMargins(0,0,0,0);
@@ -33,76 +36,65 @@ TrackContainer::TrackContainer(PluginEditorContainer *pluginEditorContainer, Pia
     hLayout->addLayout(lt);
     setLayout(hLayout);
 
-    QObject::connect(this,&TrackContainer::addPianoRoll,pianoRollContainer,&PianoRollContainer::addPianoRolls);
+    QObject::connect(this,&TrackContainer::addPianoRoll,pianoRollContainer,&PianoRollContainer::addPianoRoll);
 
 }
 
-TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track, int totalDT)
+TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track)
 {
-    mTrack *track = new mTrack;
+    TrackMidi *trackMidi = new TrackMidi;
+    auto midiData = trackMidi->midiData();
     for (int i = 0; i < midi_track.midi_data_size(); ++i)
     {
         auto midi_data = midi_track.midi_data(i);
-        track->noteMap[midi_data.total_dt()].push_back(midi_data.event());
+        midiData->noteMap[midi_data.total_dt()].push_back(midi_data.event());
     }
-    track->totalDT = totalDT;
-    MidiManager::recalculateNoteListDT(track);
+    midiData->totalDT = g_totalDt;
+    MidiManager::recalculateNoteListDT(midiData);
     auto *midiView = new TrackMidiView;
-    TrackView *view = new TrackView(track,midiView,this);
-    track->instrumentName = QString::fromStdString(midi_track.name());
+    TrackView *trackView = new TrackView(trackMidi,midiView,this);
+    midiData->instrumentName = QString::fromStdString(midi_track.name());
 
-    view->id = ID++;
-
-    emit addPianoRoll(view);
-    QObject::connect(view,&TrackView::trackClickedOn,piano_roll_container,&PianoRollContainer::switchPianoRoll);
-
+    trackView->id = ID++;
     vLayout->addWidget(midiView);
-    vSplitter->addWidget(view);
-    view->pluginTrack = plugin_editor_container->addTrack(view);
-    return view;
+    vSplitter->addWidget(trackView);
+    return trackView;
 }
 
 void TrackContainer::addTrackView(const mSong &song)
 {
-    foreach (const auto &track, song.tracks)
-    {
-        QWidget *widget = new QWidget;
-        auto *midiView = new TrackMidiView;
-        auto *view = new TrackView(track,midiView,this);
-        auto *hlayout = new QHBoxLayout;
-        hlayout->setAlignment(Qt::AlignTop);
-        hlayout->setSpacing(0);
-        hlayout->setContentsMargins(0,0,0,0);
-        widget->setLayout(hlayout);
-        hlayout->addWidget(view);
+    //    foreach (const auto &track, song.tracks)
+    //    {
+    //        QWidget *widget = new QWidget;
+    //        auto *midiView = new TrackMidiView;
+    //        auto *view = new TrackView(track,midiView,this);
+    //        auto *hlayout = new QHBoxLayout;
+    //        hlayout->setAlignment(Qt::AlignTop);
+    //        hlayout->setSpacing(0);
+    //        hlayout->setContentsMargins(0,0,0,0);
+    //        widget->setLayout(hlayout);
+    //        hlayout->addWidget(view);
 
-        view->id = ID++;
+    //        view->id = ID++;
 
-        emit addPianoRoll(view);
-        QObject::connect(view,&TrackView::trackClickedOn,piano_roll_container,&PianoRollContainer::switchPianoRoll);
-        vLayout->addWidget(midiView);
-        vSplitter->addWidget(view);
-        view->pluginTrack = plugin_editor_container->addTrack(view);
-    }
-    adjustSize();
+    //        emit addPianoRoll(view);
+    //        QObject::connect(view,&TrackView::trackClickedOn,pianoRollContainer,&PianoRollContainer::switchPianoRoll);
+    //        vLayout->addWidget(midiView);
+    //        vSplitter->addWidget(view);
+    //        view->pluginTrack = pluginEditorContainer->addTrack(view);
+    //    }
+    //    adjustSize();
 }
 
 
-void TrackContainer::addSingleView()
+TrackView* TrackContainer::addSingleView(TrackMidi *midiTrack)
 {
-    mTrack *track = new mTrack;
     auto *midiView = new TrackMidiView;
-    track->instrumentName = "New Track";
-    TrackView *view = new TrackView(track,midiView,this);
-    view->id = ID++;
-
-    emit addPianoRoll(view);
-    QObject::connect(view,&TrackView::trackClickedOn,piano_roll_container,&PianoRollContainer::switchPianoRoll);
-
+    TrackView *trackView = new TrackView(midiTrack,midiView,this);
+    trackView->id = ID++;
     vLayout->addWidget(midiView);
-    vSplitter->addWidget(view);
-    view->pluginTrack = plugin_editor_container->addTrack(view);
-
+    vSplitter->addWidget(trackView);
+    return trackView;
 }
 
 void TrackContainer::deleteTrack(TrackView *trackView, TrackMidiView *midiView)
@@ -112,9 +104,6 @@ void TrackContainer::deleteTrack(TrackView *trackView, TrackMidiView *midiView)
     vLayout->removeWidget(midiView);
     trackView->setParent(NULL);
     midiView->deleteLater();
-    // vSplitter->
-    // delete trackView;
-    // midiView->hide();
 }
 
 std::vector<TrackView *> TrackContainer::getTrackViews() const
@@ -134,8 +123,6 @@ std::vector<TrackView *> TrackContainer::getTrackViews() const
 
 void TrackContainer::keyPressEvent(QKeyEvent *event)
 {
-
-
     switch (event->key())
     {
     case Qt::Key_C:
@@ -148,14 +135,6 @@ void TrackContainer::keyPressEvent(QKeyEvent *event)
     QWidget::keyPressEvent(event);
 }
 
-void TrackContainer::paintEvent(QPaintEvent *event)
-{
-    QPainter painter(this);
-    QBrush brush(Qt::darkGray);
-    painter.setBrush(brush);
-    painter.setPen(QPen(Qt::darkGray));
-    painter.drawRect(0,0,width() - 1,height() - 1);
-}
 
 int TrackContainer::getNumTracks() const
 {
@@ -165,8 +144,21 @@ int TrackContainer::getNumTracks() const
 void TrackContainer::deleteAllTracks()
 {
     auto tracks = getTrackViews();
-    for (int var = 0; var < tracks.size(); ++var)
+    for (uint var = 0; var < tracks.size(); ++var)
     {
         tracks.at(var)->deleteTrack();
     }
+}
+
+void TrackContainer::trackClicked(TrackView *trackView)
+{
+    masterTrack->setCurrentTrack(trackView->midiTrack());
+    pianoRollContainer->switchPianoRoll(trackView);
+    for(const auto &track : getTrackViews())
+    {
+        if (trackView != track) {
+            track->deselect();
+        }
+    }
+
 }

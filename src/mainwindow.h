@@ -16,7 +16,7 @@ class AudioManager;
 #include <QVBoxLayout>
 #include <QMenuBar>
 #include <QMainWindow>
-#include <src/MidiManager.h>
+#include <src/midimanager.h>
 #include <QGraphicsScene>
 #include <src/pianorollcontainer.h>
 #include <src/trackcontainer.h>
@@ -33,7 +33,9 @@ class AudioManager;
 #include <QStackedWidget>
 #include "src/plugineditorcontainer.h"
 #include "src/settingsdialog.h"
+#include "src/mastertrack.h"
 #include "src/projectmanager.h"
+#include "src/trackmidi.h"
 
 class MainWindow : public QMainWindow
 {
@@ -42,8 +44,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    static QVector<pluginHolder*> pluginHolderVec;
+    static QVector<Vst2HostCallback*> pluginHolderVec;
     AudioEngine *audio_engine;
+    MasterTrack *masterTrack;
 public slots:
     void addNewTrack();
 
@@ -74,6 +77,7 @@ private:
     PianoRollHelperView    *piano_roll_helper;
     QVBoxLayout            *mainLayout;
     PluginEditorContainer  *plugin_editor_container;
+
     QMenu   *fileMenu;
     QMenu   *editMenu;
     QAction *openFileAction;

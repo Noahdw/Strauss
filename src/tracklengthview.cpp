@@ -18,15 +18,14 @@ TrackLengthView::TrackLengthView(QWidget *parent) : QGraphicsView(parent)
     setMinimumWidth(1000);
     setMinimumHeight(20);
     setMaximumHeight(20);
-
     scene = new QGraphicsScene(0,0,MidiManager::TPQN*g_quarterNotes,height());
     scene->setSceneRect(0,0,MidiManager::TPQN*g_quarterNotes,height());
     this->setScene(scene);
 
-    QPalette pal = palette();
-    pal.setColor(QPalette::Background, Qt::lightGray);
-    setAutoFillBackground(true);
-    setPalette(pal);
+   // QPalette pal = palette();
+   // pal.setColor(QPalette::Background,g_baseColor);
+    //setAutoFillBackground(true);
+    //setPalette(pal);
     setBackgroundRole(QPalette::NoRole);
 }
 

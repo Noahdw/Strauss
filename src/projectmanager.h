@@ -17,7 +17,7 @@ class ProjectManager
 public:
     ProjectManager();
     void saveProject();
-    void saveAsProject(QString path, const TrackContainer &track_container);
+    void saveAsProject(QString path, const MasterTrack *masterTrack);
     void loadProject(QString path, MainWindow *main_window, TrackContainer &track_container);
 
 };

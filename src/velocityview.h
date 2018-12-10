@@ -18,11 +18,11 @@ public:
     void setScale(float x,bool needsReset,int wheelPos);
     void addOrRemoveVelocityViewItem(int start, int velocity,int note, bool adding);
     void changeVelocityViewItemPosition(int oldPos,int newPos, int oldNote,int newNote);
-    void populateVelocityViewFromTrack(TrackView *track);
+    void populateVelocityViewFromTrack(TrackView *trackView);
     void onPianoRollResized(float x);
-    mTrack *getTrack();
+    MidiData *getMidiData();
 protected:
-    void paintEvent(QPaintEvent *event);
+
 
 private:
     QGraphicsScene *scene;

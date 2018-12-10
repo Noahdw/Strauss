@@ -9,22 +9,13 @@
 PianoRollContainer::PianoRollContainer()
 {      
     stackedLayout = new QStackedLayout;
-    //  setMinimumWidth(1000);
-    this->setLayout(stackedLayout);
+    setLayout(stackedLayout);
 }
 
 
 // Can't load the same .dll from same folder so I copy to temp folder
 // TODO: See if changing .dll name suffices and don't need to make x copies of a plugin, just 1
-void PianoRollContainer::propogateFolderViewDoubleClicked(QString pluginName, QString filePath, QString actualPath)
-{
-    if (stackedLayout->count() == 0)
-    {
-        return;
-    }
-    PianoRoll *roll = dynamic_cast<PianoRoll*>(stackedLayout->currentWidget()->children().at(3));
-    roll->track->addPluginFromPath(filePath,pluginName,actualPath);
-}
+
 
 void PianoRollContainer::setControlChangeContainer(ControlChangeContainer *_controlChangeContainer)
 {
@@ -74,9 +65,9 @@ void PianoRollContainer::switchPianoRoll(TrackView * track_view)
 
 }
 
-void PianoRollContainer::addPianoRolls(TrackView *trackView)
+PianoRoll *PianoRollContainer::addPianoRoll(TrackView *trackView)
 {
-    auto *pianoRoll     = new PianoRoll;
+    auto *pianoRoll     = new PianoRoll(trackView->midiTrack());
     auto *keyboard      = new Keyboard(pianoRoll);
     auto *velocityView  = new VelocityView(trackView);
     auto *trackLength   = new TrackLengthView;
@@ -84,11 +75,11 @@ void PianoRollContainer::addPianoRolls(TrackView *trackView)
     pianoRoll->setKeyboard(keyboard);
     pianoRoll->setVelocityView(velocityView);
     pianoRoll->trackLengthView = trackLength;
-    trackLength->initTrackLengthView(QRectF(0,0,trackView->track->totalDT,0),((float)trackLength->width() / (960*g_quarterNotes)));
+    trackLength->initTrackLengthView(QRectF(0,0,trackView->midiTrack()->midiData()->totalDT,0),((float)trackLength->width() / (960*g_quarterNotes)));
     g_timer->setDuration(((float)(60.0/g_tempo)*g_quarterNotes*1000));
     qDebug() <<"Time: " << g_timer->duration();
     pianoRoll->track = trackView;
-    if (trackView->track->totalDT != 0) {
+    if (trackView->midiTrack()->midiData()->totalDT != 0) {
 
         pianoRoll->convertTrackToItems();
     }
@@ -109,30 +100,20 @@ void PianoRollContainer::addPianoRolls(TrackView *trackView)
     hlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
 
-
     hlayout2->addSpacing(keyboard->width());
     hlayout2->addWidget(velocityView);
     vlayout->addLayout(hlayout2);
-
-    QWidget *initview = new QWidget;
+    QFrame *initview = new QFrame;
     initview->setLayout(vlayout);
     stackedLayout->addWidget(initview);
 
-
-
-    trackView->plugin.host->setPianoRollRef(pianoRoll);
     velocityView->setSceneRect(0,0,pianoRoll->totalDT,velocityView->height());
     velocityView->populateVelocityViewFromTrack(trackView);
     trackView->getTrackMidiView()->shareScene(pianoRoll->scene);
     controlChangeContainer->addControlChangeView(pianoRoll);
     pianoRoll->isInitialized = true;
     pianoRoll->forceResize();
+    return pianoRoll;
 }
 
-void PianoRollContainer::paintEvent(QPaintEvent *event)
-{
-    QPainter painter(this);
-    QBrush brush(Qt::darkGray);
-    painter.setBrush(brush);
-    painter.drawRect(0,0,width() - 1,height() - 1);
-}
+

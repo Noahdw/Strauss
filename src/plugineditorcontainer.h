@@ -10,18 +10,17 @@ class Vst2HostCallback;
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <src/folderview.h>
-
-class PluginEditorContainer : public QWidget
+#include "mastertrack.h"
+class PluginEditorContainer : public QFrame
 {
     Q_OBJECT
 public:
-    PluginEditorContainer(FolderViewAbstractModel *model);
+    PluginEditorContainer(FolderViewAbstractModel *model, MasterTrack *masterTrack);
     PluginTrackView* addTrack(TrackView *track);
-    void addPlugin(PluginTrackView *pluginTrack,Vst2HostCallback *vst2);
     void switchPluginViews(PluginTrackView *pluginTrack);
-    void FolderViewDoubleClicked(QString name, QString filepath);
     void pluginTrackClickedOn();
     PluginTrackView *lastPluginTrack = NULL;
+    MasterTrack *masterTrack;
 private:
     QVBoxLayout *vLayout;
     QHBoxLayout *hlayout;

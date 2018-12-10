@@ -17,18 +17,22 @@ AEffect *plugin = NULL;
 
 // init common vars
 bool keyboardModeEnabled = false;
-double g_tempo = 90;
+double g_tempo = 120;
 double g_quarterNotes = 60;
+int g_totalDt = g_quarterNotes * 960;
 int g_blocksize = 64;
 int g_sampleRate = 44100;
 double g_volume = 0.666;
 QTimeLine *g_timer = new QTimeLine((float)(60.0/(float)g_tempo)*g_quarterNotes*1000);//Song time in ms
+QColor g_backgroundColor(82,82,82);
+QColor g_baseColor(54,54,54);
+QColor g_selectedColor(96,96,96);
 //end init
 
-QVector<pluginHolder*> MainWindow::pluginHolderVec;
+QVector<Vst2HostCallback*> MainWindow::pluginHolderVec;
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent)
+                                          QMainWindow(parent)
 {
     model = new FolderViewAbstractModel(getFoldersFromSettings());
     centralWidget = new QWidget(this);
@@ -48,13 +52,15 @@ MainWindow::MainWindow(QWidget *parent) :
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
-    folder_view              = new FolderView(model);
+    masterTrack              = new  MasterTrack;
+    folder_view              = new FolderView(model,masterTrack);
     header_container         = new HeaderContainer(audio_engine);
     piano_roll_container     = new PianoRollContainer;
-    plugin_editor_container  = new PluginEditorContainer(model);
-    track_container          = new TrackContainer(plugin_editor_container,piano_roll_container);
+    plugin_editor_container  = new PluginEditorContainer(model,masterTrack);
+    track_container          = new TrackContainer(plugin_editor_container,piano_roll_container,masterTrack);
     control_change_container = new ControlChangeContainer(piano_roll_container);
     piano_roll_helper        = new PianoRollHelperView(control_change_container);
+    masterTrack->initializeDependencies(track_container,piano_roll_container,plugin_editor_container);
     piano_roll_container->setControlChangeContainer(control_change_container);
     folder_view->pRollContainer = piano_roll_container;
     trackScrollArea->setWidget(track_container);
@@ -73,21 +79,17 @@ MainWindow::MainWindow(QWidget *parent) :
     prollSplitter->addWidget(trackSplitter);
     prollSplitter->addWidget(control_change_container);
     QVBoxLayout *pSpacerLayout = new QVBoxLayout();
-    //  pSpacerLayout->addSpacing(500); // force it to bottom
     pSpacerLayout->addSpacerItem(new QSpacerItem(0,100,QSizePolicy::Fixed,QSizePolicy::Expanding));
     pSpacerLayout->addWidget(piano_roll_helper);
     helperLayout->addLayout(pSpacerLayout);
-    //  helperLayout->addWidget(piano_roll_helper);
     helperLayout->addWidget(prollSplitter);
     mainLayout->addLayout(helperLayout);
     centralWidget->setLayout(mainLayout);
     stackedCentralWidget->addWidget(centralWidget);
+
     stackedCentralWidget->addWidget(plugin_editor_container);
     QObject::connect(track_container,&TrackContainer::switchControlChange,control_change_container,
                      &ControlChangeContainer::switchControlChangeContainer);
-
-
-
 
     addNewTrack();
     setUpMenuBar();
@@ -101,11 +103,6 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         player.openDevice(i);
     }
-    QPalette pal = palette();
-    pal.setColor(QPalette::Background, QColor(150,150,150));
-    setAutoFillBackground(true);
-    setPalette(pal);
-
 
     QDir dir(QDir::current().path()+"/TempPlugins");
     dir.removeRecursively();
@@ -115,10 +112,6 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         dir.mkdir(QDir::current().path()+"/ProgramBanks");
     }
-
-    trackScrollArea->setStyleSheet("QScrollArea {background-color: rgb(170,170,170); border: 2px solid grey }");
-
-
 }
 
 MainWindow::~MainWindow()
@@ -156,7 +149,6 @@ void MainWindow::openFile()
         }
 
         manager->song = manager->Deserialize(array);
-        // prollContainer->pianoRoll->convertFileToItems(*manager);
 
         file.close();
     }
@@ -182,7 +174,6 @@ void MainWindow::on_StartButton_clicked()
 void MainWindow::on_actionSave_triggered()
 {
 
-    // playSong();
 
 }
 QFuture<void> future;
@@ -204,7 +195,7 @@ void MainWindow::saveAsProject()
 {
     QString filePath = QFileDialog::getSaveFileName(this,tr("Save as"),QDir::currentPath(),tr("format (*.mipr)"));
     ProjectManager project;
-    project.saveAsProject(filePath,*track_container);
+    project.saveAsProject(filePath,masterTrack);
 }
 
 void MainWindow::loadProject()
@@ -222,7 +213,7 @@ void MainWindow::on_actionPlay_triggered()
 
 void MainWindow::deleteAllNotes()
 {
-    //  prollContainer->pianoRoll->deleteAllNotes();
+
 }
 
 void MainWindow::acceptSettingsDialog(int accept)
@@ -297,12 +288,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         }
         for(const auto& plugin : pluginHolderVec)
         {
-            if (plugin->host->canRecord())
+            if (plugin->canRecord())
             {
                 int note = getNoteFromKeyboard(event->key());
                 if (note)
                 {
-                    plugin->host->addMidiEvent(0x90,note,velocity,0);
+                    plugin->addMidiEvent(0x90,note,velocity,0);
                 }
             }
         }
@@ -334,12 +325,12 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
         }
         for(const auto& plugin : pluginHolderVec)
         {
-            if (plugin->host->canRecord())
+            if (plugin->canRecord())
             {
                 int note = getNoteFromKeyboard(event->key());
                 if (note)
                 {
-                    plugin->host->addMidiEvent(0x90,note,0,0);
+                    plugin->addMidiEvent(0x90,note,0,0);
                 }
             }
         }
@@ -353,7 +344,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 
 void MainWindow::addNewTrack()
 {
-    track_container->addSingleView();
+     masterTrack->addTrack();
 }
 
 void MainWindow::displaySettingsDialog()

@@ -50,7 +50,9 @@ HeaderContainer::HeaderContainer(AudioEngine *audioManager)
     QObject::connect(tempoWidget,    &QDraggingWidget::valueChanged,this,&HeaderContainer::masterTempoChanged);
 
 
-    groupBox->setStyleSheet("QGroupBox {  border: 1px solid gray; padding: 4px;}");
+    groupBox->setStyleSheet("QGroupBox {  border: 1px solid rgb(20,20,20);"
+                                        " padding: 6px;"
+                                        " background: rgb(50,50,50);}");
     //  playButton->setStyleSheet("background-image: url(:/images/icons/play_pause.png);");
     QPixmap pic(":/icons/play_pause.png");
     playButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay));

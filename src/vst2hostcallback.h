@@ -3,6 +3,7 @@
 
 class PianoRoll;
 class PluginTrackView;
+class TrackMidi;
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -39,40 +40,41 @@ class Vst2HostCallback : public QObject
     Q_OBJECT
 public:
     Vst2HostCallback();
-    Vst2HostCallback(mTrack *track);
+    Vst2HostCallback(MidiData *track);
     ~Vst2HostCallback();
     AEffect* loadPlugin(char* fileName, char *pluginName);
     AEffect* LoadBridgedPlugin(char * szPath);
-    const int numParams(AEffect *plugin);
-    QString getParamName(AEffect *plugin,int index);
+    int numParams(AEffect *effect) const;
+    QString getParamName(AEffect *effect,int index);
     bool canRecord();
-    int configurePluginCallbacks(AEffect *plugin);
-    void startPlugin(AEffect *plugin);
+    int configurePluginCallbacks();
+    void startPlugin();
     void initializeIO();
-    void processAudio(AEffect *plugin, float **inputs, float **outputs,long numFrames);
+    void processAudio(AEffect *effect, float **inputs, float **outputs,long numFrames);
     void silenceChannel(float **channelData, int numChannels, long numFrames);
-    void processMidi(AEffect *plugin);
+    void processMidi(AEffect *effect);
     void initializeMidiEvents();
     void restartPlayback();
     void pauseOrResumePlayback(bool isResume);
     void addMidiEvent(uchar status, uchar note, uchar velocity, qreal currentTick);
     void setPianoRollRef(PianoRoll *piano);
     void setCanRecord(bool canRecord);
-    void turnOffAllNotes(AEffect *plugin);
+    void turnOffAllNotes();
     void showPlugin();
+    void hidePlugin();
     void exportAudioInit();
-    void setBlockSize(AEffect *plugin,int blockSize);
+    void setBlockSize(AEffect *effect,int blockSize);
     void markForDeletion();
-    int exportAudioBegin(AEffect *plugin, float **outputs,
+    int exportAudioBegin(AEffect *effect, float **outputs,
                          long numFrames);
-    void unloadPlugin(AEffect *plugin);
+    void unloadPlugin(AEffect *effect);
     void exportAudioEnd();
-    std::string savePluginState(AEffect *plugin) const;
-    void setPluginState(AEffect *plugin, const std::string &chunk);
+    std::string savePluginState(AEffect *effect) const;
+    void setPluginState(AEffect *effect, const std::string &chunk);
     EventToAdd eventToAdd;
     std::queue<EventToAdd> midiEventQueue;
     std::deque<EventToAdd> recordedMidiEventDeque;
-    mTrack *track;
+    MidiData *track;
     int ccFramesTillBlock[128];
     int ccVecPos[128];
     PianoRoll *pianoroll;
@@ -88,8 +90,9 @@ public:
     QString actual_url;
     QString unique_plugin_id;
     PluginTrackView * masterPluginTrackView;
-
+    TrackMidi *midiTrack;
     dispatcherFuncPtr dispatcher;
+    AEffect *effect = NULL;
 
 private:
     VstEvents *events;

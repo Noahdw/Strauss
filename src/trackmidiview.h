@@ -28,7 +28,6 @@ private:
     QPen pen;
 
 protected:
-    void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
 };
 

@@ -85,7 +85,10 @@ QVariant FolderViewAbstractModel::data(const QModelIndex &index, int role) const
         TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
         return item->data(0);
     }
-
+    if ( role == Qt::DecorationRole ) {
+        QFileIconProvider fileIcon;
+       return fileIcon.icon(QFileInfo(index.data().toString()));
+    }
     if(role == 0x0100)
     {
         TreeItem *item = static_cast<TreeItem*>(index.internalPointer());

@@ -7,23 +7,22 @@
 #include <random>
 #include <src/trackmidiview.h>
 #include "src/plugintrackview.h"
-
+#include "src/trackmidi.h"
 std::default_random_engine generator;
 std::uniform_int_distribution<int> distribution(80,255);
 
-TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer *trackContainer, QWidget *parent) : QFrame(parent)
+TrackView::TrackView(TrackMidi *midiTrack, TrackMidiView *trackMidiView,TrackContainer *trackContainer, QWidget *parent) : QFrame(parent)
 {
     setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
-    track_container = trackContainer;
-    setStyleSheet("QFrame { background-color: lightGray; border: 1px solid black; }");
-    this->track = track;
-    track_midi_view = trackMidiView;
+    _trackContainer = trackContainer;
+    _midiTrack = midiTrack;
+    _trackMidiView = trackMidiView;
     setMinimumWidth(widgetWidth);
     setMaximumWidth(widgetWidth);
     setMinimumHeight(115);
     setMaximumHeight(115);
 
-    instrumentLabel = new QLineEdit(track->instrumentName);
+    instrumentLabel = new QLineEdit(midiTrack->midiData()->instrumentName);
     instrumentLabel->setReadOnly(true);
     instrumentLabel->setMaximumWidth(widgetWidth-10);
     instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(0, 0, 0, 0); }");
@@ -52,7 +51,6 @@ TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer 
     vlayout->addWidget(comboBox);
     setLayout(vlayout);
 
-    plugin.host = new Vst2HostCallback(track);
     randomRed = distribution(generator);
     randomGreen = distribution(generator);
     randomBlue = distribution(generator);
@@ -64,7 +62,7 @@ TrackView::TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer 
                      this,&TrackView::ShowContextMenu);
     connect(comboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [=](int index){ comboBoxIdChanged(index);}); // wtf
-    plugin.host->setCanRecord(true);
+    //plugin.host->setCanRecord(true);
 
     brush = QBrush(QColor(randomRed, randomGreen, randomBlue));
     comboBox->addItem("None");
@@ -105,7 +103,11 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
             }
             else
             {
-                emit trackClickedOn(this);
+
+                setProperty("clicked",true);
+                style()->unpolish(this);
+                style()->polish(this);
+                _trackContainer->trackClicked(this);
                 return true;
             }
         }
@@ -115,76 +117,27 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
     return false;
     // return TrackView::eventFilter(target,event);
 }
-void TrackView::addPluginFromPath(QString filepath, QString name, QString actualPath)
-{
-    if (plugin.effect == NULL)
-    {
-        qDebug() << "No plugin is currently set";
 
-        QByteArray array = filepath.toLocal8Bit();
-        char* file = array.data();
 
-        plugin.effect = plugin.host->loadPlugin(file,name.left(name.size() - 4).toLocal8Bit().data());
-        if (plugin.effect == NULL)
-        {
-            qDebug() << "NULLPTR PLUGIN: in loadPlugin";
-            return;
-        }
-        int state = plugin.host->configurePluginCallbacks(plugin.effect);
-        if (state == -1)
-        {
-            qDebug() << "Failed to configurePluginCallbacks. abort startPlugin";
-            return;
-        }
-        instrumentLabel->setText(name.left(name.size() - 4));
-        plugin.host->startPlugin(plugin.effect);
-        MainWindow::pluginHolderVec.append(&plugin);
-        pluginTrack->addPlugin(&plugin);
-        plugin.host->isMasterPlugin = true;
-        plugin.host->masterPluginTrackView = this->pluginTrack;
-        plugin.host->actual_url = actualPath;
 
-        for (int i = 0; i <  plugin.host->numParams(plugin.effect); ++i)
-        {
-            QString name = plugin.host->getParamName(plugin.effect,i);
-            comboBox->addItem(name);
-        }
-    }
-
-}
-
-void TrackView::addPluginFromLoadProject(QString filepath)
-{
-    if (filepath == "")
-    {
-        return;
-    }
-    QString tempPath = QString(QDir::current().path()+"/TempPlugins/%1.dll").arg(FolderView::tempFolderID++);
-    if (QFile::exists(tempPath))
-    {
-        QFile::remove(tempPath);
-    }
-
-    if (!QFile::copy(filepath, tempPath))
-    {
-        qDebug() << QDir::current().path();
-        qDebug() << "Could not copy plugin";
-        return;
-    }
-    int last = filepath.lastIndexOf("/") + 1;
-    QString name = filepath.right(filepath.length() - last);
-    addPluginFromPath(tempPath,name,filepath);
-}
 
 
 // Will delete this class. Do not call any member variables/functions after container call.
 void TrackView::deleteTrack()
 {
-    pluginTrack->deleteLater();
-    plugin.host->markForDeletion();
+    _midiTrack->deleteTrack();
+    //    pluginTrack->deleteLater();
+    //    plugin.host->markForDeletion();
     //track_midi_view->deleteLater();
     //delete this;
-    track_container->deleteTrack(this,track_midi_view);
+    // _trackContainer->deleteTrack(this,_trackMidiView);
+}
+
+void TrackView::deselect()
+{
+    setProperty("clicked",false);
+    style()->unpolish(this);
+    style()->polish(this);
 }
 
 QString TrackView::getTrackName() const
@@ -194,18 +147,18 @@ QString TrackView::getTrackName() const
 
 TrackMidiView *TrackView::getTrackMidiView()
 {
-    return track_midi_view;
+    return _trackMidiView;
 }
 
 void TrackView::notifyMuteChange(int state)
 {
     if(state)
     {
-        plugin.host->isMuted = true;
+        midiTrack()->masterPlugin()->isMuted = true;
     }
     else
     {
-        plugin.host->isMuted = false;
+        midiTrack()->masterPlugin()->isMuted = false;
     }
 }
 
@@ -213,11 +166,12 @@ void TrackView::notifyRecordingChange(int state)
 {
     if (state)
     {
-        plugin.host->setCanRecord(true);
+
+        midiTrack()->masterPlugin()->setCanRecord(true);
     }
     else
     {
-        plugin.host->setCanRecord(false);
+        midiTrack()->masterPlugin()->setCanRecord(false);
     }
 }
 
@@ -236,9 +190,9 @@ void TrackView::ShowContextMenu(const QPoint &pos)
 
 void TrackView::showPlugin()
 {
-    if (plugin.host)
+    if (midiTrack()->masterPlugin()->effect != NULL)
     {
-        plugin.host->showPlugin();
+        midiTrack()->masterPlugin()->showPlugin();
     }
 }
 
@@ -259,7 +213,7 @@ void TrackView::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.setBrush(brush);
-    painter.drawRect(0,0,width() - 1,instrumentLabel->height() + 5);
+    painter.drawRect(0,0,width() - 1,instrumentLabel->height() + 7);
 }
 
 void TrackView::mousePressEvent(QMouseEvent *event)
@@ -268,9 +222,10 @@ void TrackView::mousePressEvent(QMouseEvent *event)
     {
         ShowContextMenu(event->pos());
     }
-
-
-    emit trackClickedOn(this);
+       setProperty("clicked",true);
+    _trackContainer->trackClicked(this);
+    style()->unpolish(this);
+    style()->polish(this);
     QFrame::mousePressEvent(event);
 }
 

@@ -30,7 +30,7 @@ void PianoRollHelperView::comboBoxIdChanged(int index)
 void PianoRollHelperView::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    QBrush brush(Qt::lightGray);
+    QBrush brush(QColor(96,96,96));
     painter.setBrush(brush);
     painter.drawRect(0,0,width() - 1,height()-1);
     brush.setColor((QColor(100, 50, 137)));

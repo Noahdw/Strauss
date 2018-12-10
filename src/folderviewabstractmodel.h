@@ -5,7 +5,8 @@ class TreeItem;
 #include <QAbstractItemModel>
 #include <QFileSystemModel>
 #include <QListWidgetItem>
-
+#include <QFileIconProvider>
+#include <QDebug>
 class FolderViewAbstractModel : public QAbstractItemModel
 {
     Q_OBJECT

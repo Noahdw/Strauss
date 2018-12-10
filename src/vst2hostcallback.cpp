@@ -11,7 +11,7 @@
 #include <src/controlchangeoverlay.h>
 #include <src/plugintrackview.h>
 #include "src/pluginview.h"
-
+#include "trackmidi.h"
 #pragma comment(lib,"user32.lib")
 #pragma comment(lib, "advapi32")
 #define PROXY_REGKEY        "Software\\JBridge"
@@ -33,7 +33,7 @@ Vst2HostCallback::Vst2HostCallback()
 
 }
 
-Vst2HostCallback::Vst2HostCallback(mTrack *mtrack)
+Vst2HostCallback::Vst2HostCallback(MidiData *mtrack)
 {
     track = mtrack;
 
@@ -43,7 +43,7 @@ Vst2HostCallback::~Vst2HostCallback()
 {
     if (actual_url != "")
     {
-        for (int i = 0; i < maxNotes; ++i)
+        for (uint i = 0; i < maxNotes; ++i)
         {
             delete eventsHolder[i];
         }
@@ -153,8 +153,8 @@ VstIntPtr VSTCALLBACK hostCallback(AEffect *effect, VstInt32 opcode,
 AEffect *Vst2HostCallback::loadPlugin(char* fileName,char *pluginName)
 {
     this->pluginName = (char*)malloc(strlen(pluginName) + 1);
-    strcpy(this->pluginName,pluginName);
-    AEffect *plugin = NULL;
+    strcpy_s(this->pluginName,strlen(pluginName) + 1,pluginName);
+    AEffect *newPlugin = NULL;
     HMODULE modulePtr = LoadLibraryA(fileName);
     hinst = modulePtr;
     if(modulePtr == NULL) {
@@ -166,8 +166,8 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName,char *pluginName)
     {
         qDebug() << "Jbridge plugin";
         FreeLibrary(modulePtr);
-        plugin = LoadBridgedPlugin(fileName);
-        if (plugin == NULL)
+        newPlugin = LoadBridgedPlugin(fileName);
+        if (newPlugin == NULL)
         {
             qDebug() << "Jbridge plugin failed to load";
             return NULL;
@@ -188,36 +188,36 @@ AEffect *Vst2HostCallback::loadPlugin(char* fileName,char *pluginName)
                 return NULL;
             }
         }
-        plugin = mainEntryPoint((audioMasterCallback)hostCallback);
+        newPlugin = mainEntryPoint((audioMasterCallback)hostCallback);
     }
     // Instantiate the plugin
 
     sRate = sampleRate;
     samplesPerTick = sampleRate/(float)(MidiManager::TPQN * (g_tempo/60.0f));
-    // samplesPerTick =(60.0/120.0 )*(1000000/sRate);//Why do i need /2 to work????
     qDebug() << "SamplesperTick: " << samplesPerTick;
-    return plugin;
+    effect = newPlugin;
+    return newPlugin;
 }
 
-int Vst2HostCallback::configurePluginCallbacks(AEffect *plugin) {
+int Vst2HostCallback::configurePluginCallbacks() {
     // Check plugin's magic number
     // If incorrect, then the file either was not loaded properly, is not a
     // real VST plugin, or is otherwise corrupt.
-    if(plugin->magic != kEffectMagic) {
+    if(effect->magic != kEffectMagic) {
         qDebug() << "Plugin's magic number is bad";
         return -1;
     }
 
     // Create dispatcher handle
-    dispatcher = (dispatcherFuncPtr)(plugin->dispatcher);
+    dispatcher = (dispatcherFuncPtr)(effect->dispatcher);
 
     // Set up plugin callback functions
-    plugin->getParameter = (getParameterFuncPtr)plugin->getParameter;
-    plugin->processReplacing = (processFuncPtr)plugin->processReplacing;
-    plugin->setParameter = (setParameterFuncPtr)plugin->setParameter;
+    effect->getParameter = (getParameterFuncPtr)effect->getParameter;
+    effect->processReplacing = (processFuncPtr)effect->processReplacing;
+    effect->setParameter = (setParameterFuncPtr)effect->setParameter;
 
 
-    return (int)plugin;
+    return 0;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -238,12 +238,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-void Vst2HostCallback::startPlugin(AEffect *plugin) {
+void Vst2HostCallback::startPlugin() {
 
-    dispatcher(plugin, effOpen, 0, 0, NULL, 0.0f);
-    dispatcher(plugin, effSetSampleRate, 0, 0, NULL, sampleRate);
-    dispatcher(plugin, effSetBlockSize, 0, g_blocksize, NULL, 0.0f);
-    dispatcher(plugin, effMainsChanged, 0, 1, NULL, 0.0f);
+    dispatcher(effect, effOpen, 0, 0, NULL, 0.0f);
+    dispatcher(effect, effSetSampleRate, 0, 0, NULL, sampleRate);
+    dispatcher(effect, effSetBlockSize, 0, g_blocksize, NULL, 0.0f);
+    dispatcher(effect, effMainsChanged, 0, 1, NULL, 0.0f);
 
     //This crap taken from https://github.com/falkTX/dssi-vst/blob/master/dssi-vst-server.cpp
     WNDCLASSEXA wclass = { };
@@ -272,9 +272,9 @@ void Vst2HostCallback::startPlugin(AEffect *plugin) {
         qDebug() <<  "Error - Could not create window: " << GetLastError();
         return;
     }
-    dispatcher(plugin,effEditOpen,0,0,editor,0);
+    dispatcher(effect,effEditOpen,0,0,editor,0);
     Rect *rect = 0;
-    plugin->dispatcher(plugin, effEditGetRect, 0, 0, &rect, 0);
+    effect->dispatcher(effect, effEditGetRect, 0, 0, &rect, 0);
     if (!rect)
     {
         qDebug() << "Error - Could not get plugin rect";
@@ -395,11 +395,11 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
      */
     if (!hasReachedEnd) {
         auto cc = &pianoroll->bridge->overlays;
-        for (int j = 0; j < cc->size(); ++j)
+        for (uint j = 0; j < cc->size(); ++j)
         {
             df = 0;
             canSkip = false;
-            uint k = 0;
+            int k = 0;
             if (cc->at(j) != NULL && cc->at(j)->activeItems.size() > 2)
             {
                 while(k < g_blocksize){
@@ -533,7 +533,7 @@ void Vst2HostCallback::processMidi(AEffect *plugin)
 void Vst2HostCallback::initializeMidiEvents()
 {
     events = (VstEvents*)malloc(sizeof(VstEvents) + sizeof(VstEvents*)*(maxNotes));
-    for (int i = 0; i < maxNotes; ++i)
+    for (uint i = 0; i < maxNotes; ++i)
     {
         VstMidiEvent* evnt = new VstMidiEvent;
         eventsHolder[i] = evnt;
@@ -609,7 +609,7 @@ bool Vst2HostCallback::canRecord()
     return canRecording;
 }
 
-void Vst2HostCallback::turnOffAllNotes(AEffect *plugin)
+void Vst2HostCallback::turnOffAllNotes()
 {
     for (int i = 0; i < 128; ++i)
     {
@@ -631,7 +631,7 @@ void Vst2HostCallback::turnOffAllNotes(AEffect *plugin)
         events->events[i] = (VstEvent*)evnt;
         ++events->numEvents;
     }
-    dispatcher(plugin, effProcessEvents, 0, 0, events, 0.0f);
+    dispatcher(effect, effProcessEvents, 0, 0, events, 0.0f);
 }
 
 void Vst2HostCallback::showPlugin()
@@ -640,6 +640,14 @@ void Vst2HostCallback::showPlugin()
     {
         ShowWindow(editor,SW_RESTORE);
         SetForegroundWindow(editor);
+    }
+}
+
+void Vst2HostCallback::hidePlugin()
+{
+    if (editor)
+    {
+        ShowWindow(editor,SW_HIDE);
     }
 }
 
@@ -746,12 +754,11 @@ void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **out
             outputs[1][i] *= trackVolume;
         }
 
-        for (int i = 1; i < masterPluginTrackView->plugins.size(); ++i)
+        for (const auto &p : midiTrack->effectPlugins)
         {
-            auto p = masterPluginTrackView->plugins.at(i);
-            if (p->holder->host->canPlay)
+            if (p->canPlay)
             {
-                p->holder->host->processAudio(p->holder->effect,outputs,outputs,numFrames);
+                p->processAudio(p->effect,outputs,outputs,numFrames);
             }
         }
     }
@@ -768,7 +775,7 @@ void Vst2HostCallback::setBlockSize(AEffect *plugin,int blockSize)
 
 void Vst2HostCallback::markForDeletion()
 {
-    pianoroll->deleteLater();
+    //pianoroll->deleteLater();
     if (actual_url != "")
     {
         shouldDelete = true;
@@ -822,7 +829,7 @@ AEffect* Vst2HostCallback::LoadBridgedPlugin(char * szPath)
 
 }
 
-const int Vst2HostCallback::numParams(AEffect *plugin)
+int Vst2HostCallback::numParams(AEffect *plugin) const
 {
     if (plugin)
     {

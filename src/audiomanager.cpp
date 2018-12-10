@@ -28,10 +28,10 @@ void AudioManager::initializePlugins()
 {
     for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
     {
-        auto host = MainWindow::pluginHolderVec.at(i)->host;
-        if (host->canPlay && !host->isMuted)
+        auto plugin = MainWindow::pluginHolderVec.at(i);
+        if (plugin->canPlay && !plugin->isMuted)
         {
-            host->exportAudioInit();
+            plugin->exportAudioInit();
         }
     }
 }
@@ -41,10 +41,10 @@ int AudioManager::beginExporting()
     int isPlaying = 0;
     for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
     {
-        auto holder = MainWindow::pluginHolderVec.at(i);
-        if (holder->host->canPlay && !holder->host->isMuted)
+        auto plugin = MainWindow::pluginHolderVec.at(i);
+        if (plugin->canPlay && !plugin->isMuted)
         {
-            isPlaying +=  holder->host->exportAudioBegin(holder->effect,output,g_blocksize);
+            isPlaying +=  plugin->exportAudioBegin(plugin->effect,output,g_blocksize);
             for (int j = 0; j < g_blocksize; ++j)
             {
                 output_storage[0][j] += output[0][j] * g_volume;
@@ -72,8 +72,8 @@ void AudioManager::endExporting()
     }
     for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
     {
-        auto holder = MainWindow::pluginHolderVec.at(i);
-        holder->host->exportAudioEnd();
+        auto plugin = MainWindow::pluginHolderVec.at(i);
+        plugin->exportAudioEnd();
     }
     free(output_storage);
     free(output);

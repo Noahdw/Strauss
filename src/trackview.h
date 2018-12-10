@@ -4,6 +4,7 @@
 class TrackMidiView;
 class PluginTrackView;
 class TrackContainer;
+class TrackMidi;
 
 #include <QWidget>
 #include <QPainter>
@@ -20,39 +21,40 @@ class TrackContainer;
 #include <QPushButton>
 #include <QSlider>
 #include <QComboBox>
+
 class TrackView: public QFrame
 {
     Q_OBJECT
 
 public:
-    TrackView(mTrack *track, TrackMidiView *trackMidiView,TrackContainer *trackContainer, QWidget* parent = 0);
-    void addPluginFromPath(QString filepath, QString name, QString actualPath);
-    void addPluginFromLoadProject(QString filepath);
+    TrackView(TrackMidi *midiTrack, TrackMidiView *_trackMidiView, TrackContainer *_trackContainer, QWidget* parent = 0);
     void deleteTrack();
+    void deselect();
     QString getTrackName() const;
     TrackMidiView *getTrackMidiView();
-    mTrack *track;
-    pluginHolder plugin;
+    TrackMidi* midiTrack(){return _midiTrack;}
     int id;
     int randomRed = 0;
     int randomGreen = 0;
     int randomBlue = 0;
     QString instrumentName;
     PluginTrackView *pluginTrack;
+    QLineEdit *instrumentLabel;
+    QComboBox *comboBox;
 protected:
     void paintEvent(QPaintEvent * event);
     void mousePressEvent(QMouseEvent *event);
     bool eventFilter(QObject *target, QEvent *event);
 private:
+    TrackMidi* _midiTrack;
 
-    QLineEdit *instrumentLabel;
     QVBoxLayout *vlayout;
     QCheckBox *muteBox;
     QCheckBox *recordBox;
     QPushButton * showButton;
-    TrackMidiView *track_midi_view;
-    TrackContainer * track_container;
-    QComboBox *comboBox;
+    TrackMidiView *_trackMidiView;
+    TrackContainer *_trackContainer;
+
     QBrush brush;
     bool canEditLine = false;
     const int widgetWidth = 100;

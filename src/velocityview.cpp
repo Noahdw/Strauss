@@ -5,6 +5,7 @@
 #include <QScrollBar>
 #include <src/velocityviewitem.h>
 #include <src/trackview.h>
+#include "src/trackmidi.h"
 int viewHeight = 70;
 VelocityView::VelocityView(TrackView *trackView, QWidget *parent) : QGraphicsView(parent)
 {
@@ -71,16 +72,17 @@ void VelocityView::changeVelocityViewItemPosition(int oldPos, int newPos, int ol
     }
 }
 
-void VelocityView::populateVelocityViewFromTrack(TrackView *track)
+void VelocityView::populateVelocityViewFromTrack(TrackView *trackView)
 {
-    int vLength = track->track->listOfNotes.length();
+    auto data = trackView->midiTrack()->midiData();
+    int vLength = data->listOfNotes.length();
     int DT = 0;
     for (int i = 0; i < vLength; i+=2) {
-        DT += track->track->listOfNotes.at(i);
-        if ((uchar)track->track->listOfNotes.at(i+1) == 0x90) {
-            uchar velocity = (track->track->listOfNotes.at(i+1) >> 16);
+        DT += data->listOfNotes.at(i);
+        if ((uchar)data->listOfNotes.at(i+1) == 0x90) {
+            uchar velocity = (data->listOfNotes.at(i+1) >> 16);
             if (velocity > 0) {
-                uchar note = (track->track->listOfNotes.at(i+1) >> 8);
+                uchar note = (data->listOfNotes.at(i+1) >> 8);
                 addOrRemoveVelocityViewItem(DT,velocity,note,true);
             }
         }
@@ -99,17 +101,7 @@ void VelocityView::setScale(float x, bool needsReset, int wheelPos)
 
 }
 
-void VelocityView::paintEvent(QPaintEvent *event)
-{
-    QPainter painter(viewport());
-    QPen pen;
-    pen.setColor(Qt::lightGray);
-    painter.setBrush(Qt::lightGray);
 
-    painter.setPen(pen);
-    painter.drawRect(viewport()->rect());
-    QGraphicsView::paintEvent(event);
-}
 
 void VelocityView::onPianoRollResized(float x)
 {
@@ -117,7 +109,7 @@ void VelocityView::onPianoRollResized(float x)
     scale(x,1);
 }
 
-mTrack *VelocityView::getTrack()
+MidiData *VelocityView::getMidiData()
 {
-    return track_view->track;
+    return track_view->midiTrack()->midiData();
 }

@@ -1,7 +1,7 @@
 #include "pianorollitem.h"
 #include <src/velocityview.h>
 #include <QDebug>
-
+#include "src/trackmidi.h"
 
 PianoRollItem::PianoRollItem()
 {
@@ -160,16 +160,17 @@ void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
+    auto data = pianoroll->midiTrack->midiData();
     if (canResizeLeft || canResizeRight)
     {
         if (initWidth != width || initXPos != x())
         {
-            int velocity = MidiManager::getVelocityFromNote(noteStart,note,pianoroll->track->track);
-            MidiManager::removeMidiNote(noteStart,noteEnd,note,pianoroll->track->track);
+            int velocity = MidiManager::getVelocityFromNote(noteStart,note,data);
+            MidiManager::removeMidiNote(noteStart,noteEnd,note,data);
             noteStart = x();
             noteEnd = width;
-            MidiManager::addMidiNote(note,velocity,x(),noteEnd,pianoroll->track->track);
-            MidiManager::recalculateNoteListDT(pianoroll->track->track);
+            MidiManager::addMidiNote(note,velocity,x(),noteEnd,data);
+            MidiManager::recalculateNoteListDT(data);
         }
         canResizeLeft = canResizeRight = false;
         return;
@@ -181,13 +182,13 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (((yPos*keyHeight) != lastYPos) || ((xPos*colSpacing) != lastXPos))
     {
         note = 127 - (lastYPos/keyHeight);
-        int velocity = MidiManager::getVelocityFromNote(noteStart,note,pianoroll->track->track);
-        MidiManager::removeMidiNote(noteStart,noteEnd,note,pianoroll->track->track);
+        int velocity = MidiManager::getVelocityFromNote(noteStart,note,data);
+        MidiManager::removeMidiNote(noteStart,noteEnd,note,data);
         pianoroll->velocityView->changeVelocityViewItemPosition(noteStart,x(),note,127-yPos);
         note = 127 - yPos;
-        MidiManager::addMidiNote(note,velocity,x(),noteEnd,pianoroll->track->track);
+        MidiManager::addMidiNote(note,velocity,x(),noteEnd,data);
         noteStart = x();
-        MidiManager::recalculateNoteListDT(pianoroll->track->track);
+        MidiManager::recalculateNoteListDT(data);
       //  pianoroll->issueMoveCommand();
         pianoroll->changeNotesAfterMouseDrag(this);
     }

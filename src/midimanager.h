@@ -20,7 +20,7 @@ struct mEvent
     QString type;
 
 };
-struct mTrack
+struct MidiData
 {
     int length;
     QList<mEvent> events;
@@ -32,7 +32,7 @@ struct mTrack
 };
 struct mSong
 {
-    QList<mTrack*> tracks;
+    QList<MidiData*> tracks;
     int format;
     int trackChunks;
     bool divisionFormat;
@@ -55,17 +55,17 @@ public:
         return &noteVec;
     }
 
-    mTrack track;
+    MidiData midiData;
     mSong song;
     QVector<int> noteVec;
 
     static DWORD statusDWORD(uchar db1, uchar db2, uchar status);
-    static  void addMidiNote(int note, int veloc, int start, int length, mTrack *track);
-    static  void addPartialMidiNote(DWORD event, int start, mTrack *track);
-    static  void removeMidiNote(int start, int length, int note, mTrack *track);
-    static  void changeMidiVelocity(int start, int note, int velocity, mTrack *track);
-    static  void recalculateNoteListDT(mTrack *track);
-    static  int  getVelocityFromNote(int start, int note, mTrack *track);
+    static  void addMidiNote(int note, int veloc, int start, int length, MidiData *midiData);
+    static  void addPartialMidiNote(DWORD event, int start, MidiData *midiData);
+    static  void removeMidiNote(int start, int length, int note, MidiData *midiData);
+    static  void changeMidiVelocity(int start, int note, int velocity, MidiData *midiData);
+    static  void recalculateNoteListDT(MidiData *midiData);
+    static  int  getVelocityFromNote(int start, int note, MidiData *midiData);
 
     static int TPQN;
 

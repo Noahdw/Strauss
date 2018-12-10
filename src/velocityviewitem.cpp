@@ -72,7 +72,7 @@ void VelocityViewItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     int NewValue =127 - (((this->y() - 0) * NewRange) / OldRange);
     velocity = NewValue;
     qDebug() << "New velocity: " << velocity;
-    MidiManager::changeMidiVelocity(x(),note,velocity,velocity_view->getTrack());
+    MidiManager::changeMidiVelocity(x(),note,velocity,velocity_view->getMidiData());
     velocity_view->viewport()->update();
 }
 

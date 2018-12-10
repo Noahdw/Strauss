@@ -12,7 +12,7 @@ class ControlChangeBridge;
 
 #include <QKeyEvent>
 
-class ControlChangeContainer: public QWidget
+class ControlChangeContainer: public QFrame
 {
     Q_OBJECT
 public:

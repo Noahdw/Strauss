@@ -1,0 +1,178 @@
+QComboBox {
+   color: rgb(220,220,220);
+   background: rgb(96,96,96);
+    border: 1px solid rgb(44,44,44);
+   padding: 1px 0px 1px 3px;
+}
+
+QListView{
+    color: rgb(220,220,220);
+    background: rgb(96,96,96);
+    border: 1px solid rgb(44,44,44);
+}
+QComboBox QAbstractItemView {
+    border: 2px solid rgb(44,44,44);
+    selection-background-color: rgb(44,44,44);
+}
+QScrollArea{
+    border: none;
+}
+
+QLabel{
+    color: rgb(220,220,220);
+}
+QScrollBar:vertical {
+    border: 1px solid rgb(44,44,44);
+    background: rgb(50,50,50);
+    width: 15px;
+    margin: 1px 0px 1px 0px;
+}
+QScrollBar::handle:vertical {
+    background: rgb(96,96,96);
+    border: 1px rgb(200,200,200);
+    min-height: 20px;
+}
+QScrollBar::add-line:vertical {
+    background: none;
+    border: 1px solid rgb(44,44,44);
+    height: 10 px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+QScrollBar::sub-line:vertical {
+    background: none;
+    border: 1px solid rgb(44,44,44);
+    height: 10 px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+QScrollBar::add-page:vertical{
+    background: none;
+}
+QScrollBar::sub-page:vertical{
+    background: none;
+}
+QDialog{
+    border: 1px solid grey;
+    background: rgb(150,150,150);
+}
+QSlider{
+    border: 1px solid grey;
+    background: rgb(192,192,192);
+    height: 25px;
+}
+QSlider::groove:horizontal{
+    border: 1px solid grey;
+    background: rgb(192,192,192);
+}
+QSlider::handle:horizontal{
+    border: 1px solid grey;
+    background: rgb(50,50,50);
+    width: 15px;
+}
+QPushButton{
+    border: 1px double black;
+    background: rgb(96,96,96);
+    border width: 2px;
+    border-radius 4;
+    padding: 4px;
+    border-style: outset;
+    text-align: center;
+    color: rgb(220,220,220);
+    font: bold 11px;
+}
+QPushButton:hover{
+    background: rgb(145,145,145);
+}
+QPushButton:pressed{
+    background: rgb(130,130,130);
+    border-style: inset;
+}
+TrackLengthView{
+    background: rgb(96,96,96);
+    border: 1px solid rgb(44,44,44);
+}
+
+QTreeView{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(96,96,96);
+    color: rgb(220,220,220);
+    padding: 4px;
+}
+VelocityView{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(96,96,96);
+}
+
+PianoRoll{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(96,96,96);
+}
+TrackView{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(96,96,96);
+}
+TrackView[clicked=true]{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(120,120,120);
+}
+QCheckBox{
+     color: rgb(220,220,220);
+
+}
+
+QCheckBox::indicator{
+     border: 2px solid rgb(145,145,145);
+     background: rgb(44,44,44);
+}
+QCheckBox::indicator::checked{
+    background: rgb(112,44,32);
+}
+TrackContainer{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(50,50,50);
+    padding-left: 3px;
+    padding-top: 3px;
+}
+MainWindow{
+    background: rgb(82,82,82);
+}
+PluginTrackView{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(96,96,96);
+    padding: 3px;
+}
+PluginTrackView[clicked=true]{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(120,120,120);
+    padding: 3px;
+}
+PianoRollContainer{
+    border: 1px solid rgb(44,44,44);
+    background: rgb(50,50,50);
+}
+TrackMidiView{
+    background: rgb(112,112,112);
+    border: 1px solid rgb(44,44,44);
+}
+
+QSplitter::handle:horizontal{
+    background: rgb(50,50,50);
+}
+QSplitter::handle:vertical{
+    background: rgb(50,50,50);
+}
+ControlChangeView{
+    background: rgb(112,112,112);
+    border: 1px solid rgb(44,44,44);
+}
+PluginEditorContainer{
+    background: rgb(96,96,96);
+    border: 1px solid rgb(44,44,44);
+}
+PluginView{
+    background: rgb(96,96,96);
+    border: 1px solid rgb(44,44,44);
+    padding: 3px;
+}
+
