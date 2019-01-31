@@ -40,7 +40,7 @@ TrackView::TrackView(TrackMidi *midiTrack, TrackMidiView *trackMidiView,TrackCon
     showButton->setCheckable(true);
 
     QVBoxLayout *vlayout = new QVBoxLayout;
-    recordBox->setChecked(true);
+
     vlayout->setContentsMargins(10,5,10,5);
     vlayout->setAlignment(Qt::AlignTop);
     vlayout->addWidget(instrumentLabel,0,Qt::AlignTop|Qt::AlignLeft);
@@ -69,6 +69,14 @@ TrackView::TrackView(TrackMidi *midiTrack, TrackMidiView *trackMidiView,TrackCon
     comboBox->setMaxCount(24);
 
 }
+
+TrackView::~TrackView()
+{
+    pluginTrack->deleteLater();
+
+    _trackContainer->deleteTrack(this,_trackMidiView);
+}
+
 bool TrackView::eventFilter(QObject *target, QEvent *event)
 {
     // qDebug() << event->type();
@@ -103,7 +111,6 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
             }
             else
             {
-
                 setProperty("clicked",true);
                 style()->unpolish(this);
                 style()->polish(this);
@@ -119,18 +126,11 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
 }
 
 
-
-
-
-// Will delete this class. Do not call any member variables/functions after container call.
+// Used when this class is beying destroyed
 void TrackView::deleteTrack()
 {
-    _midiTrack->deleteTrack();
-    //    pluginTrack->deleteLater();
-    //    plugin.host->markForDeletion();
-    //track_midi_view->deleteLater();
-    //delete this;
-    // _trackContainer->deleteTrack(this,_trackMidiView);
+    delete _midiTrack;
+
 }
 
 void TrackView::deselect()
@@ -152,27 +152,16 @@ TrackMidiView *TrackView::getTrackMidiView()
 
 void TrackView::notifyMuteChange(int state)
 {
-    if(state)
-    {
-        midiTrack()->masterPlugin()->isMuted = true;
-    }
-    else
-    {
-        midiTrack()->masterPlugin()->isMuted = false;
-    }
+
+    midiTrack()->masterPlugin()->isMuted = state;
+
 }
 
 void TrackView::notifyRecordingChange(int state)
 {
-    if (state)
-    {
 
-        midiTrack()->masterPlugin()->setCanRecord(true);
-    }
-    else
-    {
-        midiTrack()->masterPlugin()->setCanRecord(false);
-    }
+    midiTrack()->masterPlugin()->setCanRecord(state);
+
 }
 
 void TrackView::ShowContextMenu(const QPoint &pos)
@@ -222,7 +211,7 @@ void TrackView::mousePressEvent(QMouseEvent *event)
     {
         ShowContextMenu(event->pos());
     }
-       setProperty("clicked",true);
+    setProperty("clicked",true);
     _trackContainer->trackClicked(this);
     style()->unpolish(this);
     style()->polish(this);

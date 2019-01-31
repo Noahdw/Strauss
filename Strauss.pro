@@ -63,7 +63,11 @@ SOURCES += src/main.cpp\
     src/command.cpp \
     src/qdraggingwidget.cpp \
     src/mastertrack.cpp \
-    src/trackmidi.cpp
+    src/trackmidi.cpp \
+    src/notation/notationmainwindow.cpp \
+    src/notation/notationview.cpp \
+    src/notation/notationpage.cpp \
+    src/notation/measure.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -102,7 +106,11 @@ HEADERS  += src/mainwindow.h\
     src/command.h \
     src/qdraggingwidget.h \
     src/mastertrack.h \
-    src/trackmidi.h
+    src/trackmidi.h \
+    src/notation/notationmainwindow.h \
+    src/notation/notationview.h \
+    src/notation/notationpage.h \
+    src/notation/measure.h
 
 LIBS += -lwinmm \
 

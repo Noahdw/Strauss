@@ -106,6 +106,11 @@ void HeaderContainer::record()
     play();
 }
 
+void HeaderContainer::notation()
+{
+
+}
+
 void HeaderContainer::keyboardMode(bool enabled)
 {
     keyboardModeEnabled = enabled;

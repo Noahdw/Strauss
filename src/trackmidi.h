@@ -12,10 +12,10 @@ class TrackMidi
 {
 public:
     TrackMidi();
+    ~TrackMidi();
     void setTrackView(TrackView *trackView);
     void setPianoRoll(PianoRoll *pianoRoll);
     void setMasterPlugin(Vst2HostCallback *vst2HostCallBack) {plugin = vst2HostCallBack;}
-    void deleteTrack();
     Vst2HostCallback *loadPlugin(QString actualPath);
     TrackView *trackView(){return _trackView;}
     MidiData  *midiData(){return &_midiData;}

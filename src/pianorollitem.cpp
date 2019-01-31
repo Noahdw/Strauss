@@ -63,20 +63,20 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     double scaleFactor = pianoroll->tPQN * pianoroll->scaleFactor;
 
     int xPos = (x() / scaleFactor);
-    int xAdjust = ( event->lastScenePos().x()/scaleFactor) - (actualInitX/ scaleFactor);
+    int xAdjust = ( event->lastScenePos().x()/scaleFactor) - (initMouseXPos/ scaleFactor);
     if (pianoroll->prefferedScaleFactor <= 0.03125)
     {
-        setPos(x() + event->lastScenePos().x() - actualInitX,yPos*keyHeight);
-                xAdjust = event->lastScenePos().x() - actualInitX;
-        actualInitX = event->lastScenePos().x();
+        setPos(x() + event->lastScenePos().x() - initMouseXPos,yPos*keyHeight);
+        xAdjust = event->lastScenePos().x() - initMouseXPos;
+        initMouseXPos = event->lastScenePos().x();
 
     }
     else
     {
-        if ((int)( event->lastScenePos().x()/scaleFactor) != (int)(actualInitX/ scaleFactor))
+        if ((int)( event->lastScenePos().x()/scaleFactor) != (int)(initMouseXPos/ scaleFactor))
         {
-            (int)( event->lastScenePos().x()/scaleFactor) < (int)(actualInitX/ scaleFactor) ? xAdjust = -1 : xAdjust = 1;
-            actualInitX = event->lastScenePos().x();
+            (int)( event->lastScenePos().x()/scaleFactor) < (int)(initMouseXPos/ scaleFactor) ? xAdjust = -1 : xAdjust = 1;
+            initMouseXPos = event->lastScenePos().x();
         }
         // qDebug() << "scenePos: " << event->lastScenePos().x()/scaleFactor << "pos.x()" << actualInitX/ scaleFactor;
         xPos += xAdjust;
@@ -134,7 +134,7 @@ void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsItem::mousePressEvent(event);
     lastSceneResizePos = event->lastScenePos().x();
     initXPos = x();
-    actualInitX = event->lastScenePos().x();
+    initMouseXPos = event->lastScenePos().x();
     initWidth = width;
     if (event->pos().x() <= (width / noteResizeThreshold) )
     {
@@ -166,11 +166,28 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         if (initWidth != width || initXPos != x())
         {
             int velocity = MidiManager::getVelocityFromNote(noteStart,note,data);
-            MidiManager::removeMidiNote(noteStart,noteEnd,note,data);
+            //MidiManager::removeMidiNote(noteStart,noteEnd,note,data);
+            this->velocity = velocity;
             noteStart = x();
             noteEnd = width;
-            MidiManager::addMidiNote(note,velocity,x(),noteEnd,data);
-            MidiManager::recalculateNoteListDT(data);
+            //MidiManager::addMidiNote(note,velocity,x(),noteEnd,data);
+            //MidiManager::recalculateNoteListDT(data);
+
+            int widthAdjust = 0;
+            int xAdjust = 0;
+            if(canResizeRight)
+                widthAdjust =width - initWidth;
+            if(canResizeLeft)
+            {
+                xAdjust = x() - initXPos;
+                widthAdjust =width - initWidth;
+                if(xAdjust < 0)
+                    xAdjust--;
+            }
+
+
+            pianoroll->resizeSelectedNotes(xAdjust,widthAdjust);
+
         }
         canResizeLeft = canResizeRight = false;
         return;
@@ -189,7 +206,7 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         MidiManager::addMidiNote(note,velocity,x(),noteEnd,data);
         noteStart = x();
         MidiManager::recalculateNoteListDT(data);
-      //  pianoroll->issueMoveCommand();
+        //  pianoroll->issueMoveCommand();
         pianoroll->changeNotesAfterMouseDrag(this);
     }
 }

@@ -16,7 +16,7 @@ class QDraggingWidget : public QWidget
 public:
     explicit QDraggingWidget(int min, int max,int defaultValue);
     QDraggingWidget();
-    const int getValue();
+    int getValue();
     void setMinimumValue(int min);
     void setMaximumValue(int max);
     void setDefaultValue(int defaultValue);
@@ -34,7 +34,8 @@ private:
     int _value;
     Qt::Orientation orientation;
     int min, max;
-    int lastMousePos;
+    int lastXPos;
+    int lastYPos;
     QLabel *valueLabel;
 };
 

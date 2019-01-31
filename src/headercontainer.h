@@ -28,6 +28,7 @@ private slots:
     void restart();
     void pause();
     void record();
+    void notation();
     void keyboardMode(bool enabled);
     void masterTempoChanged(int tempo);
 };

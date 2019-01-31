@@ -79,6 +79,7 @@ void PluginEditorContainer::switchPluginViews(PluginTrackView *pluginTrack)
 
 void PluginEditorContainer::pluginTrackClickedOn()
 {
+
     for (int i = 0; i < hTopLayout->count(); ++i) {
         auto pluginTrack = dynamic_cast<PluginTrackView*>(hTopLayout->itemAt(i)->widget());
 

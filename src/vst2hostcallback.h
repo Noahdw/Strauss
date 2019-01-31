@@ -78,7 +78,8 @@ public:
     int ccFramesTillBlock[128];
     int ccVecPos[128];
     PianoRoll *pianoroll;
-    double trackVolume = 0.5;
+    double trackVolume = 1.0;
+    float pan = 0.0;
     float sampleRate = 44100.0f;
     bool canPlay = false;
     bool isMuted = false;

@@ -24,11 +24,19 @@ PluginTrackView::PluginTrackView(TrackView * track)
     vlayout    = new QVBoxLayout;
     volumeSlider = new QSlider;
     QLabel *volumeLabel = new QLabel("Volume");
+    panSlider = new QSlider;
+    QLabel *panLabel = new QLabel("Pan");
 
     volumeSlider->setRange(0,300);
     volumeSlider->setFixedHeight(15);
     volumeSlider->setOrientation(Qt::Horizontal);
-    volumeSlider->setValue(100);
+    volumeSlider->setValue(200);
+
+    panSlider->setRange(-100,100);
+    panSlider->setFixedHeight(15);
+    panSlider->setOrientation(Qt::Horizontal);
+    panSlider->setValue(0);
+
 
     recordBox->setChecked(false);
     vlayout->setContentsMargins(10,0,10,10);
@@ -39,6 +47,8 @@ PluginTrackView::PluginTrackView(TrackView * track)
     vlayout->addWidget(recordBox);
     vlayout->addWidget(volumeLabel);
     vlayout->addWidget(volumeSlider);
+    vlayout->addWidget(panLabel);
+    vlayout->addWidget(panSlider);
     setLayout(vlayout);
 
     setFrameShape(QFrame::Box);
@@ -53,6 +63,9 @@ PluginTrackView::PluginTrackView(TrackView * track)
 
 
     connect(volumeSlider,&QSlider::sliderReleased,this,&PluginTrackView::volumeChanged);
+    connect(panSlider,&QSlider::sliderReleased,this,&PluginTrackView::panChanged);
+    midiTrack = track->midiTrack();
+
 }
 
 PluginTrackView::~PluginTrackView()
@@ -78,6 +91,7 @@ void PluginTrackView::mousePressEvent(QMouseEvent *event)
     pluginEditorContainer->masterTrack->setCurrentTrack(midiTrack);
     pluginEditorContainer->switchPluginViews(this);
     pluginEditorContainer->pluginTrackClickedOn();
+    pluginEditorContainer->masterTrack->setCurrentTrack(midiTrack);
     clickedOn(true);
     QFrame::mousePressEvent(event);
 }
@@ -108,8 +122,6 @@ void PluginTrackView::clickedOn(bool state)
     if (state)
     {
         pen.setStyle(Qt::DashLine);
-        // QString style = QString("QFrame { background-color:  rgb(%1,%2,%3); border: 0px ; }").arg(red).arg(green).arg(blue);
-        //setStyleSheet("QFrame { background-color: rgb(170,170,170); border: 1px solid black; border-radius: 4px; }");
         setProperty("clicked",true);
         style()->unpolish(this);
         style()->polish(this);
@@ -117,7 +129,6 @@ void PluginTrackView::clickedOn(bool state)
     else
     {
         pen.setStyle(Qt::SolidLine);
-        //setStyleSheet("QFrame { background-color: lightGray; border: 1px solid black; border-radius: 4px; }");
         setProperty("clicked",false);
         style()->unpolish(this);
         style()->polish(this);
@@ -128,6 +139,12 @@ void PluginTrackView::clickedOn(bool state)
 void PluginTrackView::setTrackName(QString name)
 {
     instrumentLabel->setText(name);
+}
+
+void PluginTrackView::panChanged()
+{
+    float p = panSlider->value();
+    midiTrack->masterPlugin()->pan = p / 200.0;
 }
 
 void PluginTrackView::volumeChanged()

@@ -32,7 +32,7 @@ void MasterTrack::addMidiTrackFromProject(const::google::protobuf::RepeatedPtrFi
     {
         auto *midiTrack = new TrackMidi;
         auto masterPlug = pb_midi_track[i].master_plugin();
-        auto trackView = trackContainer->addTrackFromLoadProject(pb_midi_track[i]);
+        auto trackView = trackContainer->addTrackFromLoadProject(pb_midi_track[i],midiTrack);
         midiTrack->setTrackView(trackView);
         auto pluginTrack = pluginEditorContainer->addTrack(trackView);
         trackView->pluginTrack = pluginTrack;

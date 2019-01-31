@@ -11,6 +11,13 @@ TrackMidi::TrackMidi()
     plugin->midiTrack = this;
 }
 
+TrackMidi::~TrackMidi()
+{
+    plugin->markForDeletion();
+    _trackView->deleteLater();
+    _pianoRoll->deleteLater();
+}
+
 void TrackMidi::setTrackView(TrackView *trackView)
 {
     _trackView = trackView;
@@ -23,10 +30,7 @@ void TrackMidi::setPianoRoll(PianoRoll *pianoRoll)
     plugin->setPianoRollRef(pianoRoll);
 }
 
-void TrackMidi::deleteTrack()
-{
 
-}
 
 Vst2HostCallback *TrackMidi::loadPlugin(QString actualPath)
 {

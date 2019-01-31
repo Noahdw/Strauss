@@ -45,6 +45,7 @@ void VelocityView::addOrRemoveVelocityViewItem(int start, int velocity, int note
     {
         foreach (const auto& item, scene->items())
         {
+            qDebug() <<"ITEM.x: " << item->x() << "start " << start << "count " << scene->items().length();
             if (floor(item->x()) == start) {
                  VelocityViewItem *line = dynamic_cast<VelocityViewItem*>(item);
                  if (line->note == note) {

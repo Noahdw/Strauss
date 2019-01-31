@@ -28,6 +28,7 @@ class TrackView: public QFrame
 
 public:
     TrackView(TrackMidi *midiTrack, TrackMidiView *_trackMidiView, TrackContainer *_trackContainer, QWidget* parent = 0);
+    ~TrackView();
     void deleteTrack();
     void deselect();
     QString getTrackName() const;

@@ -208,7 +208,6 @@ void Keyboard::mouseMoveEvent(QMouseEvent *event)
 {
     auto items = scene->items(mapToScene(event->pos()),Qt::ContainsItemShape);
 
-    //  lastNote = event->y() / 128;
 
     if (event->buttons() != Qt::LeftButton) {
         return;
@@ -216,25 +215,19 @@ void Keyboard::mouseMoveEvent(QMouseEvent *event)
     for(const auto & item : items)
     {
         if (item->y() != lastNote) {
-            setNoteColors();
-            for(const auto & lastItem : scene->items() )
+            if (!dynamic_cast<QGraphicsRectItem*>(item))
             {
-                QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(lastItem);
-                if(note){
-                    //((int)(note->y() / keyHeight) % 12) == 0 ? note->setBrush(Qt::black) : note->setBrush(Qt::white);
-                    piano_roll->playKeyboardNote(127 - note->y()/keyHeight, false);
+                continue;
+            }
+            piano_roll->playKeyboardNote(127 - activeNote->y()/keyHeight, false);
+            activeNote->setBrush(activeBrush);
+            activeNote = dynamic_cast<QGraphicsRectItem*>(item);
+            activeBrush = activeNote->brush();
 
-                }
-            }
-            QGraphicsRectItem *note = dynamic_cast<QGraphicsRectItem*>(item);
-            if (note)
-            {
-                lastNote = item->y();
-                activeBrush =note->brush();
-                note->setBrush(Qt::red);
-                activeNote = note;
-                piano_roll->playKeyboardNote(127 - note->y()/keyHeight, true);
-            }
+            lastNote = item->y();
+            activeNote->setBrush(Qt::red);
+            piano_roll->playKeyboardNote(127 - activeNote->y()/keyHeight, true);
+
         }
 
 

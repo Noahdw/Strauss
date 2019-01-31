@@ -25,7 +25,7 @@ class TrackContainer : public QFrame
     Q_OBJECT
 public:
     TrackContainer(PluginEditorContainer *pluginEditorContainer, PianoRollContainer * pianoRollContainer, MasterTrack * masterTrack);
-    TrackView *addTrackFromLoadProject(const MidiTrack &midi_track);
+    TrackView *addTrackFromLoadProject(const MidiTrack &midi_track, TrackMidi *midiTrack);
     TrackView *addSingleView(TrackMidi *midiTrack);
     void deleteTrack(TrackView *trackView, TrackMidiView *midiView);
     int getNumTracks() const;

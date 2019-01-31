@@ -36,6 +36,7 @@ class AudioManager;
 #include "src/mastertrack.h"
 #include "src/projectmanager.h"
 #include "src/trackmidi.h"
+#include "src/Notation/notationmainwindow.h"
 
 class MainWindow : public QMainWindow
 {
@@ -63,6 +64,7 @@ private slots:
     void deleteAllNotes();
     void acceptSettingsDialog(int accept);
     void displaySettingsDialog();
+    void switchNotationView();
     void loadProject();
     void exportAudio();
 private:
@@ -90,10 +92,12 @@ private:
     QAction *saveAction;
     QAction *saveAsAction;
     QAction *loadAction;
+    QAction *switchNotationAction;
     QScrollArea *trackScrollArea;
     int velocity = 70;
     QWidget *centralWidget;
     QWidget *pluginEdiorCentralWidget;
+    NotationMainWindow *centralNotationWidget;
     QStackedWidget * stackedCentralWidget;
     FolderViewAbstractModel *model;
     QList<QString> getFoldersFromSettings();

@@ -26,6 +26,7 @@ public:
     TrackView * trackView;
     TrackMidi *midiTrack;
 public slots:
+    void panChanged();
     void volumeChanged();
 protected:
     void paintEvent(QPaintEvent *event);
@@ -33,6 +34,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event);
 private:
     QSlider *volumeSlider;
+    QSlider *panSlider;
     QLineEdit *instrumentLabel;
     QCheckBox *muteBox;
     QCheckBox *recordBox;
@@ -42,6 +44,7 @@ private:
     int red;
     int green;
     int blue;
+    int pan = 64;
 };
 
 #endif // PLUGINTRACKVIEW_H

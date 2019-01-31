@@ -37,6 +37,7 @@ public:
     void playKeyboardNote(int note, bool active);
     void clearActiveNotes();
     void deleteAllNotes();
+    void resizeSelectedNotes(int xAdjustL,int xAdjustR);
     void deleteSelectedNotes();
     void setScrollWheelValue(int value);
     void updateSongTrackerPos(bool isPauseOrResume, bool isResume, int custom);
@@ -142,6 +143,22 @@ public:
 
 private:
     QList<QGraphicsItem*> removedItems;
+    PianoRoll* _pianoRoll;
+
+};
+
+class PianoRollResizeCommand : Command
+{
+public:
+    PianoRollResizeCommand(PianoRoll *pianoRoll, QList<QGraphicsItem*> items, int xLeftAdjust, int xRightAdjust);
+    ~PianoRollResizeCommand();
+    virtual void execute();
+    virtual void undo();
+
+private:
+    QList<QGraphicsItem*> resizedItems;
+    int xLeft;
+    int xRight;
     PianoRoll* _pianoRoll;
 
 };

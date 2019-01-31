@@ -391,11 +391,11 @@ void PianoRoll::copyItems()
 
 void PianoRoll::pasteItems()
 {
-//    for(const auto &item : copied_items)
-//    {
-//        auto *pitem = new PianoRollItem;
+    //    for(const auto &item : copied_items)
+    //    {
+    //        auto *pitem = new PianoRollItem;
 
-//    }
+    //    }
 }
 
 bool PianoRoll::hasPlugin()
@@ -421,6 +421,22 @@ void PianoRoll::deleteAllNotes()
         item=nullptr;
     }
 }
+
+void PianoRoll::resizeSelectedNotes(int xAdjustL, int xAdjustR)
+{
+    if (last_selected_items.size() == 0)
+    {
+        return;
+    }
+    auto list = last_selected_items;
+    list.detach();
+    commands.push((Command*) new PianoRollResizeCommand(this,list,xAdjustL,xAdjustR));
+    commands.top()->execute();
+    clearActiveNotes();
+    scene->selectedItems().clear();
+    last_selected_items.clear();
+}
+
 
 
 void PianoRoll::deleteSelectedNotes()
@@ -506,7 +522,7 @@ void PianoRoll::drawBackground(QPainter * painter, const QRectF & rect)
     painter->setPen(pen);
     painter->eraseRect(*sceneRect); //does this even matter?
     painter->resetMatrix();
-   // painter->fillRect(viewport()->rect(),QBrush(QColor(250,250,250)));
+    // painter->fillRect(viewport()->rect(),QBrush(QColor(250,250,250)));
 
     //Draws the horizontals lines
     for (int var = 0; var <= 128; ++var)
@@ -553,48 +569,48 @@ void PianoRoll::wheelEvent(QWheelEvent *event)
     QScrollBar* wheelPos;
     if(event->modifiers().testFlag(Qt::ControlModifier))
     {
-        //AnchorUnderMouse allows xPos to update automatically but make sure to keep track
+    //AnchorUnderMouse allows xPos to update automatically but make sure to keep track
         // of yPos as it should not be changed here.
-        int previousMousePos = verticalScrollBar()->value();
+    int previousMousePos = verticalScrollBar()->value();
 
-        if(tPQN*scaleFactor*transform().m11() > kminimumColSpacing)
-        {
-            scaleFactor = prefferedScaleFactor;
-        }
-        while(tPQN*scaleFactor*transform().m11()<kminimumColSpacing)
-        {
-            scaleFactor*=2;
-        }
-        int zoom  = event->angleDelta().y() /120;
-        yscroller = event->angleDelta().y() /120*11;
+    if(tPQN*scaleFactor*transform().m11() > kminimumColSpacing)
+    {
+        scaleFactor = prefferedScaleFactor;
+    }
+    while(tPQN*scaleFactor*transform().m11()<kminimumColSpacing)
+    {
+        scaleFactor*=2;
+    }
+    int zoom  = event->angleDelta().y() /120;
+    yscroller = event->angleDelta().y() /120*11;
 
-        wheelPos = this->horizontalScrollBar();
-        if (zoom > 0)
-        {
-            scale(xscale,1);
-            velocityView->setScale(xscale,false,wheelPos->value());
-            trackLengthView->setScale(xscale,false,wheelPos->value(),scaleFactor);
-            trackLengthView->setTransform(transform());
-        }
-        else
-        {
-            scale(0.8/xscale,1);
-            velocityView->setScale(0.8/xscale,false,wheelPos->value());
-            trackLengthView->setScale(0.8/xscale,false,wheelPos->value(),scaleFactor);
-            trackLengthView->setTransform(transform());
-        }
-        //  this->scale(xscale,1);
-        if (transform().m11() <= (float)width() / (tPQN*g_quarterNotes))
-        {
-            resetMatrix();
-            scale((float)width() / (tPQN*g_quarterNotes),1);
-            velocityView->setScale((float)width() / (tPQN*g_quarterNotes),true,wheelPos->value());
-            trackLengthView->setTransform(transform());
-            trackLengthView->setScale((float)width() / (tPQN*g_quarterNotes),true,0,scaleFactor);
-        }
-        colSpacing*=transform().m11();
-        wheelPos=this->verticalScrollBar();
-        wheelPos->setValue(previousMousePos);
+    wheelPos = this->horizontalScrollBar();
+    if (zoom > 0)
+    {
+        scale(xscale,1);
+        velocityView->setScale(xscale,false,wheelPos->value());
+        trackLengthView->setScale(xscale,false,wheelPos->value(),scaleFactor);
+        trackLengthView->setTransform(transform());
+    }
+    else
+    {
+        scale(0.8/xscale,1);
+        velocityView->setScale(0.8/xscale,false,wheelPos->value());
+        trackLengthView->setScale(0.8/xscale,false,wheelPos->value(),scaleFactor);
+        trackLengthView->setTransform(transform());
+    }
+    //  this->scale(xscale,1);
+    if (transform().m11() <= (float)width() / (tPQN*g_quarterNotes))
+    {
+        resetMatrix();
+        scale((float)width() / (tPQN*g_quarterNotes),1);
+        velocityView->setScale((float)width() / (tPQN*g_quarterNotes),true,wheelPos->value());
+        trackLengthView->setTransform(transform());
+        trackLengthView->setScale((float)width() / (tPQN*g_quarterNotes),true,0,scaleFactor);
+    }
+    colSpacing*=transform().m11();
+    wheelPos=this->verticalScrollBar();
+    wheelPos->setValue(previousMousePos);
     }
     else
     {
@@ -779,7 +795,7 @@ void PianoRollAddCommand::undo()
     {
         PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
         int note = 127 - (pItem->y()/keyHeight);
-        _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pItem->noteStart,0,note,false);
+        _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pItem->x(),0,note,false);
         MidiManager::removeMidiNote(pItem->x(),pItem->width,note,_pianoRoll->midiTrack->midiData());
         _pianoRoll->scene->removeItem(item);
     }
@@ -822,6 +838,51 @@ void PianoRollRemoveCommand::undo()
         MidiManager::addMidiNote(note,pItem->velocity,pItem->x(),pItem->width,_pianoRoll->midiTrack->midiData());
         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pItem->x(),pItem->velocity,note,true);
         _pianoRoll->scene->addItem(item);
+    }
+    MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
+}
+
+PianoRollResizeCommand::PianoRollResizeCommand(PianoRoll *pianoRoll, QList<QGraphicsItem *> items, int xLeftAdjust, int xRightAdjust)
+{
+    _pianoRoll = pianoRoll;
+    resizedItems = items;
+    xLeft = xLeftAdjust;
+    xRight = xRightAdjust;
+}
+
+void PianoRollResizeCommand::execute()
+{
+    foreach (const auto & item, resizedItems)
+    {
+        PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
+        int orgigX = pItem->x() - xLeft;
+        int origWidth = pItem->width - xRight;
+        int note = 127 - (pItem->y()/keyHeight);
+        MidiManager::removeMidiNote(orgigX,origWidth,note,_pianoRoll->midiTrack->midiData());
+        MidiManager::addMidiNote(note,pItem->velocity,pItem->x(),pItem->width,_pianoRoll->midiTrack->midiData());
+         _pianoRoll->velocityView->addOrRemoveVelocityViewItem(orgigX,pItem->velocity,note,false);
+        _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pItem->x(),pItem->velocity,note,true);
+
+
+    }
+    MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
+}
+
+void PianoRollResizeCommand::undo()
+{
+    foreach (const auto & item, resizedItems)
+    {
+        PianoRollItem *pItem = static_cast<PianoRollItem*>(item);
+        int origX = pItem->x() - xLeft;
+        int origWidth = pItem->width - xRight;
+        int note = 127 - (pItem->y()/keyHeight);
+        MidiManager::removeMidiNote(pItem->x(),pItem->width,note,_pianoRoll->midiTrack->midiData());
+        _pianoRoll->velocityView->addOrRemoveVelocityViewItem(pItem->x(),pItem->velocity,note,false);
+        _pianoRoll->velocityView->addOrRemoveVelocityViewItem(origX,pItem->velocity,note,true);
+        MidiManager::addMidiNote(note,pItem->velocity,origX,origWidth,_pianoRoll->midiTrack->midiData());
+        pItem->setX(origX);
+        pItem->setBoundingRect(origWidth);
+
     }
     MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack->midiData());
 }

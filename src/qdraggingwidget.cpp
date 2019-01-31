@@ -14,7 +14,7 @@ QDraggingWidget::QDraggingWidget()
 
 }
 
-const int QDraggingWidget::getValue()
+int QDraggingWidget::getValue()
 {
     return _value;
 }
@@ -35,10 +35,8 @@ void QDraggingWidget::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        if (orientation == Qt::Vertical)
-            lastMousePos = event->pos().y();
-        if (orientation == Qt::Horizontal)
-            lastMousePos = event->pos().x();
+        lastXPos = event->pos().x();
+        lastYPos = event->pos().y();
     }
 
     QWidget::mousePressEvent(event);
@@ -48,33 +46,34 @@ void QDraggingWidget::mouseMoveEvent(QMouseEvent *event)
 {
     if(event->buttons() == Qt::LeftButton)
     {
-        if (abs(lastMousePos) % 3 == 1)
+
+        if (orientation == Qt::Vertical)
         {
-            if (orientation == Qt::Vertical)
+            if (abs(lastYPos) % 3 == 1 && event->pos().y() != lastYPos)
             {
-                int direction = (event->pos().y() > lastMousePos) ? -1 : 1;
+                int direction = (event->pos().y() > lastYPos) ? -1 : 1;
                 if (_value + direction < max && _value + direction > min)
                 {
                     _value += direction;
                     emit valueChanged(_value);
                     valueLabel->setText(QString::number(_value));
                 }
-            }
-            else if(orientation == Qt::Horizontal)
-            {
-                int direction = (event->pos().x() > lastMousePos) ? -1 : 1;
-                if (_value + direction < max && _value + direction > min)
-                {
-                    _value += direction;
-                    emit valueChanged(_value);
-                    valueLabel->setText(QString::number(_value));
-                }
+
             }
         }
-        if (orientation == Qt::Vertical)
-            lastMousePos = event->y();
-        if (orientation == Qt::Horizontal)
-            lastMousePos = event->x();
+        else if(orientation == Qt::Horizontal && event->pos().x() != lastXPos)
+        {
+            int direction = (event->pos().x() > lastXPos) ? -1 : 1;
+            if (_value + direction < max && _value + direction > min)
+            {
+                _value += direction;
+                emit valueChanged(_value);
+                valueLabel->setText(QString::number(_value));
+            }
+        }
+
+        lastXPos = event->pos().x();
+        lastYPos = event->pos().y();
     }
     QWidget::mouseMoveEvent(event);
 }

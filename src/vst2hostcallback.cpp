@@ -53,7 +53,7 @@ Vst2HostCallback::~Vst2HostCallback()
         FreeLibrary(hinst);
 
     }
-    delete track;
+  //  delete track;
 
 }
 
@@ -750,8 +750,13 @@ void Vst2HostCallback::processAudio(AEffect *plugin, float **inputs, float **out
 
         for (int i = 0; i < g_blocksize; ++i)
         {
+
+            outputs[0][i] *=  0.5 - pan;
+            outputs[1][i] *=  0.5 + pan;
+
             outputs[0][i] *= trackVolume;
-            outputs[1][i] *= trackVolume;
+               outputs[1][i] *= trackVolume;
+
         }
 
         for (const auto &p : midiTrack->effectPlugins)

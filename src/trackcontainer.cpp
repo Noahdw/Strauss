@@ -40,10 +40,9 @@ TrackContainer::TrackContainer(PluginEditorContainer *pluginEditorContainer, Pia
 
 }
 
-TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track)
+TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track, TrackMidi *midiTrack)
 {
-    TrackMidi *trackMidi = new TrackMidi;
-    auto midiData = trackMidi->midiData();
+    auto midiData = midiTrack->midiData();
     for (int i = 0; i < midi_track.midi_data_size(); ++i)
     {
         auto midi_data = midi_track.midi_data(i);
@@ -52,7 +51,7 @@ TrackView *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track)
     midiData->totalDT = g_totalDt;
     MidiManager::recalculateNoteListDT(midiData);
     auto *midiView = new TrackMidiView;
-    TrackView *trackView = new TrackView(trackMidi,midiView,this);
+    TrackView *trackView = new TrackView(midiTrack,midiView,this);
     midiData->instrumentName = QString::fromStdString(midi_track.name());
 
     trackView->id = ID++;

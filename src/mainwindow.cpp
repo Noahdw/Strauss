@@ -36,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     model = new FolderViewAbstractModel(getFoldersFromSettings());
     centralWidget = new QWidget(this);
+
     pluginEdiorCentralWidget = new QWidget(this);
     stackedCentralWidget = new QStackedWidget;
     audio_engine     = new AudioEngine;
@@ -52,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
-    masterTrack              = new  MasterTrack;
+    masterTrack              = new MasterTrack;
     folder_view              = new FolderView(model,masterTrack);
     header_container         = new HeaderContainer(audio_engine);
     piano_roll_container     = new PianoRollContainer;
@@ -64,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     piano_roll_container->setControlChangeContainer(control_change_container);
     folder_view->pRollContainer = piano_roll_container;
     trackScrollArea->setWidget(track_container);
-
+    centralNotationWidget       = new NotationMainWindow(masterTrack);
     mainLayout                  = new QVBoxLayout;
     QHBoxLayout *helperLayout   = new QHBoxLayout;
     QSplitter   *trackSplitter  = new QSplitter;
@@ -88,6 +89,7 @@ MainWindow::MainWindow(QWidget *parent) :
     stackedCentralWidget->addWidget(centralWidget);
 
     stackedCentralWidget->addWidget(plugin_editor_container);
+        stackedCentralWidget->addWidget(centralNotationWidget);
     QObject::connect(track_container,&TrackContainer::switchControlChange,control_change_container,
                      &ControlChangeContainer::switchControlChangeContainer);
 
@@ -214,6 +216,7 @@ void MainWindow::on_actionPlay_triggered()
 void MainWindow::deleteAllNotes()
 {
 
+    centralNotationWidget->addMeasure();
 }
 
 void MainWindow::acceptSettingsDialog(int accept)
@@ -256,6 +259,9 @@ void MainWindow::setUpMenuBar()
     settingsAction = new QAction(tr("Settings"),this);
     connect(settingsAction, &QAction::triggered, this, &MainWindow::displaySettingsDialog);
 
+    switchNotationAction = new QAction("Notation View");
+     connect(switchNotationAction, &QAction::triggered, this, &MainWindow::switchNotationView);
+
     //Add pause
 
     //Create menu crap
@@ -272,6 +278,9 @@ void MainWindow::setUpMenuBar()
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     editMenu->addAction(deleteAllNotesAction);
     editMenu->addAction(addNewTrackAction);
+
+     QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
+     viewMenu->addAction(switchNotationAction);
 }
 
 
@@ -286,31 +295,32 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             QMainWindow::keyReleaseEvent(event);
             return;
         }
-        for(const auto& plugin : pluginHolderVec)
+        int note = getNoteFromKeyboard(event->key());
+        if (note)
         {
-            if (plugin->canRecord())
+            for(const auto& plugin : pluginHolderVec)
             {
-                int note = getNoteFromKeyboard(event->key());
-                if (note)
+                if (plugin->canRecord())
                 {
                     plugin->addMidiEvent(0x90,note,velocity,0);
                 }
+
             }
+            return;
         }
     }
-    else
+
+    switch (event->key())
     {
-        switch (event->key())
-        {
-        case Qt::Key_Alt:
-            stackedCentralWidget->setCurrentIndex(!stackedCentralWidget->currentIndex());
-            break;
-        default:
-            break;
-        }
-        event->ignore();
-        QMainWindow::keyPressEvent(event);
+    case Qt::Key_Alt:
+        stackedCentralWidget->setCurrentIndex(!stackedCentralWidget->currentIndex());
+        break;
+    default:
+        break;
     }
+    event->ignore();
+    QMainWindow::keyPressEvent(event);
+
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
@@ -344,7 +354,8 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 
 void MainWindow::addNewTrack()
 {
-     masterTrack->addTrack();
+   auto track = masterTrack->addTrack();
+   centralNotationWidget->addInstrument(track);
 }
 
 void MainWindow::displaySettingsDialog()
@@ -353,6 +364,11 @@ void MainWindow::displaySettingsDialog()
     connect(settingsDialog,&SettingsDialog::finished,this,&MainWindow::acceptSettingsDialog);
     settingsDialog->exec();
 
+}
+
+void MainWindow::switchNotationView()
+{
+    stackedCentralWidget->setCurrentWidget(centralNotationWidget);
 }
 
 void MainWindow::exportAudio()
