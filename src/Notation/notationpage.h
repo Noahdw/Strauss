@@ -6,19 +6,22 @@ class NotationView;
 #include <QObject>
 #include <QGraphicsScene>
 #include <QGraphicsView>
-
+#include <src/Notation/stave.h>
 #include <src/Notation/measure.h>
 class NotationPage : public QGraphicsView
 {
     Q_OBJECT
 public:
     NotationPage(NotationView *view);
-    void addStave();
+    Stave *addStave();
     int unusedMeasures();
     int staveGroupsPerPage();
     int measuresPerWidth();
+    int staveYFromMeasure(Measure *measure);
     void assignMeasure(Measure *measure);
+    void updateNotes(QGraphicsItem *removedNote, QList<QGraphicsItem*> &newNotes);
     std::map<Measure*,int> measures;
+    QVector<Stave*> staves;
     int lineSpace = 30;
 protected:
     void MousePressEvent(QMouseEvent *event);
@@ -26,6 +29,8 @@ protected:
    // void paintEvent(QPaintEvent * event);   // void mouseMoveEvent(QMouseEvent *event);
   //  void mouseReleaseEvent(QMouseEvent *event);
 private:
+    Stave *getStaveFromScene(QPointF pos);
+    Measure *getMeasureFromScene(Stave *stave, QPointF pos);
     QGraphicsScene *scene;
     int prefferedMeasureWidth = 200;
     int pageWidth = 1200;

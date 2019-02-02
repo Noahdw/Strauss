@@ -67,7 +67,10 @@ SOURCES += src/main.cpp\
     src/notation/notationmainwindow.cpp \
     src/notation/notationview.cpp \
     src/notation/notationpage.cpp \
-    src/notation/measure.cpp
+    src/notation/measure.cpp \
+    src/notation/stave.cpp \
+    src/notation/notationheader.cpp \
+    src/notation/note.cpp
 
 HEADERS  += src/mainwindow.h\
     src/midiplayer.h\
@@ -110,7 +113,10 @@ HEADERS  += src/mainwindow.h\
     src/notation/notationmainwindow.h \
     src/notation/notationview.h \
     src/notation/notationpage.h \
-    src/notation/measure.h
+    src/notation/measure.h \
+    src/notation/stave.h \
+    src/notation/notationheader.h \
+    src/notation/note.h
 
 LIBS += -lwinmm \
 

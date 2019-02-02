@@ -1,9 +1,12 @@
 #include "notationmainwindow.h"
+#include "src/Notation/notationheader.h"
 
 NotationMainWindow::NotationMainWindow(MasterTrack *master) : masterTrack(master)
 {
     notationView = new NotationView(master);
     mainVLayout = new QVBoxLayout;
+    header = new NotationHeader(this);
+    mainVLayout->addWidget(header);
     mainVLayout->addWidget(notationView);
     setLayout(mainVLayout);
 

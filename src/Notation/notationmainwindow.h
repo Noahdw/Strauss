@@ -1,6 +1,8 @@
 #ifndef NOTATIONMAINWINDOW_H
 #define NOTATIONMAINWINDOW_H
 
+class NotationHeader;
+
 #include <QObject>
 #include <QWidget>
 #include <src/mastertrack.h>
@@ -15,9 +17,10 @@ public:
     void addInstrument(TrackMidi *track);
     void addMeasure();
 private:
-    NotationView * notationView;
+    NotationView *notationView;
     QVBoxLayout *mainVLayout;
-    MasterTrack * masterTrack;
+    MasterTrack *masterTrack;
+    NotationHeader *header;
 };
 
 #endif // NOTATIONMAINWINDOW_H
