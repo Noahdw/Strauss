@@ -2,8 +2,7 @@
 
 
 
-Strauss is the beginning of what will hopefully one day be a Digital Audio Workstation that focuses
-on efficient composer workflow through the integration of both notation software such as Musescore as well as traditional DAWS such as Abelton. This DAW does not aim to support many of the features of live recording that exist in most DAWs, but to instead create an efficient and practical workflow for composers who either compose with notation software or directly into the piano roll.
+Strauss is a Digital Audio Workstation / Notation software that attemps to create a more efficient workflow for the modern composer. Note input is done through the notation side while there is an entire DAW underneath it that allows for fine tuning of notes and their sounnds.
 
 Strauss is  "basic feature" complete and is fully capable of producing music with.
 
@@ -22,17 +21,6 @@ Strauss is  "basic feature" complete and is fully capable of producing music wit
 * Midi device recording
 * Export audio as .WAV file
 * saving and loading project
+* basic notation support
 
 
-### Using Strauss
-You must first build Portaudio debug and release versions and put them in ./Debug and ./Release folders of your working dir.
-see http://portaudio.com/docs/v19-doxydocs/compile_windows.html.
-Then build protobuf as a dynamic linked library and put the produced protobuf.lib files in the respective ./Release and ./Debug folders.
-(Build using MSVC2017)
-Next get the VST2 SDK - download the VST3 SDK and you will find the VST2 version in there. Copy the contents to a folder called
-./SDK in your WD.
-
-Some short-cuts used to navigate:
-* Alt - swich between piano roll and plugin selector views.
-* B   - Toggle draw mode in the Control Change view.
-* C   - switch between piano roll and Control Change View.
