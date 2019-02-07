@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QPainter>
 #include <QGraphicsItem>
+#include "src/Notation/n_common.h"
 class Note : public QGraphicsItem
 {
 public:
@@ -14,8 +15,8 @@ public:
     float noteValue;
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    const qreal xRad = 20;
-    const qreal yRad = 30;
+    const qreal xRad = n_noteWidth / 2.0;
+    const qreal yRad = n_noteHeight / 2.0;
 };
 
 #endif // NOTE_H

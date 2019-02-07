@@ -3,7 +3,6 @@
 ControlChangeView::ControlChangeView(QWidget *parent) : QGraphicsView(parent)
 {
     setViewportUpdateMode(MinimalViewportUpdate);
-    setRenderHint(QPainter::Antialiasing);
 }
 
 
@@ -14,10 +13,8 @@ void ControlChangeView::resizeEvent(QResizeEvent *event)
 
 void ControlChangeView::showEvent(QShowEvent *event)
 {
-    if (scene == nullptr)
-    {
-        return;
-    }
+    if (scene == nullptr) return;
+
     setUpdatesEnabled(false);
     fitInView(scene->sceneRect(), Qt::IgnoreAspectRatio);
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);

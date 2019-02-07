@@ -19,13 +19,13 @@ public:
     int measuresPerWidth();
     int staveYFromMeasure(Measure *measure);
     void assignMeasure(Measure *measure);
-    void updateNotes(QGraphicsItem *removedNote, QList<QGraphicsItem*> &newNotes);
+    void forceRedraw();
     std::map<Measure*,int> measures;
     QVector<Stave*> staves;
     int lineSpace = 30;
 protected:
     void MousePressEvent(QMouseEvent *event);
-    void mouseDoubleClickEvent(QMouseEvent  *event);
+
    // void paintEvent(QPaintEvent * event);   // void mouseMoveEvent(QMouseEvent *event);
   //  void mouseReleaseEvent(QMouseEvent *event);
 private:

@@ -15,4 +15,13 @@ NotationHeader::NotationHeader(NotationMainWindow *mainWin)  : mainWindow(mainWi
     box->setLayout(hLayout);
     mainLayout->addWidget(box);
     setLayout(mainLayout);
+
+    connect(qrtNote, &QPushButton::clicked, [=] { changeNoteValue(1.0); });
+      connect(halfNote, &QPushButton::clicked, [=] { changeNoteValue(2.0); });
+}
+
+void NotationHeader::changeNoteValue(float value)
+{
+    mainWindow->notationView->
+    n_currentNoteValue = value;
 }

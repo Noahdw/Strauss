@@ -116,7 +116,8 @@ HEADERS  += src/mainwindow.h\
     src/notation/measure.h \
     src/notation/stave.h \
     src/notation/notationheader.h \
-    src/notation/note.h
+    src/notation/note.h \
+    src/notation/n_common.h
 
 LIBS += -lwinmm \
 

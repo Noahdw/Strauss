@@ -14,9 +14,7 @@ QComboBox QAbstractItemView {
     border: 2px solid rgb(44,44,44);
     selection-background-color: rgb(44,44,44);
 }
-QFrame{
-   background: rgb(50,50,50);
-}
+
 QScrollArea{
     border: none;
     background: rgb(96,96,96);
@@ -182,4 +180,11 @@ PluginView{
 }
 NotationPage{
     background: rgb(200,200,200);
+}
+Measure{
+    background-color: rgba(0,0,0,0);
+    border: 1px solid black;
+}
+Stave{
+    border: 2px solid black;
 }

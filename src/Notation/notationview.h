@@ -20,6 +20,7 @@ public:
     void AddMeasure(int index);
     int numInstruments();
     void assignMeasureToPage();
+    void changeCurrentNote(float value);
 protected:
     void wheelEvent(QWheelEvent *event);
 private:

@@ -9,7 +9,6 @@ The TrackView class is composed with this one to represent a midi track for some
 TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 {
     setViewportUpdateMode(MinimalViewportUpdate);
-    setRenderHint(QPainter::Antialiasing);
     setMinimumHeight(115);
     setMaximumHeight(115);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

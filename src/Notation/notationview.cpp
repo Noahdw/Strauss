@@ -5,14 +5,7 @@ NotationView::NotationView(MasterTrack *master) :masterTrack(master)
     setMinimumSize(2000,900);
     scene = new QGraphicsScene;
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-    // scene->setSceneRect(0,0,10,1000);
     setScene(scene);
-
-    for(int i = 0; i < defaultMeaures; ++i)
-    {
-        //   AddMeasure(i);
-
-    }
 }
 
 NotationPage *NotationView::AddPage(int index)
@@ -49,8 +42,6 @@ void NotationView::AddMeasure(int index)
     Measure *measure = new Measure;
     measures.append(measure);
     int mes = 1200 / measure->prefferedMeasureWidth;
-    measure->width = mes;
-    // assignMeasureToPage();
 
     foreach(auto& page, pages)
     {
@@ -61,6 +52,7 @@ void NotationView::AddMeasure(int index)
             return;
         }
     }
+
 }
 
 int NotationView::numInstruments()
@@ -73,6 +65,14 @@ void NotationView::assignMeasureToPage()
     for(int i = 0; i < defaultMeaures; ++i)
     {
         AddMeasure(i);
+    }
+}
+
+void NotationView::changeCurrentNote(float value)
+{
+    for(const auto & page : pages)
+    {
+        auto m = page->getMeasures();
     }
 }
 

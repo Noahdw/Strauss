@@ -9,6 +9,7 @@ class NotationHeader;
 #include <src/trackmidi.h>
 #include <src/notation/notationview.h>
 #include <QVBoxLayout>
+#include <src/Notation/n_common.h>
 class NotationMainWindow : public QWidget
 {
     Q_OBJECT
@@ -16,8 +17,9 @@ public:
     NotationMainWindow(MasterTrack * master);
     void addInstrument(TrackMidi *track);
     void addMeasure();
-private:
     NotationView *notationView;
+private:
+
     QVBoxLayout *mainVLayout;
     MasterTrack *masterTrack;
     NotationHeader *header;

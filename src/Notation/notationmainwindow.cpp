@@ -1,6 +1,10 @@
 #include "notationmainwindow.h"
 #include "src/Notation/notationheader.h"
 
+float n_selectedNoteValue = 1;
+int n_noteWidth = 20;
+int n_noteHeight = 20;
+float n_currentNoteValue = 1.0;
 NotationMainWindow::NotationMainWindow(MasterTrack *master) : masterTrack(master)
 {
     notationView = new NotationView(master);
@@ -16,7 +20,6 @@ void NotationMainWindow::addInstrument(TrackMidi *track)
 {
     notationView->AddInstrument(track);
     notationView->assignMeasureToPage();
-
 }
 
 void NotationMainWindow::addMeasure()
