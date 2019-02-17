@@ -23,6 +23,7 @@ public:
     std::map<Measure*,int> measures;
     QVector<Stave*> staves;
     int lineSpace = 30;
+    NotationView *notationView;
 protected:
     void MousePressEvent(QMouseEvent *event);
 
@@ -39,7 +40,7 @@ private:
     int staveWidth;
     int numStaves = 0;
     int lastStavePos = staveHeight;
-    NotationView *notationView;
+
 };
 
 #endif // NOTATIONPAGE_H

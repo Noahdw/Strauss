@@ -66,7 +66,7 @@ void HeaderContainer::play()
 {
 
     if(isPaused){
-        audio_manager->requestPauseOrResume(true);
+        audio_manager->setPaused(true);
     }
     else{
         audio_manager->requestPlaybackRestart();
@@ -82,7 +82,7 @@ void HeaderContainer::restart()
     audio_manager->requestPlaybackRestart();
     if(MidiPlayer::canRecordInput)
     {
-        MidiPlayer::addMidiAfterRecording();
+       // MidiPlayer::addMidiAfterRecording();
         MidiPlayer::canRecordInput = false;
     }
 }
@@ -90,10 +90,10 @@ void HeaderContainer::restart()
 void HeaderContainer::pause()
 {
     isPaused = true;
-    audio_manager->requestPauseOrResume(false);
+    audio_manager->setPaused(false);
     if(MidiPlayer::canRecordInput)
     {
-        MidiPlayer::addMidiAfterRecording();
+        //MidiPlayer::addMidiAfterRecording();
         MidiPlayer::canRecordInput = false;
     }
 

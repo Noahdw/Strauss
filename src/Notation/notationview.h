@@ -21,8 +21,12 @@ public:
     int numInstruments();
     void assignMeasureToPage();
     void changeCurrentNote(float value);
+    void setCursorNotePos(QPoint pos);
+    Note *cursorNote;
+    Measure *activeMeasure;
 protected:
     void wheelEvent(QWheelEvent *event);
+   // void mouseMoveEvent(QMouseEvent *event);
 private:
     QGraphicsScene *scene;
     QList<TrackMidi*> instruments;

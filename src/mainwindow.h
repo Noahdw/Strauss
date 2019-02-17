@@ -45,9 +45,10 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    static QVector<Vst2HostCallback*> pluginHolderVec;
+   // static QVector<Vst2HostCallback*> pluginHolderVec;
     AudioEngine *audio_engine;
     MasterTrack *masterTrack;
+    MidiPlayer *player;
 public slots:
     void addNewTrack();
 

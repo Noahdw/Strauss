@@ -30,6 +30,7 @@ public:
     const qreal minBorder = 10;
     int xInScene();
     Stave *stave;
+    QPoint globalNotePos;
 
         bool eventFilter(QObject *obj, QEvent *event);
      QGraphicsScene *scene;
@@ -38,7 +39,7 @@ public:
      void mouseMoveEvent(QMouseEvent *event);
      void showEvent(QShowEvent *event);
 private:
-    Note *cursorNote;
+  //  Note *cursorNote;
 };
 
 #endif // MEASURE_H

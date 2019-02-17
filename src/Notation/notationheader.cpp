@@ -9,19 +9,18 @@ NotationHeader::NotationHeader(NotationMainWindow *mainWin)  : mainWindow(mainWi
     QGroupBox *box = new QGroupBox;
     QHBoxLayout *hLayout = new QHBoxLayout;
     auto *mainLayout = new QHBoxLayout;
-    auto * widget = new QWidget;
     hLayout->addWidget(qrtNote);
     hLayout->addWidget(halfNote);
     box->setLayout(hLayout);
     mainLayout->addWidget(box);
     setLayout(mainLayout);
 
-    connect(qrtNote, &QPushButton::clicked, [=] { changeNoteValue(1.0); });
-      connect(halfNote, &QPushButton::clicked, [=] { changeNoteValue(2.0); });
+    connect(qrtNote,  &QPushButton::clicked, [=] { changeNoteValue(1.0); });
+    connect(halfNote, &QPushButton::clicked, [=] { changeNoteValue(2.0); });
 }
 
 void NotationHeader::changeNoteValue(float value)
 {
-    mainWindow->notationView->
-    n_currentNoteValue = value;
+   // mainWindow->notationView->
+    //n_currentNoteValue = value;
 }

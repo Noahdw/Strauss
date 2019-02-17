@@ -681,12 +681,11 @@ int Vst2HostCallback::exportAudioBegin(AEffect *plugin,float **outputs,
     return 1;
 }
 
-void Vst2HostCallback::unloadPlugin(AEffect *plugin)
+void Vst2HostCallback::unloadPlugin()
 {
-    dispatcher(plugin,effEditClose,0,0,NULL,0);
-    dispatcher(plugin,effMainsChanged,0, 0, NULL, 0);
-    dispatcher(plugin,effClose, 0, 0, NULL, 0.0f);
-
+    dispatcher(effect,effEditClose,0,0,NULL,0);
+    dispatcher(effect,effMainsChanged,0, 0, NULL, 0);
+    dispatcher(effect,effClose, 0, 0, NULL, 0.0f);
 }
 
 void Vst2HostCallback::exportAudioEnd()
@@ -778,18 +777,7 @@ void Vst2HostCallback::setBlockSize(AEffect *plugin,int blockSize)
     dispatcher(plugin, effSetBlockSize, 0, blockSize, NULL, 0.0f);
 }
 
-void Vst2HostCallback::markForDeletion()
-{
-    //pianoroll->deleteLater();
-    if (actual_url != "")
-    {
-        shouldDelete = true;
-        AudioEngine::shouldDeleteTrack = true;
-        return;
-    }
-    else
-        delete this;
-}
+
 
 AEffect* Vst2HostCallback::LoadBridgedPlugin(char * szPath)
 {

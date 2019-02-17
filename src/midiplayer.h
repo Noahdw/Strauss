@@ -7,13 +7,14 @@
 #include <cstdint>
 #include <QtConcurrent/QtConcurrent>
 #include <src/midimanager.h>
+#include "src/mastertrack.h"
 #pragma comment (lib, "winmm.lib")
 
 class MidiPlayer : public QObject
 {
      Q_OBJECT
 public:
-    MidiPlayer();
+    MidiPlayer(MasterTrack* mTrack);
     void playMidiFile(MidiManager *song);
     void pausePlayBack();
     void resumePlayBack();
@@ -25,9 +26,11 @@ public:
     bool shouldBreak;
     bool needBreak;
 
-    static void addMidiAfterRecording();
+    void addMidiAfterRecording();
     static bool canRecordInput;
     static bool recordingOverwrites;
+private:
+    MasterTrack* masterTrack;
 
 public slots:
     void playNote(int note,bool active);

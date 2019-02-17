@@ -4,7 +4,7 @@
 #include "src/controlchangebridge.h"
 #include "src/common.h"
 
-MidiPlayer::MidiPlayer()
+MidiPlayer::MidiPlayer(MasterTrack *mTrack) : masterTrack(mTrack)
 {
 
 }
@@ -16,9 +16,8 @@ HANDLE hEvent;
 HMIDIIN hMidiDevice = NULL;
 bool MidiPlayer::canRecordInput = false;
 bool MidiPlayer::recordingOverwrites = false;
-//HMIDISTRM outHandle;
 
-
+// deprecated,might use midi again in the future though
 void MidiPlayer::playMidiFile(MidiManager *manager)
 {
     //    MIDIPROPTIMEDIV prop;
@@ -113,7 +112,7 @@ void MidiPlayer::playMidiFile(MidiManager *manager)
 void MidiPlayer::openDevice(uint deviceNumber)
 {
     MMRESULT res;
-    if ((res = midiInOpen(&hMidiDevice,deviceNumber,(DWORD_PTR)midiCallback,0,CALLBACK_FUNCTION )) != MMSYSERR_NOERROR )
+    if ((res = midiInOpen(&hMidiDevice,deviceNumber,(DWORD_PTR)midiCallback,(DWORD_PTR)this,CALLBACK_FUNCTION )) != MMSYSERR_NOERROR )
     {
         qDebug() << "Error opening device: " << res;
         return;
@@ -142,9 +141,9 @@ int MidiPlayer::getDevices()
 // structure that holds midi data are altered until recording stops.
 void MidiPlayer::addMidiAfterRecording()
 {
-    for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
+    for (int i = 0; i < masterTrack->midiTracks.size() ; ++i)
     {
-        auto plugin =  MainWindow::pluginHolderVec.at(var);
+        auto plugin =  masterTrack->midiTracks.at(i)->plugin();
         if (!plugin->recordedMidiEventDeque.empty())
         {
             while(!plugin->recordedMidiEventDeque.empty())
@@ -190,6 +189,7 @@ void MidiPlayer::addMidiAfterRecording()
 //taken from somewhere, idk.
 void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2)
 {
+    auto masterTrack = static_cast<MasterTrack*>((void*)dwInstance);
     uchar status = dwParam1 & 0xFF;
     uchar note = dwParam1 >> 8;
     uchar velocity = dwParam1 >> 16;
@@ -200,9 +200,9 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
   //  qDebug() << "status: " << status << " Note: " << note << " Velocity: " << velocity;
     if (status == 0x90 || status == 0xB0) // Note on / Note off
     {
-        for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
+        for (int var = 0; var < masterTrack->midiTracks.size() ; ++var)
         {
-            auto plugin = MainWindow::pluginHolderVec.at(var);
+            auto plugin = masterTrack->midiTracks.at(var)->plugin();
             if(plugin->canRecord()){
                 qreal currentTick =((qreal)g_timer->currentTime() / 1000.0) * 960.0 / (60.0 / g_tempo);
                 plugin->addMidiEvent(status,note,velocity,currentTick);
@@ -230,6 +230,7 @@ void MidiPlayer::pausePlayBack(){
     midiStreamPause(outHandle);
 }
 //This allows for playback from the piano roll keyboard
+// deprecated,might use midi again in the future though
 void MidiPlayer::Midiman(int note,bool active){
 
 

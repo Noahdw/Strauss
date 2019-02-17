@@ -1,10 +1,9 @@
 #include "folderviewabstractmodel.h"
 
 /*
-I use an QAbstractItemModel because the library QFileSystemModel class only allows a single root path to define
-where it should look for files/dirs. The user should be able to supply multiple root paths, however. No to mention
-there is benefit in being able to further define the folder filtering to be used so that I don't display empty folders.
-
+    I use an QAbstractItemModel because the QTs QFileSystemModel class only allows a single root path to define
+    where it should look for files/dirs. The user should be able to supply multiple root paths, however. No to mention
+    there is benefit in being able to further define the folder filtering to be used so that I don't display empty folders.
 */
 
 FolderViewAbstractModel::FolderViewAbstractModel(const QList<QString> data, QObject *parent)

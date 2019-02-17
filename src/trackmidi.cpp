@@ -4,16 +4,18 @@
 #include "src/pianoroll.h"
 #include "src/plugintrackview.h"
 #include "src/mainwindow.h"
-TrackMidi::TrackMidi()
+#include "src/mastertrack.h"
+
+TrackMidi::TrackMidi(MasterTrack *mTrack) : masterTrack(mTrack)
 {
     _midiData.instrumentName = "New Track";
-    plugin = new Vst2HostCallback(&_midiData);
-    plugin->midiTrack = this;
+    _plugin = new Vst2HostCallback(&_midiData);
+    _plugin->midiTrack = this;
 }
 
 TrackMidi::~TrackMidi()
 {
-    plugin->markForDeletion();
+    masterTrack->removeTrack(this);
     _trackView->deleteLater();
     _pianoRoll->deleteLater();
 }
@@ -27,7 +29,7 @@ void TrackMidi::setTrackView(TrackView *trackView)
 void TrackMidi::setPianoRoll(PianoRoll *pianoRoll)
 {
     _pianoRoll = pianoRoll;
-    plugin->setPianoRollRef(pianoRoll);
+    _plugin->setPianoRollRef(pianoRoll);
 }
 
 
@@ -57,37 +59,36 @@ Vst2HostCallback *TrackMidi::loadPlugin(QString actualPath)
     QByteArray array = tempFilePath.toLocal8Bit();
     char* file = array.data();
 
-    if (plugin->effect == NULL)
+    if (_plugin->effect == NULL)
     {
         qDebug() << "No plugin is currently set";
-        plugin->effect = plugin->loadPlugin(file,pluginName.left(pluginName.size() - 4).toLocal8Bit().data());
-        if (plugin->effect == NULL)
+        _plugin->effect = _plugin->loadPlugin(file,pluginName.left(pluginName.size() - 4).toLocal8Bit().data());
+        if (_plugin->effect == NULL)
         {
             qDebug() << "NULLPTR PLUGIN: in loadPlugin";
             return NULL;
         }
-        int state = plugin->configurePluginCallbacks();
+        int state = _plugin->configurePluginCallbacks();
         if (state == -1)
         {
             qDebug() << "Failed to configurePluginCallbacks. abort startPlugin";
-            delete plugin->effect;
+            delete _plugin->effect;
             return NULL;
         }
         trackView()->instrumentLabel->setText(pluginName);
 
-        plugin->startPlugin();
-        MainWindow::pluginHolderVec.append(plugin);
-        trackView()->pluginTrack->addPlugin(plugin);
-        plugin->isMasterPlugin = true;
-        plugin->masterPluginTrackView = trackView()->pluginTrack;
-        plugin->actual_url = actualPath;
+        _plugin->startPlugin();
+        trackView()->pluginTrack->addPlugin(_plugin);
+        _plugin->isMasterPlugin = true;
+        _plugin->masterPluginTrackView = trackView()->pluginTrack;
+        _plugin->actual_url = actualPath;
 
-        for (int i = 0; i <  plugin->numParams(plugin->effect); ++i)
+        for (int i = 0; i <  _plugin->numParams(_plugin->effect); ++i)
         {
-            QString name = plugin->getParamName(plugin->effect,i);
+            QString name = _plugin->getParamName(_plugin->effect,i);
             trackView()->comboBox->addItem(name);
         }
-        return plugin;
+        return _plugin;
     }
     else{
         Vst2HostCallback *effectPlugin = new Vst2HostCallback;
@@ -109,7 +110,7 @@ Vst2HostCallback *TrackMidi::loadPlugin(QString actualPath)
         effectPlugin->isMasterPlugin = false;
         effectPlugin->actual_url = actualPath;
         effectPlugins.append(effectPlugin);
-        plugin->masterPluginTrackView->addPlugin(effectPlugin);
+        _plugin->masterPluginTrackView->addPlugin(effectPlugin);
         return effectPlugin;
     }
     return NULL;

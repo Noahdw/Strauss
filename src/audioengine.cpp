@@ -14,7 +14,7 @@ float** outputss = 0;
 float** input_storage= 0;
 float** output_storage = 0;
 int num_outputs = 64;
-AudioEngine::AudioEngine()
+AudioEngine::AudioEngine(MasterTrack *mTrack) : masterTrack(mTrack)
 {
 
 }
@@ -48,7 +48,9 @@ void AudioEngine::stopPortAudio()
         return;
     }
 }
-
+/*
+    Boilerplate PA code
+*/
 void AudioEngine::openStream()
 {
 
@@ -63,17 +65,19 @@ void AudioEngine::openStream()
                                          paFloat32,  /* 32 bit floating point output */
                                          sampleRate,
                                          g_blocksize,        // frames per buffer
-                                         &patestCallback, /* this is your callback function */
-                                         this ); /*This is a pointer that will be passed to
+                                       &patestCallback, /* this is your callback function */
+                                       this ); /*This is a pointer that will be passed to
                your callback*/
     if( err != paNoError ) {
         qDebug() << (  "PortAudio error: %s\n", Pa_GetErrorText( err ) );
     }
 }
+
+/*
+    Boilerplate PA code
+*/
 void AudioEngine::initializeIO() {
-    // inputs and outputs are assumed to be float** and are declared elsewhere,
-    // most likely the are fields owned by this class. numChannels and blocksize
-    // are also fields, both should be size_t (or unsigned int, if you prefer).
+
     inputss = (float**)malloc(sizeof(float**) * num_outputs);
     outputss = (float**)malloc(sizeof(float**) * num_outputs);
     for(int channel = 0; channel < num_outputs; channel++)
@@ -90,8 +94,10 @@ void AudioEngine::initializeIO() {
         output_storage[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
     }
 }
-// Must end audio engine before calling and start again after
-// blocksize is provided through common variable g_blockSize
+/*
+    Must end audio engine before calling and start again after
+    blocksize is provided through common variable g_blockSize
+*/
 void AudioEngine::changeBlockSize(int oldSize, int newSize)
 {
     for (int i = 0; i < oldSize; ++i)
@@ -101,9 +107,9 @@ void AudioEngine::changeBlockSize(int oldSize, int newSize)
         delete(outputss[i]);
         delete(inputss[i]);
     }
-    for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
+    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
     {
-        auto plugin = MainWindow::pluginHolderVec.at(i);
+        auto plugin = masterTrack->midiTracks.at(i)->masterPlugin();
         plugin->setBlockSize(plugin->effect,newSize);
     }
     delete(input_storage);
@@ -113,21 +119,26 @@ void AudioEngine::changeBlockSize(int oldSize, int newSize)
     g_blocksize = newSize;
     initializeIO();
 }
-
+/*
+    Brings each track to it's beginning
+    TODO: fn not needed, can be don in changePlaybackPos
+*/
 void AudioEngine::requestPlaybackRestart()
 {
-    for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
+    for (int i = 0; i < masterTrack->midiTracks.size() ; ++i)
     {
-        auto plugin=  MainWindow::pluginHolderVec.at(var);
+        auto plugin=  masterTrack->midiTracks.at(i)->masterPlugin();
         plugin->restartPlayback();
     }
 }
-
-void AudioEngine::requestPauseOrResume(bool isResume)
+/*
+    Toggles between paused and resumed playback
+*/
+void AudioEngine::setPaused(bool isResume)
 {
-    for (int var = 0; var < MainWindow::pluginHolderVec.length() ; ++var)
+    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
     {
-        auto plugin =  MainWindow::pluginHolderVec.at(var);
+        auto plugin =  masterTrack->midiTracks.at(i)->masterPlugin();
         if(isResume){
             plugin->pauseOrResumePlayback(true);
             isPaused = false;
@@ -135,28 +146,29 @@ void AudioEngine::requestPauseOrResume(bool isResume)
         else
         {
             plugin->pauseOrResumePlayback(false);
-            //plugs->host->turnOffAllNotes(plugs->effect);
             isPaused = true;
         }
     }
 }
-
+/*
+    Changes where tracks are playing from based on time in ticks
+    TODO: Find way to provide ticks that doesn't require global var
+*/
 void AudioEngine::changePlaybackPos()
 {
-    int numPlugs = MainWindow::pluginHolderVec.length();
-    for (int var = 0; var < numPlugs ; ++var)
+    int numPlugs = masterTrack->midiTracks.size();
+    for (int i = 0; i < numPlugs ; ++i)
     {
+        auto plugin =  masterTrack->midiTracks.at(i)->masterPlugin();
+        if (plugin->effect == NULL)  continue;
 
-        auto plugin =  MainWindow::pluginHolderVec.at(var);
-        if (plugin->effect == NULL) {
-            //   qDebug() <<"Plugin not set in Audiomanager";
-            continue;
-        }
         QObject::connect(this,&AudioEngine::changePlaybackPosSignal,plugin,&Vst2HostCallback::setCustomPlackbackPos);
         emit changePlaybackPosSignal(requestedPlaybackPos);
     }
 }
-
+/*
+    Boilerplate PA code
+*/
 void AudioEngine::silenceChannel(float **channelData, int numChannels, long numFrames) {
     for(int channel = 0; channel < numChannels; ++channel) {
         for(long frame = 0; frame < numFrames; ++frame) {
@@ -164,6 +176,9 @@ void AudioEngine::silenceChannel(float **channelData, int numChannels, long numF
         }
     }
 }
+/*
+    Boilerplate PA code
+*/
 void AudioEngine::startStream()
 {
     PaError err = Pa_StartStream( stream );
@@ -171,60 +186,40 @@ void AudioEngine::startStream()
     {
         qDebug() << (  "PortAudio error: %s\n", Pa_GetErrorText( err ) );
     }
-   // requestPlaybackRestart();
 }
 
-int num = 0;
-
+/*
+    The callback used to fill buffers from plugins
+*/
 int patestCallback( const void *inputBuffer, void *outputBuffer,
                     unsigned long framesPerBuffer,
-                    const PaStreamCallbackTimeInfo* timeInfo,
-                    PaStreamCallbackFlags statusFlags,
-                    void *userData )
+                   const PaStreamCallbackTimeInfo* timeInfo,
+                   PaStreamCallbackFlags statusFlags,
+                   void *userData )
 {
+    auto engine = static_cast<AudioEngine*>(userData);
     bool customPlayback = false;
-    float *out = (float*)outputBuffer;
-    unsigned int i;
-    int numPlugs = MainWindow::pluginHolderVec.length();
-    (void) inputBuffer; /* Prevent unused variable warning. */
-    if (AudioEngine::shouldDeleteTrack)
+    while(!engine->masterTrack->tracksToRemove().empty())
     {
-        qDebug() <<"I was called";
-        for (int var = 0; var < numPlugs ; ++var)
-        {
-            auto plugin = MainWindow::pluginHolderVec.at(var);
-            if (plugin->effect == NULL) {
-                continue;
-            }
-            if (plugin->shouldDelete)
-            {
-                MainWindow::pluginHolderVec.remove(var);
-                plugin->unloadPlugin(plugin->effect);
-                delete plugin;
-                numPlugs--;
-                break;
-            }
-        }
-        AudioEngine::shouldDeleteTrack = false;
+        auto track = engine->masterTrack->tracksToRemove().dequeue();
+        engine->masterTrack->midiTracks.removeOne(track);
+        track->plugin()->unloadPlugin();
+        delete track->plugin();
+
     }
     if (AudioEngine::requestedPlaybackPos != -1)
     {
         AudioEngine *audio = (AudioEngine*)userData;
         audio->changePlaybackPos();
         customPlayback = true;
-        //  AudioManager::requestCustomPlayback();
     }
-    for (int var = 0; var < numPlugs ; ++var)
+    for (int i = 0; i < engine->masterTrack->midiTracks.size() ; ++i)
     {
 
-        auto plugin = MainWindow::pluginHolderVec.at(var);
-        if (plugin->effect == NULL) {
-            //   qDebug() <<"Plugin not set in Audiomanager";
-            continue;
-        }
-        if (!plugin->canPlay) {
-            continue;
-        }
+        auto plugin = engine->masterTrack->midiTracks.at(i)->masterPlugin();
+        if (plugin->effect == NULL) continue;
+        if (!plugin->canPlay) continue;
+
         if (isPaused)
         {
             plugin->turnOffAllNotes();
@@ -234,7 +229,7 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         {
             if (customPlayback)
             {
-                //plugs->host->setCustomPlackbackPos(AudioManager::requestedPlaybackPos);
+                //TODO
             }
             plugin->processMidi(plugin->effect);
             plugin->processAudio(plugin->effect,inputss,outputss,g_blocksize);
@@ -261,10 +256,12 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         AudioEngine::requestedPlaybackPos = -1;
     }
     isPaused = false;
-    for( i=0; i<framesPerBuffer; i++ )
+
+    float *out = (float*)outputBuffer;
+    for(uint i=0; i<framesPerBuffer; i++ )
     {
-        *out++ =output_storage[0][i] ;  /* left */
-        *out++ =output_storage[1][i]; /* right */
+        *out++ =output_storage[0][i];  /* left */
+        *out++ =output_storage[1][i];  /* right */
     }
 
     AudioEngine::silenceChannel(output_storage,num_outputs,g_blocksize);

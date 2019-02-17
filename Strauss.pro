@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = Strauss
 TEMPLATE = app
 QMAKE_CXXFLAGS+= -Zi
+QMAKE_CFLAGS = -Wno-unused-parameter
 QMAKE_LFLAGS+=/DEBUG
 #Uncomment below is force running app as admin
 #QMAKE_LFLAGS += /MANIFESTUAC:\"level=\'requireAdministrator\' uiAccess=\'false\'\"

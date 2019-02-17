@@ -3,7 +3,7 @@
 #include "src/vst2hostcallback.h"
 #include "src/common.h"
 #include "sdk/portaudio.h"
-AudioManager::AudioManager()
+AudioManager::AudioManager(MasterTrack *mTrack) : masterTrack(mTrack)
 {
 
 }
@@ -26,9 +26,9 @@ int AudioManager::exportAudio(QString filePath)
 
 void AudioManager::initializePlugins()
 {
-    for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
+    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
     {
-        auto plugin = MainWindow::pluginHolderVec.at(i);
+        auto plugin = masterTrack->midiTracks.at(i)->plugin();
         if (plugin->canPlay && !plugin->isMuted)
         {
             plugin->exportAudioInit();
@@ -39,9 +39,9 @@ void AudioManager::initializePlugins()
 int AudioManager::beginExporting()
 {
     int isPlaying = 0;
-    for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
+    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
     {
-        auto plugin = MainWindow::pluginHolderVec.at(i);
+        auto plugin = masterTrack->midiTracks.at(i)->plugin();
         if (plugin->canPlay && !plugin->isMuted)
         {
             isPlaying +=  plugin->exportAudioBegin(plugin->effect,output,g_blocksize);
@@ -70,9 +70,9 @@ void AudioManager::endExporting()
         free(output_storage[i]);
         free(output[i]);
     }
-    for (int i = 0; i < MainWindow::pluginHolderVec.size(); ++i)
+    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
     {
-        auto plugin = MainWindow::pluginHolderVec.at(i);
+        auto plugin = masterTrack->midiTracks.at(i)->plugin();
         plugin->exportAudioEnd();
     }
     free(output_storage);

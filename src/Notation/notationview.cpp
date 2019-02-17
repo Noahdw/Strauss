@@ -4,8 +4,15 @@ NotationView::NotationView(MasterTrack *master) :masterTrack(master)
 {
     setMinimumSize(2000,900);
     scene = new QGraphicsScene;
+    cursorNote = new Note(1);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+ //   setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  //  setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setRenderHint(QPainter::Antialiasing);
     setScene(scene);
+    scene->addItem(cursorNote);
+    cursorNote->setZValue(1);
 }
 
 NotationPage *NotationView::AddPage(int index)
@@ -72,8 +79,15 @@ void NotationView::changeCurrentNote(float value)
 {
     for(const auto & page : pages)
     {
-        auto m = page->getMeasures();
+      //  auto m = page->getMeasures();
     }
+}
+
+void NotationView::setCursorNotePos(QPoint pos)
+{
+    cursorNote->setPos(mapToScene(pos));
+    cursorNote->setY(cursorNote->y() - verticalScrollBar()->value());
+   // cursorNote->set
 }
 
 void NotationView::wheelEvent(QWheelEvent *event)
@@ -96,3 +110,5 @@ void NotationView::wheelEvent(QWheelEvent *event)
         verticalScrollBar()->setValue(verticalScrollBar()->value() - event->angleDelta().y() /120*14);
     }
 }
+
+

@@ -102,8 +102,6 @@ void VelocityView::setScale(float x, bool needsReset, int wheelPos)
 
 }
 
-
-
 void VelocityView::onPianoRollResized(float x)
 {
     resetMatrix();

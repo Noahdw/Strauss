@@ -64,10 +64,9 @@ public:
     void hidePlugin();
     void exportAudioInit();
     void setBlockSize(AEffect *effect,int blockSize);
-    void markForDeletion();
     int exportAudioBegin(AEffect *effect, float **outputs,
                          long numFrames);
-    void unloadPlugin(AEffect *effect);
+    void unloadPlugin();
     void exportAudioEnd();
     std::string savePluginState(AEffect *effect) const;
     void setPluginState(AEffect *effect, const std::string &chunk);

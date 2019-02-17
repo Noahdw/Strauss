@@ -1,5 +1,7 @@
 #include "command.h"
 
+// Can I just remove this file and use the header?
+
 Command::Command()
 {
 

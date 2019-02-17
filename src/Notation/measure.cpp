@@ -1,6 +1,8 @@
 #include "measure.h"
 #include "src/Notation/notationpage.h"
 #include "src/Notation/stave.h"
+#include "src/Notation/notationview.h"
+
 Measure::Measure()
 {
     setMinimumWidth(100);
@@ -11,10 +13,10 @@ Measure::Measure()
     //setWindowFlag(Qt::FramelessWindowHint);
     setStyleSheet("background-color: rgba(0,0,0,0); border: 2px solid black;");
     setMouseTracking(true);
-    cursorNote = new Note(n_selectedNoteValue);
+   // cursorNote = new Note(n_selectedNoteValue);
     installEventFilter(this);
-    scene->addItem(cursorNote);
-    cursorNote->hide();
+   // scene->addItem(cursorNote);
+  //  cursorNote->hide();
     setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -126,7 +128,11 @@ void Measure::mouseMoveEvent(QMouseEvent *event)
     auto pos = mapToScene(event->pos());
     auto x = getCurrentNoteUnderMouse(pos);
     auto y = getPitchUnderMouse(pos);
-    cursorNote->setPos(x,y);
+  //  cursorNote->setPos(x,y);
+    globalNotePos = mapToGlobal(QPoint(x,y));
+    qDebug() << mapToGlobal(QPoint(x,y));
+  //  globalNotePos = notationPage->mapToParent(globalNotePos);
+    notationPage->notationView->setCursorNotePos(event->globalPos());
     notationPage->forceRedraw();
     QGraphicsView::mouseMoveEvent(event);
 
@@ -148,15 +154,15 @@ bool Measure::eventFilter(QObject *obj, QEvent *event)
     if (event->type() == QEvent::Enter)
     {
         auto mouse = static_cast<QMouseEvent*>(event);
-        cursorNote->show();
-        cursorNote->setPos(mapToScene(mouse->pos()));
+      //  cursorNote->show();
+      //  cursorNote->setPos(mapToScene(mouse->pos()));
         notationPage->forceRedraw();
     }
     else if (event->type() == QEvent::Leave)
     {
         auto mouse = static_cast<QMouseEvent*>(event);
-        cursorNote->hide();
-        cursorNote->setPos(mapToScene(mouse->pos()));
+      //  cursorNote->hide();
+      //  cursorNote->setPos(mapToScene(mouse->pos()));
         notationPage->forceRedraw();
 
     }

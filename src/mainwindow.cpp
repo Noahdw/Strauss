@@ -6,14 +6,9 @@
 #include <src/common.h>
 #include <src/audioengine.h>
 #include <src/audiomanager.h>
-MidiPlayer player;
+
 MidiManager *manager;
 TimeTracker *timeTracker;
-
-
-//temp
-Vst2HostCallback* host;
-AEffect *plugin = NULL;
 
 // init common vars
 bool keyboardModeEnabled = false;
@@ -29,17 +24,16 @@ QColor g_baseColor(54,54,54);
 QColor g_selectedColor(96,96,96);
 //end init
 
-QVector<Vst2HostCallback*> MainWindow::pluginHolderVec;
-
 MainWindow::MainWindow(QWidget *parent) :
                                           QMainWindow(parent)
 {
     model = new FolderViewAbstractModel(getFoldersFromSettings());
     centralWidget = new QWidget(this);
-
+    masterTrack              = new MasterTrack;
+    player = new MidiPlayer(masterTrack);
     pluginEdiorCentralWidget = new QWidget(this);
     stackedCentralWidget = new QStackedWidget;
-    audio_engine     = new AudioEngine;
+    audio_engine     = new AudioEngine(masterTrack);
     manager          = new MidiManager;
     timeTracker      = new TimeTracker;
 
@@ -53,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
-    masterTrack              = new MasterTrack;
+    
     folder_view              = new FolderView(model,masterTrack);
     header_container         = new HeaderContainer(audio_engine);
     piano_roll_container     = new PianoRollContainer;
@@ -100,13 +94,14 @@ MainWindow::MainWindow(QWidget *parent) :
     audio_engine->openStream();
     audio_engine->startStream();
 
-    int devices = player.getDevices();
+    int devices = player->getDevices();
     for (int i = 0; i < devices; ++i)
     {
-        player.openDevice(i);
+        player->openDevice(i);
     }
 
     QDir dir(QDir::current().path()+"/TempPlugins");
+    qDebug() << QDir::current().path()+"/TempPlugins";
     dir.removeRecursively();
     dir.mkdir(QDir::current().path()+"/TempPlugins");
     dir.setPath(QDir::current().path()+"/ProgramBanks");
@@ -124,7 +119,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_quitButton_clicked()
 {
-    midiStreamStop(player.outHandle);
+    midiStreamStop(player->outHandle);
 
     QCoreApplication::quit();
 }
@@ -161,16 +156,16 @@ void MainWindow::openFile()
 void MainWindow::on_PauseButton_clicked(int type)
 {
     if (type == -1) {
-        player.pausePlayBack();
+        player->pausePlayBack();
     }
     else
-        player.resumePlayBack();
+        player->resumePlayBack();
 
 }
 
 void MainWindow::on_StartButton_clicked()
 {
-    player.resumePlayBack();
+    player->resumePlayBack();
 }
 
 void MainWindow::on_actionSave_triggered()
@@ -298,8 +293,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         int note = getNoteFromKeyboard(event->key());
         if (note)
         {
-            for(const auto& plugin : pluginHolderVec)
+            for(const auto& track : masterTrack->midiTracks)
             {
+                auto plugin = track->plugin();
                 if (plugin->canRecord())
                 {
                     plugin->addMidiEvent(0x90,note,velocity,0);
@@ -333,8 +329,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
             QMainWindow::keyReleaseEvent(event);
             return;
         }
-        for(const auto& plugin : pluginHolderVec)
+        for(const auto& track : masterTrack->midiTracks)
         {
+            auto plugin = track->plugin();
             if (plugin->canRecord())
             {
                 int note = getNoteFromKeyboard(event->key());
@@ -375,7 +372,7 @@ void MainWindow::exportAudio()
 {
     QString filePath = QFileDialog::getSaveFileName(this,tr("Export audio"),QDir::currentPath(),tr("format (*.wav)"));
     audio_engine->stopPortAudio();
-    AudioManager audio;
+    AudioManager audio(masterTrack);
     if (!audio.exportAudio(filePath))
     {
         qDebug() << "Could not export audio";

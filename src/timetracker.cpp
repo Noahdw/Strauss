@@ -1,6 +1,8 @@
 #include "timetracker.h"
 #include "src/common.h"
 
+//DEPRECATED CLASS
+
 TimeTracker::TimeTracker()
 {
     g_timer->setFrameRange(0,100);
