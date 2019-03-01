@@ -10,7 +10,7 @@ class TrackMidi;
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QVBoxLayout>
-#include "src/vst2hostcallback.h"
+#include "src/vst2audioplugin.h"
 #include <QSlider>
 class PluginTrackView : public QFrame
 {
@@ -19,7 +19,7 @@ public:
     PluginTrackView(TrackView *track);
     ~PluginTrackView();
     std::vector<PluginView*> plugins;
-    void addPlugin(Vst2HostCallback *vst2Plugin);
+    void addPlugin(Vst2AudioPlugin *vst2Plugin);
     void clickedOn(bool state);
     void setTrackName(QString name);
     PluginEditorContainer * pluginEditorContainer;

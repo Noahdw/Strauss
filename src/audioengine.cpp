@@ -8,17 +8,13 @@ bool AudioEngine::shouldDeleteTrack = false;
 bool isPaused = false;
 
 
-float** inputss = 0;
-float** outputss = 0;
 
-float** input_storage= 0;
-float** output_storage = 0;
-int num_outputs = 64;
 AudioEngine::AudioEngine(MasterTrack *mTrack) : masterTrack(mTrack)
 {
-
 }
-
+/*
+    Boilerplate PA code
+*/
 void AudioEngine::startPortAudio()
 {
     PaError err = Pa_Initialize();
@@ -29,10 +25,12 @@ void AudioEngine::startPortAudio()
     }
     isRunning = true;
     initializeIO();
-    AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
+    AudioEngine::silenceChannel(output,num_outputs,g_blocksize);
     AudioEngine::silenceChannel(output_storage,num_outputs,g_blocksize);
 }
-
+/*
+    Boilerplate PA code
+*/
 void AudioEngine::stopPortAudio()
 {
     PaError err = Pa_CloseStream(stream);
@@ -60,11 +58,11 @@ void AudioEngine::openStream()
 
     /* Open an audio I/O stream. */
     PaError  err = Pa_OpenDefaultStream( &stream,
-                                         0,          /* no input channels */
-                                         2,          /* stereo output */
-                                         paFloat32,  /* 32 bit floating point output */
-                                         sampleRate,
-                                         g_blocksize,        // frames per buffer
+                                       0,          /* no input channels */
+                                       2,          /* stereo output */
+                                       paFloat32,  /* 32 bit floating point output */
+                                       sampleRate,
+                                       g_blocksize,        // frames per buffer
                                        &patestCallback, /* this is your callback function */
                                        this ); /*This is a pointer that will be passed to
                your callback*/
@@ -78,12 +76,12 @@ void AudioEngine::openStream()
 */
 void AudioEngine::initializeIO() {
 
-    inputss = (float**)malloc(sizeof(float**) * num_outputs);
-    outputss = (float**)malloc(sizeof(float**) * num_outputs);
+    input = (float**)malloc(sizeof(float**) * num_outputs);
+    output = (float**)malloc(sizeof(float**) * num_outputs);
     for(int channel = 0; channel < num_outputs; channel++)
     {
-        inputss[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
-        outputss[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
+        input[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
+        output[channel] = (float*)malloc(sizeof(float*) * g_blocksize);
     }
 
     input_storage = (float**)malloc(sizeof(float**) * num_outputs);
@@ -104,18 +102,18 @@ void AudioEngine::changeBlockSize(int oldSize, int newSize)
     {
         delete(input_storage[i]);
         delete(output_storage[i]);
-        delete(outputss[i]);
-        delete(inputss[i]);
+        delete(output[i]);
+        delete(input[i]);
     }
-    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
+    for (int i = 0; i < masterTrack->midiTracks().size(); ++i)
     {
-        auto plugin = masterTrack->midiTracks.at(i)->masterPlugin();
-        plugin->setBlockSize(plugin->effect,newSize);
+        auto plugin = masterTrack->midiTracks().at(i)->plugin();
+        plugin->setBlockSize(newSize);
     }
     delete(input_storage);
     delete(output_storage);
-    delete(outputss);
-    delete(inputss);
+    delete(output);
+    delete(input);
     g_blocksize = newSize;
     initializeIO();
 }
@@ -125,30 +123,19 @@ void AudioEngine::changeBlockSize(int oldSize, int newSize)
 */
 void AudioEngine::requestPlaybackRestart()
 {
-    for (int i = 0; i < masterTrack->midiTracks.size() ; ++i)
+    for (int i = 0; i < masterTrack->midiTracks().size() ; ++i)
     {
-        auto plugin=  masterTrack->midiTracks.at(i)->masterPlugin();
+        auto plugin =  masterTrack->midiTracks().at(i)->masterPlugin();
         plugin->restartPlayback();
     }
 }
 /*
     Toggles between paused and resumed playback
 */
-void AudioEngine::setPaused(bool isResume)
+void AudioEngine::setPaused(bool paused)
 {
-    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
-    {
-        auto plugin =  masterTrack->midiTracks.at(i)->masterPlugin();
-        if(isResume){
-            plugin->pauseOrResumePlayback(true);
-            isPaused = false;
-        }
-        else
-        {
-            plugin->pauseOrResumePlayback(false);
-            isPaused = true;
-        }
-    }
+    _paused = paused;
+
 }
 /*
     Changes where tracks are playing from based on time in ticks
@@ -156,14 +143,12 @@ void AudioEngine::setPaused(bool isResume)
 */
 void AudioEngine::changePlaybackPos()
 {
-    int numPlugs = masterTrack->midiTracks.size();
+    int numPlugs = masterTrack->midiTracks().size();
     for (int i = 0; i < numPlugs ; ++i)
     {
-        auto plugin =  masterTrack->midiTracks.at(i)->masterPlugin();
-        if (plugin->effect == NULL)  continue;
-
-        QObject::connect(this,&AudioEngine::changePlaybackPosSignal,plugin,&Vst2HostCallback::setCustomPlackbackPos);
-        emit changePlaybackPosSignal(requestedPlaybackPos);
+        auto plugin =  masterTrack->midiTracks().at(i)->masterPlugin();
+        if (plugin == nullptr)  continue;
+        plugin->setCustomPlackbackPos(requestedPlaybackPos);
     }
 }
 /*
@@ -192,7 +177,7 @@ void AudioEngine::startStream()
     The callback used to fill buffers from plugins
 */
 int patestCallback( const void *inputBuffer, void *outputBuffer,
-                    unsigned long framesPerBuffer,
+                   unsigned long framesPerBuffer,
                    const PaStreamCallbackTimeInfo* timeInfo,
                    PaStreamCallbackFlags statusFlags,
                    void *userData )
@@ -202,28 +187,27 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     while(!engine->masterTrack->tracksToRemove().empty())
     {
         auto track = engine->masterTrack->tracksToRemove().dequeue();
-        engine->masterTrack->midiTracks.removeOne(track);
-        track->plugin()->unloadPlugin();
-        delete track->plugin();
 
+        engine->masterTrack->unsafeRemoveTrack(track);
+        //  track->plugin().unloadPlugin();
     }
     if (AudioEngine::requestedPlaybackPos != -1)
     {
-        AudioEngine *audio = (AudioEngine*)userData;
+        AudioEngine *audio = static_cast<AudioEngine*>( userData );
         audio->changePlaybackPos();
         customPlayback = true;
     }
-    for (int i = 0; i < engine->masterTrack->midiTracks.size() ; ++i)
+    for (uint i = 0; i < engine->masterTrack->midiTracks().size() ; ++i)
     {
-
-        auto plugin = engine->masterTrack->midiTracks.at(i)->masterPlugin();
-        if (plugin->effect == NULL) continue;
-        if (!plugin->canPlay) continue;
+        auto track = engine->masterTrack->midiTracks().at(i).get();
+        auto plugin = track->plugin();
+        if (plugin == nullptr) continue;
+        if (!plugin->canProcess()) continue;
 
         if (isPaused)
         {
             plugin->turnOffAllNotes();
-            plugin->processAudio(plugin->effect,inputss,outputss,g_blocksize);
+            plugin->processAudio(engine->input,engine->output,g_blocksize);
         }
         else
         {
@@ -231,24 +215,24 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
             {
                 //TODO
             }
-            plugin->processMidi(plugin->effect);
-            plugin->processAudio(plugin->effect,inputss,outputss,g_blocksize);
+            plugin->processMidi();
+            plugin->processAudio(engine->input,engine->output,g_blocksize);
         }
-        if(plugin->isMuted)
+        if(track->muted())
         {
-            AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
+            AudioEngine::silenceChannel(engine->output,engine->num_outputs,g_blocksize);
         }
         else
         {
 
             for (int i = 0; i < g_blocksize; ++i)
             {
-                output_storage[0][i] += outputss[0][i] * g_volume ;
-                output_storage[1][i] += outputss[1][i] * g_volume ;
+                engine->output_storage[0][i] += engine->output[0][i] * g_volume ;
+                engine->output_storage[1][i] += engine->output[1][i] * g_volume ;
 
             }
 
-            AudioEngine::silenceChannel(outputss,num_outputs,g_blocksize);
+            AudioEngine::silenceChannel(engine->output,engine->num_outputs,g_blocksize);
         }
     }
     if (customPlayback)
@@ -257,14 +241,14 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     }
     isPaused = false;
 
-    float *out = (float*)outputBuffer;
+    float *out = static_cast<float*> (outputBuffer);
     for(uint i=0; i<framesPerBuffer; i++ )
     {
-        *out++ =output_storage[0][i];  /* left */
-        *out++ =output_storage[1][i];  /* right */
+        *out++ = engine->output_storage[0][i];  /* left */
+        *out++ = engine->output_storage[1][i];  /* right */
     }
 
-    AudioEngine::silenceChannel(output_storage,num_outputs,g_blocksize);
+    AudioEngine::silenceChannel(engine->output_storage,engine->num_outputs,g_blocksize);
     return 0;
 }
 

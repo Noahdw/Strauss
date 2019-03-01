@@ -23,11 +23,13 @@ private:
     QGroupBox * groupBox;
     QCheckBox * recordStyle;
     bool isPaused = false;
+    QPushButton* keyboardButton;
+    QPushButton* recordButton;
 private slots:
     void play();
     void restart();
     void pause();
-    void record();
+    void record(bool state);
     void notation();
     void keyboardMode(bool enabled);
     void masterTempoChanged(int tempo);

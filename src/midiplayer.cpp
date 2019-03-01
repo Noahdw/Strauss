@@ -1,6 +1,6 @@
 #include "midiplayer.h"
 #include "src/mainwindow.h"
-#include "src/vst2hostcallback.h"
+#include "audioplugin.h"
 #include "src/controlchangebridge.h"
 #include "src/common.h"
 
@@ -141,9 +141,10 @@ int MidiPlayer::getDevices()
 // structure that holds midi data are altered until recording stops.
 void MidiPlayer::addMidiAfterRecording()
 {
-    for (int i = 0; i < masterTrack->midiTracks.size() ; ++i)
+    for (int i = 0; i < masterTrack->midiTracks().size() ; ++i)
     {
-        auto plugin =  masterTrack->midiTracks.at(i)->plugin();
+        auto track = masterTrack->midiTracks().at(i).get();
+        auto plugin =  track->plugin();
         if (!plugin->recordedMidiEventDeque.empty())
         {
             while(!plugin->recordedMidiEventDeque.empty())
@@ -154,8 +155,8 @@ void MidiPlayer::addMidiAfterRecording()
                 {
                     if (event.status == 0xB0)
                     {
-                        plugin->pianoroll->bridge->verifyOverlayExists(event.note);
-                        plugin->pianoroll->bridge->overlays[event.note]->addPoint(event.timeInTicks,event.velocity);
+                     track->pianoRoll()->bridge->verifyOverlayExists(event.note);
+                     track->pianoRoll()->bridge->overlays[event.note]->addPoint(event.timeInTicks,event.velocity);
                     }
                     continue;
                 }
@@ -164,21 +165,21 @@ void MidiPlayer::addMidiAfterRecording()
                     if (e.note == event.note)
                     {
                         int length = e.timeInTicks - event.timeInTicks;
-                        MidiManager::addMidiNote(event.note,event.velocity,event.timeInTicks,length,plugin->track);
+                        MidiManager::addMidiNote(event.note,event.velocity,event.timeInTicks,length,track->midiData());
                           qDebug() << "ADDING MIDI. NOTE: " << event.note << " VELOCITY: " << event.velocity << " TotalTime: " << event.timeInTicks
                                    << " Length: " << length;
-                          plugin->pianoroll->addNoteToScene(event.note,event.timeInTicks,length,event.velocity);
+                          track->pianoRoll()->addNoteToScene(event.note,event.timeInTicks,length,event.velocity);
                         break;
                     }
                 }
             //    MidiManager::addUnfinishedNote(event.note,event.velocity,event.timeInTicks,plugs->host->track);
             }
-            MidiManager::recalculateNoteListDT(plugin->track);
+            MidiManager::recalculateNoteListDT(track->midiData());
             for (int i = 0; i < 128; ++i)
             {
-                if (plugin->pianoroll->bridge->overlays[i] != NULL)
+                if (track->pianoRoll()->bridge->overlays[i] != NULL)
                 {
-                    plugin->pianoroll->bridge->overlays[i]->recalculateDT();
+                    track->pianoRoll()->bridge->overlays[i]->recalculateDT();
                 }
             }
 
@@ -200,10 +201,10 @@ void CALLBACK midiCallback(HMIDIIN  handle, UINT uMsg, DWORD dwInstance, DWORD d
   //  qDebug() << "status: " << status << " Note: " << note << " Velocity: " << velocity;
     if (status == 0x90 || status == 0xB0) // Note on / Note off
     {
-        for (int var = 0; var < masterTrack->midiTracks.size() ; ++var)
-        {
-            auto plugin = masterTrack->midiTracks.at(var)->plugin();
-            if(plugin->canRecord()){
+        for (int var = 0; var < masterTrack->midiTracks().size() ; ++var)
+        {   auto track = masterTrack->midiTracks().at(var).get();
+            auto plugin = track->plugin();
+            if(track->canRecord()){
                 qreal currentTick =((qreal)g_timer->currentTime() / 1000.0) * 960.0 / (60.0 / g_tempo);
                 plugin->addMidiEvent(status,note,velocity,currentTick);
                 if (MidiPlayer::canRecordInput)

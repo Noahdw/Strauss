@@ -30,7 +30,6 @@ mSong MidiManager::Deserialize(QByteArray &array)
 {
     //One extra byte at pos 0 of array for some reason, 0 based indexing cancels it out
     int ticksPerQuarterNote,framesPerSecondSMTPE,deltaTimeSMTPE;
-    //int format = array.at(10);
     int trackChunks = array.at(12); // no one needs more than 127 tracks anyways, technically this is var length
 
     bool divistionFormat = (array.at(13) >> 7);
@@ -49,18 +48,14 @@ mSong MidiManager::Deserialize(QByteArray &array)
     int highest_total_dt = TPQN * 60;
     double tpqnScale = TPQN / ticksPerQuarterNote; // Enforce 960 TPQN
     int currentPos = 15;
-    // was (if format is 0), only TPQN supported for now though
+    // was (if format is 0), only TPQN supported for now though, SMTPE support latter
     if (true) {
-        //Runs for amount of tracks in a song
         for (int var = 0; var < trackChunks; ++var) {
-
             MidiData *track = new MidiData;
-            track->trackName = "";
-            track->instrumentName = "";
             currentPos += 4; //should put on first byte of Length
-            track->length = ((uchar)(array.at(currentPos)) << 24 |
+            track->length = ((uchar)(array.at(currentPos))   << 24 |
                              (uchar)(array.at(currentPos+1)) << 16 |
-                             (uchar)(array.at(currentPos+2)) << 8 |
+                             (uchar)(array.at(currentPos+2)) << 8  |
                              (uchar)(array.at(currentPos+3)));
             qDebug() << "Track " << var << "length: " << track->length;
             currentPos += 4; //should put on first byte after length
@@ -75,6 +70,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                 //Because of variable length, bit 7(last MSB) is used to denote that it is last byte
                 //in the series if it is 0.
                 //NOTE* bit 7n must be 1 if it is not last byte, does not signify a larger value though
+                //TODO: Convert to a loop
                 int deltaTime = 0;
                 if ((uchar)array.at(pos) >> 7 == 0)
                 {
@@ -221,7 +217,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                             for (int var = 0; var < len; ++var) {
 
                                 pos++;
-                                //unhandled for now, wtf does the data mean
+                                //unhandled for now
 
                             }
                             break;
@@ -233,7 +229,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                             for (int var = 0; var < len; ++var) {
 
                                 pos++;
-                                //unhandled for now, wtf does the data mean
+                                //unhandled for now
                             }
                             break;
                         }
@@ -245,7 +241,7 @@ mSong MidiManager::Deserialize(QByteArray &array)
                             for (int var = 0; var < len; ++var) {
 
                                 pos++;
-                                //unhandled for now, wtf does the data mean
+                                //unhandled for now
                             }
                             break;
                         }
@@ -337,7 +333,6 @@ void MidiManager::removeMidiNote(int start, int length, int note, MidiData *trac
             break;
         }
     }
-   // MidiManager::recalculateNoteListDT(track);
 }
 
 void MidiManager::changeMidiVelocity(int start, int note, int velocity, MidiData *track)

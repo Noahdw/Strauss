@@ -29,7 +29,6 @@ class AudioManager;
 #include "src/pianorollhelperview.h"
 #include <QPainter>
 #include <QKeyEvent>
-#include <src/timetracker.h>
 #include <QStackedWidget>
 #include "src/plugineditorcontainer.h"
 #include "src/settingsdialog.h"

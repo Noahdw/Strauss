@@ -3,7 +3,7 @@
 
 class TrackView;
 class PluginTrackView;
-class Vst2HostCallback;
+class Vst2AudioPlugin;
 
 #include <QWidget>
 #include <QHBoxLayout>

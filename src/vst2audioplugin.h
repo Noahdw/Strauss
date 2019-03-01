@@ -4,9 +4,11 @@
 class PianoRoll;
 class PluginTrackView;
 class TrackMidi;
+
 #include <string>
 #include <iostream>
 #include <fstream>
+#include "audioplugin.h"
 #include "SDK/aeffectx.h"
 #include <SDK/aeffect.h>
 #include <SDK/vstfxstore.h>
@@ -25,54 +27,41 @@ struct Rect {
     short right;
 };
 
-struct EventToAdd
-{
-    uchar status = 0x90;
-    uchar note = 0;
-    bool eventOn = false;
-    bool hasEventToAdd = false;
-    qreal timeInTicks = 0;
-    uchar velocity;
-};
 
-class Vst2HostCallback : public QObject
+
+class Vst2AudioPlugin : public AudioPlugin
 {
-    Q_OBJECT
+
 public:
-    Vst2HostCallback();
-    Vst2HostCallback(MidiData *track);
-    ~Vst2HostCallback();
-    AEffect* loadPlugin(char* fileName, char *pluginName);
+     Vst2AudioPlugin(TrackMidi *track);
+
+    ~Vst2AudioPlugin();
+    bool loadPlugin(QString path, QString name);
     AEffect* LoadBridgedPlugin(char * szPath);
     int numParams(AEffect *effect) const;
     QString getParamName(AEffect *effect,int index);
-    bool canRecord();
     int configurePluginCallbacks();
     void startPlugin();
     void initializeIO();
-    void processAudio(AEffect *effect, float **inputs, float **outputs,long numFrames);
+    void processAudio(float **inputs, float **outputs,int numFrames);
     void silenceChannel(float **channelData, int numChannels, long numFrames);
-    void processMidi(AEffect *effect);
+    void processMidi();
     void initializeMidiEvents();
     void restartPlayback();
-    void pauseOrResumePlayback(bool isResume);
     void addMidiEvent(uchar status, uchar note, uchar velocity, qreal currentTick);
     void setPianoRollRef(PianoRoll *piano);
-    void setCanRecord(bool canRecord);
     void turnOffAllNotes();
     void showPlugin();
     void hidePlugin();
     void exportAudioInit();
-    void setBlockSize(AEffect *effect,int blockSize);
-    int exportAudioBegin(AEffect *effect, float **outputs,
-                         long numFrames);
+    void setBlockSize(int blockSize);
+    int exportAudioBegin(float **outputs,
+                         int numFrames);
     void unloadPlugin();
     void exportAudioEnd();
-    std::string savePluginState(AEffect *effect) const;
-    void setPluginState(AEffect *effect, const std::string &chunk);
+    std::string savePluginState() const;
+    void setPluginState(const std::string &chunk);
     EventToAdd eventToAdd;
-    std::queue<EventToAdd> midiEventQueue;
-    std::deque<EventToAdd> recordedMidiEventDeque;
     MidiData *track;
     int ccFramesTillBlock[128];
     int ccVecPos[128];
@@ -86,14 +75,13 @@ public:
     bool isMasterPlugin = false;
     bool shouldDelete = false;
     int noteVecPos = 0;
-    char *pluginName;
-    QString actual_url;
+    QString pluginName;
     QString unique_plugin_id;
     PluginTrackView * masterPluginTrackView;
     TrackMidi *midiTrack;
     dispatcherFuncPtr dispatcher;
     AEffect *effect = NULL;
-
+    void setCustomPlackbackPos(int playbackPos);
 private:
     VstEvents *events;
 
@@ -111,17 +99,10 @@ private:
     float **inputs;
     float samplesPerTick = 0;
 
-    HWND editor;
-public slots:
-    void setCustomPlackbackPos(int playbackPos);
-
+    HWND editor = nullptr;
 };
 
-struct pluginHolder
-{
-    Vst2HostCallback *host = NULL;
-    AEffect *effect = NULL;
-};
+
 
 //from http://teragonaudio.com/article/How-to-make-your-own-VST-host.html
 

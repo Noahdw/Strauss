@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName("MyDaw");
     QCoreApplication::setApplicationName("Strauss");
-   // QCoreApplication::setAttribute(Qt::AA_UseStyleSheetPropagationInWidgetStyles, true);
+
     MainWindow window;
     window.show();
     return app.exec();

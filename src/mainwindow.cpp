@@ -1,14 +1,14 @@
 #include "mainwindow.h"
 #include <src/keyboard.h>
 #include <windows.h>
-#include <src/vst2hostcallback.h>
+#include <src/vst2audioplugin.h>
 #include <src/midiplayer.h>
 #include <src/common.h>
 #include <src/audioengine.h>
 #include <src/audiomanager.h>
 
-MidiManager *manager;
-TimeTracker *timeTracker;
+MidiManager manager;
+
 
 // init common vars
 bool keyboardModeEnabled = false;
@@ -34,8 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     pluginEdiorCentralWidget = new QWidget(this);
     stackedCentralWidget = new QStackedWidget;
     audio_engine     = new AudioEngine(masterTrack);
-    manager          = new MidiManager;
-    timeTracker      = new TimeTracker;
+
 
 
     setCentralWidget(stackedCentralWidget);
@@ -139,17 +138,17 @@ void MainWindow::openFile()
         }
         QString s;
 
-        QByteArray array = manager->ReadMidi(file);
+        QByteArray array = manager.ReadMidi(file);
         for (int var = 0; var < array.length(); ++var) {
             qint8 val= array.at(var);
             s.append(QString::number(val) + " ");
         }
 
-        manager->song = manager->Deserialize(array);
+        manager.song = manager.Deserialize(array);
 
         file.close();
     }
-    track_container->addTrackView(manager->song);
+    track_container->addTrackView(manager.song);
 }
 
 
@@ -293,12 +292,13 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         int note = getNoteFromKeyboard(event->key());
         if (note)
         {
-            for(const auto& track : masterTrack->midiTracks)
+            for(const auto& track : masterTrack->midiTracks())
             {
                 auto plugin = track->plugin();
-                if (plugin->canRecord())
+                if (track->canRecord())
                 {
-                    plugin->addMidiEvent(0x90,note,velocity,0);
+                    //TODO
+                    //plugin.addMidiEvent(0x90,note,velocity,0);
                 }
 
             }
@@ -329,10 +329,10 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
             QMainWindow::keyReleaseEvent(event);
             return;
         }
-        for(const auto& track : masterTrack->midiTracks)
+        for(const auto& track : masterTrack->midiTracks())
         {
             auto plugin = track->plugin();
-            if (plugin->canRecord())
+            if (track->canRecord())
             {
                 int note = getNoteFromKeyboard(event->key());
                 if (note)

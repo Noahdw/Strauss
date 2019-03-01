@@ -14,7 +14,7 @@ void ProjectManager::saveProject()
 
 }
 
-void ProjectManager::saveAsProject(QString path, const MasterTrack *masterTrack)
+void ProjectManager::saveAsProject(QString path,  MasterTrack *masterTrack)
 {
 
     Application *app = new Application;
@@ -23,15 +23,15 @@ void ProjectManager::saveAsProject(QString path, const MasterTrack *masterTrack)
     app->set_sample_rate(g_sampleRate);
     app->set_total_dt(g_quarterNotes * 960);
 
-    for (const auto &track : masterTrack->midiTracks) {
+    for (const auto& track : masterTrack->midiTracks()) {
 
         auto midi_track = app->add_midi_track();
 
         midi_track->set_name( track->trackView()->getTrackName().toUtf8().constData());
 
         auto plugin = midi_track->mutable_master_plugin();
-        plugin->set_plugin_url(track->masterPlugin()->actual_url.toUtf8().constData());
-        plugin->set_program_bank(track->masterPlugin()->savePluginState(track->masterPlugin()->effect));
+        plugin->set_plugin_url(track->masterPlugin()->pluginPath.toUtf8().constData());
+        plugin->set_program_bank(track->masterPlugin()->savePluginState());
         for(auto& item : track->midiData()->noteMap)
         {
             for (uint j = 0; j < item.second.size(); ++j)

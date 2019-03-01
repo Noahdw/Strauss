@@ -12,8 +12,8 @@ HeaderContainer::HeaderContainer(AudioEngine *audioManager)
     auto *playButton     = new QPushButton(this);
     auto *pauseButton    = new QPushButton(this);
     auto *restartButton  = new QPushButton(this);
-    auto *recordButton   = new QPushButton("Record",this);
-    auto *keyboardButton = new QPushButton("Keyboard mode",this);
+    recordButton         = new QPushButton("Record",this);
+    keyboardButton       = new QPushButton(this);
     auto *hbox           = new QHBoxLayout;
     auto *mainbox        = new QHBoxLayout;
     recordStyle          = new QCheckBox;
@@ -41,24 +41,25 @@ HeaderContainer::HeaderContainer(AudioEngine *audioManager)
     mainbox->addWidget(groupBox);
     mainbox->setAlignment(Qt::AlignTop|Qt::AlignCenter);
     setLayout(mainbox);
-
+    recordButton ->setCheckable(true);
     QObject::connect(playButton,     &QPushButton::clicked,this,&HeaderContainer::play);
     QObject::connect(pauseButton,    &QPushButton::clicked,this,&HeaderContainer::pause);
     QObject::connect(restartButton,  &QPushButton::clicked,this,&HeaderContainer::restart);
-    QObject::connect(recordButton,   &QPushButton::clicked,this,&HeaderContainer::record);
+    QObject::connect(recordButton,   &QPushButton::toggled,this,&HeaderContainer::record);
     QObject::connect(keyboardButton, &QPushButton::toggled,this,&HeaderContainer::keyboardMode);
     QObject::connect(tempoWidget,    &QDraggingWidget::valueChanged,this,&HeaderContainer::masterTempoChanged);
 
 
     groupBox->setStyleSheet("QGroupBox {  border: 1px solid rgb(20,20,20);"
-                                        " padding: 6px;"
-                                        " background: rgb(50,50,50);}");
+                            " padding: 6px;"
+                            " background: rgb(50,50,50);}");
     //  playButton->setStyleSheet("background-image: url(:/images/icons/play_pause.png);");
     QPixmap pic(":/icons/play_pause.png");
     playButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay));
     pauseButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPause));
     restartButton->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaSeekBackward));
     // playButton->setIconSize(pic.size());
+    keyboardButton->setIcon(QIcon(":/icons/keyboard_icon.png"));
 
 }
 
@@ -82,7 +83,7 @@ void HeaderContainer::restart()
     audio_manager->requestPlaybackRestart();
     if(MidiPlayer::canRecordInput)
     {
-       // MidiPlayer::addMidiAfterRecording();
+        // MidiPlayer::addMidiAfterRecording();
         MidiPlayer::canRecordInput = false;
     }
 }
@@ -99,11 +100,15 @@ void HeaderContainer::pause()
 
 }
 
-void HeaderContainer::record()
+void HeaderContainer::record(bool state)
 {
-    MidiPlayer::canRecordInput = true;
-    MidiPlayer::recordingOverwrites = recordStyle->isChecked();
-    play();
+    recordButton->setProperty("toggled",state);
+    style()->unpolish(recordButton);
+    style()->polish(recordButton);
+    MidiPlayer::canRecordInput = state;
+    MidiPlayer::recordingOverwrites = state;
+    if(state)
+        play();
 }
 
 void HeaderContainer::notation()
@@ -113,13 +118,16 @@ void HeaderContainer::notation()
 
 void HeaderContainer::keyboardMode(bool enabled)
 {
+    keyboardButton->setProperty("toggled",enabled);
+    style()->unpolish(keyboardButton);
+    style()->polish(keyboardButton);
     keyboardModeEnabled = enabled;
 }
 
 void HeaderContainer::masterTempoChanged(int tempo)
 {
- g_tempo = tempo;
- g_timer->setDuration(((float)(60.0/g_tempo)*g_quarterNotes*1000));
+    g_tempo = tempo;
+    g_timer->setDuration((static_cast<float>(60.0/g_tempo)*g_quarterNotes*1000));
 }
 
 

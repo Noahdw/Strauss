@@ -5,7 +5,7 @@
 #include <QObject>
 #include <SDK/portaudio.h>
 #include <math.h>
-#include <src/vst2hostcallback.h>
+#include <src/vst2audioplugin.h>
 #include <qdebug.h>
 #include <SDK/aeffect.h>
 #include "src/mastertrack.h"
@@ -24,8 +24,8 @@ public:
     void initializeIO();
     void changeBlockSize(int oldSize, int newSize);
     void requestPlaybackRestart();
-    void setPaused(bool isResume);
-    QVector<pluginHolder*> *plugins;
+    void setPaused(bool paused);
+    bool isPaused() {return _paused;}
     bool isRunning = false;
     float sampleRate = 44100;
     MasterTrack *masterTrack;
@@ -33,8 +33,13 @@ public:
     static uint blocksize;
     static int requestedPlaybackPos;
     static bool shouldDeleteTrack;
+    float** input = 0;
+    float** output = 0;
+    float** input_storage= 0;
+    float** output_storage = 0;
+    int num_outputs = 64;
 private:
-
+    bool _paused = false;
 signals:
     void changePlaybackPosSignal( int pos);
 

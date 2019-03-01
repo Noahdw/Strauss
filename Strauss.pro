@@ -7,7 +7,7 @@
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
+CONFIG += c++17
 TARGET = Strauss
 TEMPLATE = app
 QMAKE_CXXFLAGS+= -Zi
@@ -28,6 +28,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += src/main.cpp\
+    src/audioplugin.cpp \
+    src/audiopluginfactory.cpp \
     src/mainwindow.cpp\
     src/midiplayer.cpp\
     src/midimanager.cpp\
@@ -37,7 +39,6 @@ SOURCES += src/main.cpp\
     src/keyboard.cpp \
     src/pianorollcontainer.cpp \
     src/trackcontainer.cpp \
-    src/vst2hostcallback.cpp \
     src/velocityview.cpp \
     src/trackmidiview.cpp \
     src/velocityviewitem.cpp \
@@ -51,7 +52,6 @@ SOURCES += src/main.cpp\
     src/controlchangeitem.cpp \
     src/collisionitem.cpp \
     src/pianorollhelperview.cpp \
-    src/timetracker.cpp \
     src/plugineditorcontainer.cpp \
     src/plugintrackview.cpp \
     src/pluginview.cpp \
@@ -66,14 +66,22 @@ SOURCES += src/main.cpp\
     src/mastertrack.cpp \
     src/trackmidi.cpp \
     src/notation/notationmainwindow.cpp \
-    src/notation/notationview.cpp \
-    src/notation/notationpage.cpp \
     src/notation/measure.cpp \
     src/notation/stave.cpp \
     src/notation/notationheader.cpp \
-    src/notation/note.cpp
+    src/notation/note.cpp \
+    src/notation/element.cpp \
+    src/notation/score.cpp \
+    src/notation/scoreview.cpp \
+    src/notation/page.cpp \
+    src/notation/moment.cpp \
+    src/notation/chord.cpp \
+    src/notation/formatter.cpp \
+    src/vst2audioplugin.cpp
 
 HEADERS  += src/mainwindow.h\
+    src/audioplugin.h \
+    src/audiopluginfactory.h \
     src/midiplayer.h\
     src/midimanager.h\
     src/pianoroll.h \
@@ -82,7 +90,6 @@ HEADERS  += src/mainwindow.h\
     src/keyboard.h \
     src/pianorollcontainer.h \
     src/trackcontainer.h \
-    src/vst2hostcallback.h \
     src/velocityview.h \
     src/trackmidiview.h \
     src/velocityviewitem.h \
@@ -97,7 +104,6 @@ HEADERS  += src/mainwindow.h\
     src/collisionitem.h \
     src/pianorollhelperview.h \
     src/common.h \
-    src/timetracker.h \
     src/plugineditorcontainer.h \
     src/plugintrackview.h \
     src/pluginview.h \
@@ -112,13 +118,19 @@ HEADERS  += src/mainwindow.h\
     src/mastertrack.h \
     src/trackmidi.h \
     src/notation/notationmainwindow.h \
-    src/notation/notationview.h \
-    src/notation/notationpage.h \
     src/notation/measure.h \
     src/notation/stave.h \
     src/notation/notationheader.h \
     src/notation/note.h \
-    src/notation/n_common.h
+    src/notation/n_common.h \
+    src/notation/element.h \
+    src/notation/score.h \
+    src/notation/scoreview.h \
+    src/notation/page.h \
+    src/notation/moment.h \
+    src/notation/chord.h \
+    src/notation/formatter.h \
+    src/vst2audioplugin.h
 
 LIBS += -lwinmm \
 
@@ -133,3 +145,6 @@ DEPENDPATH += $$PWD/Debug \
 
 RESOURCES += \
     graphics.qrc
+
+FORMS += \
+    src/trackview.ui

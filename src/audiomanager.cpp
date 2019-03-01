@@ -1,6 +1,6 @@
 #include "audiomanager.h"
 #include "src/mainwindow.h"
-#include "src/vst2hostcallback.h"
+#include "src/vst2audioplugin.h"
 #include "src/common.h"
 #include "sdk/portaudio.h"
 AudioManager::AudioManager(MasterTrack *mTrack) : masterTrack(mTrack)
@@ -26,25 +26,28 @@ int AudioManager::exportAudio(QString filePath)
 
 void AudioManager::initializePlugins()
 {
-    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
+    for (int i = 0; i < masterTrack->midiTracks().size(); ++i)
     {
-        auto plugin = masterTrack->midiTracks.at(i)->plugin();
-        if (plugin->canPlay && !plugin->isMuted)
+        auto track = masterTrack->midiTracks().at(i).get();
+        auto plugin = track->plugin();
+        if (plugin->canProcess() && !track->muted())
         {
             plugin->exportAudioInit();
         }
     }
 }
 // when isPlaying returns 0, that means all plugins have finished processing audio
+// Slight bug in that last bit of audio is not saved
 int AudioManager::beginExporting()
 {
     int isPlaying = 0;
-    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
+    for (int i = 0; i < masterTrack->midiTracks().size(); ++i)
     {
-        auto plugin = masterTrack->midiTracks.at(i)->plugin();
-        if (plugin->canPlay && !plugin->isMuted)
+        auto track = masterTrack->midiTracks().at(i).get();
+        auto plugin = track->plugin();
+        if (plugin->canProcess() && !track->muted())
         {
-            isPlaying +=  plugin->exportAudioBegin(plugin->effect,output,g_blocksize);
+            isPlaying +=  plugin->exportAudioBegin(output,g_blocksize);
             for (int j = 0; j < g_blocksize; ++j)
             {
                 output_storage[0][j] += output[0][j] * g_volume;
@@ -70,9 +73,9 @@ void AudioManager::endExporting()
         free(output_storage[i]);
         free(output[i]);
     }
-    for (int i = 0; i < masterTrack->midiTracks.size(); ++i)
+    for (int i = 0; i < masterTrack->midiTracks().size(); ++i)
     {
-        auto plugin = masterTrack->midiTracks.at(i)->plugin();
+        auto plugin = masterTrack->midiTracks().at(i)->plugin();
         plugin->exportAudioEnd();
     }
     free(output_storage);

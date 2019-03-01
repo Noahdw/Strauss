@@ -86,7 +86,11 @@ QVariant FolderViewAbstractModel::data(const QModelIndex &index, int role) const
     }
     if ( role == Qt::DecorationRole ) {
         QFileIconProvider fileIcon;
-       return fileIcon.icon(QFileInfo(index.data().toString()));
+        QFileInfo info(index.data().toString());
+
+        if(info.isDir())
+          return QIcon(":/icons/folder_icon.png");
+          return QIcon(":/icons/dll_icon.png");
     }
     if(role == 0x0100)
     {

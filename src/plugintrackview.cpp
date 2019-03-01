@@ -104,7 +104,7 @@ void PluginTrackView::mouseDoubleClickEvent(QMouseEvent *event)
     QFrame::mouseDoubleClickEvent(event);
 }
 
-void PluginTrackView::addPlugin(Vst2HostCallback * vst2Plugin)
+void PluginTrackView::addPlugin(Vst2AudioPlugin * vst2Plugin)
 {
     if (pluginEditorContainer->lastPluginTrack == NULL)
     {
@@ -144,11 +144,11 @@ void PluginTrackView::setTrackName(QString name)
 void PluginTrackView::panChanged()
 {
     float p = panSlider->value();
-    midiTrack->masterPlugin()->pan = p / 200.0;
+   // midiTrack->masterPlugin().pan = p / 200.0;
 }
 
 void PluginTrackView::volumeChanged()
 {
     double volume = (double)volumeSlider->value() / 100.0;
-    midiTrack->masterPlugin()->trackVolume = volume;
+   // midiTrack->masterPlugin().trackVolume = volume;
 }

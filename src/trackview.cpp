@@ -33,41 +33,44 @@ TrackView::TrackView(TrackMidi *midiTrack, TrackMidiView *trackMidiView,TrackCon
     {
         instrumentLabel->setText("new track");
     }
-    muteBox    = new QCheckBox("Mute",this);
-    recordBox  = new QCheckBox("Record",this);
+    muteButton    = new QPushButton("M",this);
+    recordButton  = new QPushButton("R",this);
+    auto* hlayoutLevel1 = new QHBoxLayout;
     showButton = new QPushButton("Show",this);
     comboBox = new QComboBox;
-    showButton->setCheckable(true);
-
+    recordButton->setCheckable(true);
+    muteButton->setCheckable(true);
     QVBoxLayout *vlayout = new QVBoxLayout;
+
 
     vlayout->setContentsMargins(10,5,10,5);
     vlayout->setAlignment(Qt::AlignTop);
     vlayout->addWidget(instrumentLabel,0,Qt::AlignTop|Qt::AlignLeft);
-    vlayout->addWidget(muteBox);
-    vlayout->addWidget(recordBox);
+    hlayoutLevel1->addWidget(muteButton);
+    hlayoutLevel1->addWidget(recordButton);
+    vlayout->addLayout(hlayoutLevel1);
+
     vlayout->addWidget(showButton);
-    showButton->setFixedSize(50,20);
     vlayout->addWidget(comboBox);
+
     setLayout(vlayout);
 
     randomRed = distribution(generator);
     randomGreen = distribution(generator);
     randomBlue = distribution(generator);
-    connect(instrumentLabel, &QLineEdit::customContextMenuRequested,this,&TrackView::ShowContextMenu);
-    QObject::connect(recordBox,&QCheckBox::stateChanged,this,&TrackView::notifyRecordingChange);
-    QObject::connect(muteBox,  &QCheckBox::stateChanged,this,&TrackView::notifyMuteChange);
-    QObject::connect(showButton,&QPushButton::clicked,this,&TrackView::showPlugin);
+
+    connect(instrumentLabel,      &QLineEdit::customContextMenuRequested,this,&TrackView::ShowContextMenu);
+    QObject::connect(recordButton,&QPushButton::toggled,   this,&TrackView::toggleRecording);
+    QObject::connect(muteButton,  &QPushButton::toggled,   this,&TrackView::toggleMute);
+    QObject::connect(showButton,  &QPushButton::clicked,   this,&TrackView::showPlugin);
     QObject::connect(this, &QWidget::customContextMenuRequested,
                      this,&TrackView::ShowContextMenu);
     connect(comboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [=](int index){ comboBoxIdChanged(index);}); // wtf
-    //plugin.host->setCanRecord(true);
 
     brush = QBrush(QColor(randomRed, randomGreen, randomBlue));
     comboBox->addItem("None");
     comboBox->setMaxCount(24);
-
 }
 
 TrackView::~TrackView()
@@ -79,7 +82,6 @@ TrackView::~TrackView()
 
 bool TrackView::eventFilter(QObject *target, QEvent *event)
 {
-    // qDebug() << event->type();
     if(target == instrumentLabel)
     {
         if (event->type() == QEvent::FocusOut)
@@ -126,10 +128,10 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
 }
 
 
-// Used when this class is beying destroyed
+// Will result in this class gettting deleted.
 void TrackView::deleteTrack()
 {
-    delete _midiTrack;
+    _midiTrack->prepareToDelete();
 
 }
 
@@ -150,17 +152,21 @@ TrackMidiView *TrackView::getTrackMidiView()
     return _trackMidiView;
 }
 
-void TrackView::notifyMuteChange(int state)
+void TrackView::toggleMute(bool state)
 {
-
-    midiTrack()->masterPlugin()->isMuted = state;
+    muteButton->setProperty("toggled",state);
+    style()->unpolish(muteButton);
+    style()->polish(muteButton);
+    midiTrack()->setMuted(state);
 
 }
 
-void TrackView::notifyRecordingChange(int state)
+void TrackView::toggleRecording(bool state)
 {
-
-    midiTrack()->masterPlugin()->setCanRecord(state);
+    recordButton->setProperty("toggled",state);
+    style()->unpolish(recordButton);
+    style()->polish(recordButton);
+    midiTrack()->setCanRecord(state);
 
 }
 
@@ -179,10 +185,9 @@ void TrackView::ShowContextMenu(const QPoint &pos)
 
 void TrackView::showPlugin()
 {
-    if (midiTrack()->masterPlugin()->effect != NULL)
-    {
-        midiTrack()->masterPlugin()->showPlugin();
-    }
+    if(midiTrack()->plugin())
+        midiTrack()->plugin()->showPlugin();
+
 }
 
 void TrackView::renameTrack()

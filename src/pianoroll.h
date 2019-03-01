@@ -23,7 +23,6 @@ class TrackMidi;
 #include <QKeyEvent>
 #include <src/controlchangeoverlay.h>
 #include <src/common.h>
-#include <src/timetracker.h>
 #include "src/command.h"
 #include <QStack>
 class PianoRoll : public QGraphicsView{
@@ -44,7 +43,6 @@ public:
     void notifyPianoRollItemMoved(int xMove, int yMove,QGraphicsItem *item);
     void addNoteToScene(int note, int position, int length, int velocity);
     void changeNotesAfterMouseDrag(QGraphicsItem *item);
-    void switchViewContainer();
     void forceResize();
     void issueMoveCommand(int xMove, int yMove, QGraphicsItem* item);
     void copyItems();
@@ -53,8 +51,6 @@ public:
     TrackView *track;
     TrackLengthView * trackLengthView;
     VelocityView *velocityView;
-    QGraphicsScene *scene;
-    QRectF *sceneRect;
     TrackMidi *midiTrack;
     ControlChangeBridge * bridge;
     int tPQN = MidiManager::TPQN;
@@ -71,7 +67,6 @@ public slots:
     void turnNoteOff(int note);
 
 protected:
-    void mouseDoubleClickEvent(QMouseEvent  *event);
     void paintEvent(QPaintEvent * event);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
@@ -87,8 +82,8 @@ private:
     QRubberBand *rubberBand;
     QGraphicsRectItem *line;
     QPoint origin;
-    QList<QGraphicsItem*> last_selected_items;
-    QList<QGraphicsItem*> copied_items;
+    QList<QGraphicsItem*> lastSelectedItems;
+    QList<QGraphicsItem*> copiedItems;
     QStack<Command*> commands;
     int currentTimer = 0;
     int lastYNote = 0;
@@ -96,71 +91,8 @@ private:
     double xscale = 1.1;
 };
 
-struct ItemData{
-  int xPos;
-  int yPos;
-  int length;
-};
 
-class PianoRollMoveCommand : Command
-{
-public:
-    PianoRollMoveCommand(PianoRoll *pianoRoll, QList<QGraphicsItem*> items, int x, int y, QGraphicsItem *skipItem);
-    ~PianoRollMoveCommand();
-    virtual void execute();
-    virtual void undo();
-private:
-    QList<QGraphicsItem*> items;
-    QGraphicsItem *skippedItem;
-    int xPos;
-    int yPos;
-     PianoRoll* _pianoRoll;
 
-};
 
-class PianoRollAddCommand : Command
-{
-public:
-    PianoRollAddCommand(PianoRoll *pianoRoll, QList<ItemData> items);
-    ~PianoRollAddCommand();
-    virtual void execute();
-    virtual void undo();
-
-private:
-    QList<QGraphicsItem*> newItems;
-    QList<ItemData> items;
-    PianoRoll* _pianoRoll;
-
-};
-
-class PianoRollRemoveCommand : Command
-{
-public:
-    PianoRollRemoveCommand(PianoRoll *pianoRoll, QList<QGraphicsItem*> items);
-    ~PianoRollRemoveCommand();
-    virtual void execute();
-    virtual void undo();
-
-private:
-    QList<QGraphicsItem*> removedItems;
-    PianoRoll* _pianoRoll;
-
-};
-
-class PianoRollResizeCommand : Command
-{
-public:
-    PianoRollResizeCommand(PianoRoll *pianoRoll, QList<QGraphicsItem*> items, int xLeftAdjust, int xRightAdjust);
-    ~PianoRollResizeCommand();
-    virtual void execute();
-    virtual void undo();
-
-private:
-    QList<QGraphicsItem*> resizedItems;
-    int xLeft;
-    int xRight;
-    PianoRoll* _pianoRoll;
-
-};
 
 #endif // PIANOROLL_H

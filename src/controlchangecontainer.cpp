@@ -34,11 +34,11 @@ void ControlChangeContainer::addControlChangeView(PianoRoll * pianoRoll)
     QGraphicsScene * scene = new QGraphicsScene;
     bridge->view->pRoll = pianoRoll;
     pianoRoll->bridge = bridge;
-    bridge->view->scene = pianoRoll->scene;
-    bridge->view->setScene(pianoRoll->scene);
+    bridge->view->scene = pianoRoll->scene();
+    bridge->view->setScene(pianoRoll->scene());
     bridge->baseScene = scene;
     bridge->overlays[bridge->currentIndex]->updateScene(scene);
-    scene->setSceneRect(*pianoRoll->sceneRect);
+    scene->setSceneRect(pianoRoll->scene()->sceneRect());
 
     sLayout2->addWidget(bridge);
     sLayout2->setCurrentIndex(0);

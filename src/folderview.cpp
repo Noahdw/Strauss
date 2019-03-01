@@ -39,22 +39,7 @@ void FolderView::itemDoubleClicked()
     QModelIndex index = list->currentIndex();
     QString pluginName = index.data(0).toString();
     QString absPath = index.data(0x0100).toString();
-//    qDebug() << index.data(1);
-//    QString tempPath = QString(QDir::current().path()+"/TempPlugins/%1.dll").arg(FolderView::tempFolderID++);
-//    qDebug() << tempPath;
-//    if (QFile::exists(tempPath))
-//    {
-//        QFile::remove(tempPath);
-//    }
-
-//    if (!QFile::copy(absPath, tempPath))
-//    {
-//        qDebug() << absPath;
-//        qDebug() << "Could not copy plugin";
-//        return;
-//    }
-
-    masterTrack->currentTrack()->loadPlugin(absPath);
+    masterTrack->currentTrack()->addPlugin(absPath);
 
 }
 

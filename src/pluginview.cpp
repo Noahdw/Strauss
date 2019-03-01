@@ -1,7 +1,7 @@
 #include "pluginview.h"
-#include "src/vst2hostcallback.h"
+#include "src/vst2audioplugin.h"
 
-PluginView::PluginView(Vst2HostCallback *vst2Plugin)
+PluginView::PluginView(Vst2AudioPlugin *vst2Plugin)
 {
     setMaximumSize(150,150);
     setMinimumSize(150,150);

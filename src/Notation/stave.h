@@ -3,24 +3,23 @@
 
 #include <QObject>
 #include <QWidget>
-#include <QHBoxLayout>
-#include <QGraphicsLineItem>
-#include <src/Notation/measure.h>
-class Stave : public QFrame
+#include "element.h"
+
+class Measure;
+class Score;
+
+class Stave : public Element
 {
-    Q_OBJECT
 public:
+    Stave(Score* score =0);
+    QRectF size();
+    int staveLines()  const {return _staveLines;}
+    int lineSpacing() const {return _lineSpacing;}
 
-    Stave();
-    QVector<Measure*> measures;
 
-    int yInScene;
-    int priority;
-    int numLines = 5;
-    int lineHeight = 20;
-    void assignMeasure(Measure * measure);
-    void paintEvent(QPaintEvent * event);
-    QHBoxLayout *measureLayout;
+private:
+    int _staveLines = 5;
+    int _lineSpacing = 20;
 };
 
 #endif // STAVE_H

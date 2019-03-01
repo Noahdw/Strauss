@@ -7,17 +7,17 @@
 #include <QHBoxLayout>
 #include <QPainter>
 #include <QPushButton>
-#include "src/vst2hostcallback.h"
+#include "src/vst2audioplugin.h"
 #include <QLabel>
 
 class PluginView : public QFrame
 {
     Q_OBJECT
 public:
-    PluginView(Vst2HostCallback *vst2Plugin);
+    PluginView(Vst2AudioPlugin *vst2Plugin);
     void showPlugin();
     void disablePlugin(bool state);
-    Vst2HostCallback *plugin;
+    Vst2AudioPlugin *plugin;
 private:
     QVBoxLayout *vLayout;
     QString pluginName;

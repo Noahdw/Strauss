@@ -15,7 +15,7 @@ class TrackMidi;
 #include <QBoxLayout>
 #include <QGraphicsRectItem>
 #include <QFrame>
-#include <src/vst2hostcallback.h>
+#include <src/vst2audioplugin.h>
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QPushButton>
@@ -50,8 +50,8 @@ private:
     TrackMidi* _midiTrack;
 
     QVBoxLayout *vlayout;
-    QCheckBox *muteBox;
-    QCheckBox *recordBox;
+    QPushButton *muteButton;
+    QPushButton *recordButton;
     QPushButton * showButton;
     TrackMidiView *_trackMidiView;
     TrackContainer *_trackContainer;
@@ -64,8 +64,8 @@ signals:
     void trackClickedOn(TrackView *track_View);
 
 private slots:
-    void notifyMuteChange(int state);
-    void notifyRecordingChange(int state);
+    void toggleMute(bool state);
+    void toggleRecording(bool state);
     void ShowContextMenu(const QPoint &pos);
     void showPlugin();
     void renameTrack();

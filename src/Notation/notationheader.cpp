@@ -21,6 +21,5 @@ NotationHeader::NotationHeader(NotationMainWindow *mainWin)  : mainWindow(mainWi
 
 void NotationHeader::changeNoteValue(float value)
 {
-   // mainWindow->notationView->
-    //n_currentNoteValue = value;
+
 }

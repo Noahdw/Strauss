@@ -1,29 +1,30 @@
 #include "notationmainwindow.h"
 #include "src/Notation/notationheader.h"
 
-float n_selectedNoteValue = 1;
-int n_noteWidth = 20;
-int n_noteHeight = 20;
-float n_currentNoteValue = 1.0;
+
 NotationMainWindow::NotationMainWindow(MasterTrack *master) : masterTrack(master)
 {
-    notationView = new NotationView(master);
+    score = new Score;
+    scoreView = new ScoreView(score);
     mainVLayout = new QVBoxLayout;
     header = new NotationHeader(this);
     mainVLayout->addWidget(header);
-    mainVLayout->addWidget(notationView);
+    mainVLayout->addWidget(scoreView);
     setLayout(mainVLayout);
+
+    score->addStave(0);
+    for(int i = 0; i < 10; i++)
+        score->addMeasure(i);
 
 }
 
 void NotationMainWindow::addInstrument(TrackMidi *track)
 {
-    notationView->AddInstrument(track);
-    notationView->assignMeasureToPage();
+
 }
 
 void NotationMainWindow::addMeasure()
 {
-    notationView->AddMeasure(0);
+
 }
 

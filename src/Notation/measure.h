@@ -1,45 +1,25 @@
 #ifndef MEASURE_H
 #define MEASURE_H
 
-class NotationPage;
 class Stave;
-#define DEFAULT_STATE 100
+class Score;
+class Moment;
 #include <QObject>
-#include <QList>
-#include <QGraphicsLineItem>
+
 #include <QDebug>
-#include <QGraphicsView>
-#include "src/Notation/note.h"
-#include "src/Notation/n_common.h"
-class Measure : public QGraphicsView
+#include "element.h"
+
+class Measure : public Element
 {
 public:
-    Measure();
-    int prefferedMeasureWidth = 100;
-
-    QGraphicsLineItem *measureLine;
-    std::map<float,QGraphicsItem*> notes;
-    NotationPage * notationPage;
-    void setPage(NotationPage *page);
-    void setStave(Stave *stv);
-    void insertNote(float beat,float value);
-    float getCurrentNoteUnderMouse(QPointF pos);
-    float getPitchUnderMouse(QPointF pos);
-    int tsTop = 4;
-    int tsBot = 4;
-    const qreal minBorder = 10;
-    int xInScene();
-    Stave *stave;
-    QPoint globalNotePos;
-
-        bool eventFilter(QObject *obj, QEvent *event);
-     QGraphicsScene *scene;
- protected:
-     void mousePressEvent(QMouseEvent *event);
-     void mouseMoveEvent(QMouseEvent *event);
-     void showEvent(QShowEvent *event);
+    Measure(Score* _score =0);
+    void draw(QPainter* painter);
+    void insertStaff(int index);
+    void removeStaff(int index);
+    QMap<float, Moment *> &moments(int staff);
+    elementType getType() const;
 private:
-  //  Note *cursorNote;
+    QVector<std::shared_ptr<QMap<float, Moment *> > > _moments;
 };
 
 #endif // MEASURE_H
