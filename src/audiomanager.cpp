@@ -30,14 +30,14 @@ void AudioManager::initializePlugins()
     {
         auto track = masterTrack->midiTracks().at(i).get();
         auto plugin = track->plugin();
-        if (plugin->canProcess() && !track->muted())
+        if (plugin->canProcess() && !track->isMuted())
         {
             plugin->exportAudioInit();
         }
     }
 }
 // when isPlaying returns 0, that means all plugins have finished processing audio
-// Slight bug in that last bit of audio is not saved
+// Slight bug in that last bit of audio is not processed
 int AudioManager::beginExporting()
 {
     int isPlaying = 0;
@@ -45,7 +45,7 @@ int AudioManager::beginExporting()
     {
         auto track = masterTrack->midiTracks().at(i).get();
         auto plugin = track->plugin();
-        if (plugin->canProcess() && !track->muted())
+        if (plugin->canProcess() && !track->isMuted())
         {
             isPlaying +=  plugin->exportAudioBegin(output,g_blocksize);
             for (int j = 0; j < g_blocksize; ++j)

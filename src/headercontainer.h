@@ -16,13 +16,12 @@ class HeaderContainer : public QWidget
 {
     Q_OBJECT
 public:
-    HeaderContainer(AudioEngine *audioManager);
+    HeaderContainer(AudioEngine *audioEngine);
 
 private:
-    AudioEngine *audio_manager;
+    AudioEngine *_audioEngine;
     QGroupBox * groupBox;
     QCheckBox * recordStyle;
-    bool isPaused = false;
     QPushButton* keyboardButton;
     QPushButton* recordButton;
 private slots:

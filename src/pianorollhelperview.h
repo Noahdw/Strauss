@@ -25,8 +25,8 @@ private:
     void initializeComboBox();
     void switchView();
     QVBoxLayout *vLayout;
-    QPushButton *switch_layout_button;
-    ControlChangeContainer *control_change_container;
+    QPushButton *switchLayoutButton;
+    ControlChangeContainer *_controlChangeContainer;
 
 
 };

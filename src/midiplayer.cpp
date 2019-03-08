@@ -1,7 +1,6 @@
 #include "midiplayer.h"
 #include "src/mainwindow.h"
 #include "audioplugin.h"
-#include "src/controlchangebridge.h"
 #include "src/common.h"
 
 MidiPlayer::MidiPlayer(MasterTrack *mTrack) : masterTrack(mTrack)
@@ -155,8 +154,8 @@ void MidiPlayer::addMidiAfterRecording()
                 {
                     if (event.status == 0xB0)
                     {
-                     track->pianoRoll()->bridge->verifyOverlayExists(event.note);
-                     track->pianoRoll()->bridge->overlays[event.note]->addPoint(event.timeInTicks,event.velocity);
+                   //  track->pianoRoll()->bridge->verifyOverlayExists(event.note);
+                   //  track->pianoRoll()->bridge->overlays[event.note]->addPoint(event.timeInTicks,event.velocity);
                     }
                     continue;
                 }
@@ -177,10 +176,10 @@ void MidiPlayer::addMidiAfterRecording()
             MidiManager::recalculateNoteListDT(track->midiData());
             for (int i = 0; i < 128; ++i)
             {
-                if (track->pianoRoll()->bridge->overlays[i] != NULL)
-                {
-                    track->pianoRoll()->bridge->overlays[i]->recalculateDT();
-                }
+               // if (track->pianoRoll()->bridge->overlays[i] != NULL)
+              //  {
+                 //   track->pianoRoll()->bridge->overlays[i]->recalculateDT();
+               // }
             }
 
         }

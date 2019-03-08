@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 class AudioManager;
-
+class Browser;
 #include <QFileDialog>
 #include <QFile>
 #include <QMessageBox>
@@ -20,7 +20,6 @@ class AudioManager;
 #include <QGraphicsScene>
 #include <src/pianorollcontainer.h>
 #include <src/trackcontainer.h>
-#include <src/folderview.h>
 #include <src/headercontainer.h>
 #include <QLibrary>
 #include <qvector.h>
@@ -71,9 +70,9 @@ private:
     void setUpMenuBar();
     int getNoteFromKeyboard(int key);
 
-    PianoRollContainer     *piano_roll_container;
+    PianoRollContainer     *pianoRollContainer;
     TrackContainer         *track_container;
-    FolderView             *folder_view;
+    Browser                *browser;
     HeaderContainer        *header_container;
     ControlChangeContainer *control_change_container;
     PianoRollHelperView    *piano_roll_helper;

@@ -86,6 +86,14 @@ void MasterTrack::setCurrentTrack(TrackMidi* trackMidi)
     Q_ASSERT(trackMidi != NULL);
     _currentTrack = trackMidi;
 }
+
+void MasterTrack::updateTrackPositions(bool isPaused, bool isRestart, int custom)
+{
+    for(const auto& p : midiTracks())
+    {
+        p.get()->pianoRoll()->updateSongTrackerPos(isPaused,isRestart,custom);
+    }
+}
 /*
     TODO: Need a better way to do this, too many classes are dependent on one another to use constructors
 */

@@ -45,7 +45,7 @@ PianoRoll::PianoRoll(TrackMidi *trackMidi) : midiTrack(trackMidi)
     rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     animation  = new QGraphicsItemAnimation;
     line       = new QGraphicsRectItem(0,0,1,5000);
-
+    line->setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
     scene()->addItem(line);
     line->setZValue(1);
     QPen pen(QColor(156,21,25),0);
@@ -76,6 +76,7 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
     QGraphicsItem *currentItem = itemAt(event->pos());
+    if(dynamic_cast<QGraphicsRectItem*>(currentItem) == line) return;
     if(!currentItem)
     {
         if(event->button() == Qt::LeftButton)
@@ -267,7 +268,7 @@ void PianoRoll::turnNoteOff(int note)
 /* -1 indicates that no custom playback was provided.
    TODO: Should remove whole pause/resume/thing and just make it dependent on custom
 */
-void PianoRoll::updateSongTrackerPos(bool isPauseOrResume, bool isResume, int custom)
+void PianoRoll::updateSongTrackerPos(bool isPaused, bool isRestart, int custom)
 {
     if (custom != -1)
     {
@@ -278,13 +279,13 @@ void PianoRoll::updateSongTrackerPos(bool isPauseOrResume, bool isResume, int cu
         g_timer->setPaused(false);
     }
     else{
-        if (isPauseOrResume) {
-            if(isResume){
-                g_timer->setPaused(false);
+        if (!isRestart) {
+            if(isPaused){
+                g_timer->setPaused(true);
+                currentTimer = g_timer->currentTime();
             }
             else{
-                currentTimer = g_timer->currentTime();
-                g_timer->setPaused(true);
+                g_timer->setPaused(false);
             }
 
         }else{
@@ -373,8 +374,11 @@ bool PianoRoll::hasPlugin()
   Given a piano note, either queue for the note to be played
   or to be turned off. Request is sent to active plugins for playback.
 */
+//TODO variable default velocity based off of wheel event when hovering on note (or something)
 void PianoRoll::playKeyboardNote(int note, bool active)
 {
+    if(!hasPlugin()) return;
+
     auto velocity =  (active ? 45 : 0);
     midiTrack->masterPlugin()->addMidiEvent(0x90,note,velocity,g_timer->currentValue());
 }

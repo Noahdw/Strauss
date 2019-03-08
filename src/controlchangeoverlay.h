@@ -19,12 +19,13 @@ class CollisionItem;
 #include <QGraphicsSceneEvent>
 #include <QPointF>
 #include <map>
+class ControlChange;
 
 class ControlChangeOverlay  : public QGraphicsView{
     Q_OBJECT
 
 public:
-    ControlChangeOverlay(int ccType,QWidget *parent = 0);
+    ControlChangeOverlay(int _ccType,ControlChange* controlChange);
     void createLineConnector();
     void removeSelectedItems();
     void removeCollidingItems(QList<QGraphicsItem*> &items);
@@ -32,13 +33,12 @@ public:
     void fitIntoView();
     void recalculateDT();
     void switchDrawModes();
-    void updateScene(QGraphicsScene *scene);
+    void updateScene(QRectF rect);
     bool eventFilter(QObject *target, QEvent *event);
 
     ControlChangeItem *recentItem;
     std::map<int,QGraphicsItem*> activeItems;
     bool canDraw = false;
-    std::vector<int> listOfCC;
     int ccType;
 
 protected:
@@ -52,11 +52,11 @@ protected:
     void paintEvent(QPaintEvent *event);
 private:
     CollisionItem *collisionItem;
+    ControlChange* _controlChange;
     bool firstShow = true;
     QPoint origin;
     std::vector<QGraphicsLineItem*> lineItems;
     QRubberBand *rubberBand;
-    QGraphicsScene *scene;
     QGraphicsRectItem *rectItem;
     //These items should never be deleted
     ControlChangeItem *leftItem;

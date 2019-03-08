@@ -1,13 +1,9 @@
 #include "src/audioengine.h"
 #include "SDK/portaudio.h"
 #include <src/mainwindow.h>
+
 PaStream *stream;
-
 int AudioEngine::requestedPlaybackPos;
-bool AudioEngine::shouldDeleteTrack = false;
-bool isPaused = false;
-
-
 
 AudioEngine::AudioEngine(MasterTrack *mTrack) : masterTrack(mTrack)
 {
@@ -105,10 +101,11 @@ void AudioEngine::changeBlockSize(int oldSize, int newSize)
         delete(output[i]);
         delete(input[i]);
     }
-    for (int i = 0; i < masterTrack->midiTracks().size(); ++i)
+    for (uint i = 0; i < masterTrack->midiTracks().size(); ++i)
     {
         auto plugin = masterTrack->midiTracks().at(i)->plugin();
-        plugin->setBlockSize(newSize);
+        if(plugin)
+            plugin->setBlockSize(newSize);
     }
     delete(input_storage);
     delete(output_storage);
@@ -123,11 +120,17 @@ void AudioEngine::changeBlockSize(int oldSize, int newSize)
 */
 void AudioEngine::requestPlaybackRestart()
 {
-    for (int i = 0; i < masterTrack->midiTracks().size() ; ++i)
+     masterTrack->updateTrackPositions(false,true,-1);
+    for (uint i = 0; i < masterTrack->midiTracks().size() ; ++i)
     {
         auto plugin =  masterTrack->midiTracks().at(i)->masterPlugin();
-        plugin->restartPlayback();
+        if(plugin)
+        {
+            plugin->restartPlayback();
+
+        }
     }
+    _paused = false;
 }
 /*
     Toggles between paused and resumed playback
@@ -135,7 +138,7 @@ void AudioEngine::requestPlaybackRestart()
 void AudioEngine::setPaused(bool paused)
 {
     _paused = paused;
-
+    masterTrack->updateTrackPositions(paused,false,-1);
 }
 /*
     Changes where tracks are playing from based on time in ticks
@@ -149,6 +152,7 @@ void AudioEngine::changePlaybackPos()
         auto plugin =  masterTrack->midiTracks().at(i)->masterPlugin();
         if (plugin == nullptr)  continue;
         plugin->setCustomPlackbackPos(requestedPlaybackPos);
+          masterTrack->updateTrackPositions(false,false,requestedPlaybackPos);
     }
 }
 /*
@@ -204,7 +208,7 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         if (plugin == nullptr) continue;
         if (!plugin->canProcess()) continue;
 
-        if (isPaused)
+        if (engine->isPaused())
         {
             plugin->turnOffAllNotes();
             plugin->processAudio(engine->input,engine->output,g_blocksize);
@@ -218,7 +222,7 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
             plugin->processMidi();
             plugin->processAudio(engine->input,engine->output,g_blocksize);
         }
-        if(track->muted())
+        if(track->isMuted())
         {
             AudioEngine::silenceChannel(engine->output,engine->num_outputs,g_blocksize);
         }
@@ -239,7 +243,6 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
     {
         AudioEngine::requestedPlaybackPos = -1;
     }
-    isPaused = false;
 
     float *out = static_cast<float*> (outputBuffer);
     for(uint i=0; i<framesPerBuffer; i++ )

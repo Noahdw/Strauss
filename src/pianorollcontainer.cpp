@@ -110,7 +110,6 @@ PianoRoll *PianoRollContainer::addPianoRoll(TrackView *trackView)
     velocityView->setSceneRect(0,0,pianoRoll->totalDT,velocityView->height());
     velocityView->populateVelocityViewFromTrack(trackView);
     trackView->getTrackMidiView()->shareScene(pianoRoll->scene());
-    controlChangeContainer->addControlChangeView(pianoRoll);
     pianoRoll->isInitialized = true;
     pianoRoll->forceResize();
     return pianoRoll;

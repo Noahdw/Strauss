@@ -10,8 +10,10 @@ std::unique_ptr<AudioPlugin> AudioPluginFactory::createAudioPlugin(QString path)
 {
     auto type = path.section('.',-1);
     if (type == "") return nullptr;
-    if(type == ".dll")
+    if(type == "dll")
         return createVst2Plugin(path);
+    if(type == "vst3")
+        return createVst3Plugin(path);
     return nullptr;
 }
 
@@ -36,5 +38,10 @@ std::unique_ptr<AudioPlugin> AudioPluginFactory::createVst2Plugin(QString path)
     if(plugin->loadPlugin(tempFilePath,pluginName))
         return plugin;
 
+    return nullptr;
+}
+
+std::unique_ptr<AudioPlugin> AudioPluginFactory::createVst3Plugin(QString path)
+{
     return nullptr;
 }

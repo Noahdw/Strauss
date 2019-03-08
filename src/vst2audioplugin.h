@@ -27,8 +27,6 @@ struct Rect {
     short right;
 };
 
-
-
 class Vst2AudioPlugin : public AudioPlugin
 {
 
@@ -62,30 +60,25 @@ public:
     std::string savePluginState() const;
     void setPluginState(const std::string &chunk);
     EventToAdd eventToAdd;
-    MidiData *track;
     int ccFramesTillBlock[128];
     int ccVecPos[128];
     PianoRoll *pianoroll;
+
     double trackVolume = 1.0;
     float pan = 0.0;
     float sampleRate = 44100.0f;
-    bool canPlay = false;
     bool isMuted = false;
-    bool isPaused = true;
     bool isMasterPlugin = false;
     bool shouldDelete = false;
     int noteVecPos = 0;
     QString pluginName;
     QString unique_plugin_id;
     PluginTrackView * masterPluginTrackView;
-    TrackMidi *midiTrack;
     dispatcherFuncPtr dispatcher;
     AEffect *effect = NULL;
     void setCustomPlackbackPos(int playbackPos);
 private:
-    VstEvents *events;
-
-    QVector<int> *noteList;
+    VstEvents* events;
 
     HMODULE hinst;
     bool canRecording = false;

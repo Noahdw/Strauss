@@ -5,26 +5,27 @@ PianoRollHelperView::PianoRollHelperView(ControlChangeContainer *controlChangeCo
 {
     setSizePolicy(QSizePolicy::Fixed , QSizePolicy::Fixed );
     setMinimumHeight(200);
-    control_change_container = controlChangeContainer;
+    _controlChangeContainer = controlChangeContainer;
 
     vLayout = new QVBoxLayout;
     comboBox = new QComboBox;
-    switch_layout_button = new QPushButton("Switch view");
+    switchLayoutButton = new QPushButton("Switch view");
     comboBox->setMaxVisibleItems(16);
     setLayout(vLayout);
     initializeComboBox();
     vLayout->setAlignment(Qt::AlignTop | Qt::AlignCenter);
     vLayout->addWidget(comboBox);
-    vLayout->addWidget(switch_layout_button);
+    vLayout->addWidget(switchLayoutButton);
     connect(comboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [=](int index){ comboBoxIdChanged(index);}); // wtf
-    connect(switch_layout_button,&QPushButton::clicked,this,&PianoRollHelperView::switchView);
+    connect(switchLayoutButton,&QPushButton::clicked,this,&PianoRollHelperView::switchView);
 }
 
 void PianoRollHelperView::comboBoxIdChanged(int index)
 {
     qDebug() << index;
-    control_change_container->switchControlChangeType(index);
+    _controlChangeContainer->switchControlChange(index);
+   // _controlChangeContainer->switchControlChangeContainer(true);
 }
 
 void PianoRollHelperView::paintEvent(QPaintEvent *event)
@@ -90,5 +91,6 @@ void PianoRollHelperView::initializeComboBox()
 
 void PianoRollHelperView::switchView()
 {
-    control_change_container->switchControlChangeContainer();
+    _controlChangeContainer->switchControlChangeContainer();
 }
+

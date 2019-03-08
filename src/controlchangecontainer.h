@@ -3,10 +3,10 @@
 
 class PianoRollContainer;
 class ControlChangeBridge;
-
+class MasterTrack;
 #include <QObject>
 #include <QWidget>
-#include <src/controlchangeview.h>
+#include <src/controlchange.h>
 #include <QVBoxLayout>
 #include <QStackedLayout>
 
@@ -16,16 +16,18 @@ class ControlChangeContainer: public QFrame
 {
     Q_OBJECT
 public:
-    ControlChangeContainer(PianoRollContainer *pianoRollContainer);
+    ControlChangeContainer(MasterTrack* masterTrack,PianoRollContainer* pianoRollContainer);
     QStackedLayout *sLayout;
     QStackedLayout *sLayout2;
     QWidget * ccStackedHolder;
     void switchControlChangeContainer();
-    void addControlChangeView(PianoRoll *pianoRoll);
-    void switchControlChangeType(int index);
+    void addControlChange();
+    void switchControlChange(int index);
+    int currentIndex = 0;
 private:
-    PianoRollContainer *piano_roll_container;
-
+    MasterTrack* _masterTrack;
+    PianoRollContainer* _pianoRollContainer;
+    ControlChange *lastControlChange;
 protected:
     void keyPressEvent(QKeyEvent * event);
 };

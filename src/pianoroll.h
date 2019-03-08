@@ -39,7 +39,7 @@ public:
     void resizeSelectedNotes(int xAdjustL,int xAdjustR);
     void deleteSelectedNotes();
     void setScrollWheelValue(int value);
-    void updateSongTrackerPos(bool isPauseOrResume, bool isResume, int custom);
+    void updateSongTrackerPos(bool isPaused,bool isRestart, int custom);
     void notifyPianoRollItemMoved(int xMove, int yMove,QGraphicsItem *item);
     void addNoteToScene(int note, int position, int length, int velocity);
     void changeNotesAfterMouseDrag(QGraphicsItem *item);

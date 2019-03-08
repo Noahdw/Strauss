@@ -2,10 +2,12 @@
 #include "src/controlchangeitem.h"
 #include "src/collisionitem.h"
 #include "src/common.h"
+#include "controlchange.h"
+#include "trackmidi.h"
 
-ControlChangeOverlay::ControlChangeOverlay(int ccType, QWidget *parent) : QGraphicsView(parent)
+ControlChangeOverlay::ControlChangeOverlay(int _ccType, ControlChange* controlChange) : _controlChange(controlChange)
 {
-    this->ccType = ccType;
+    ccType = _ccType;
     setStyleSheet("background-color: transparent;");
     setViewportUpdateMode(FullViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -15,6 +17,7 @@ ControlChangeOverlay::ControlChangeOverlay(int ccType, QWidget *parent) : QGraph
     rightItem     = new ControlChangeItem;
     collisionItem = new CollisionItem(this);
     rubberBand    = new QRubberBand(QRubberBand::Rectangle, this);
+    setScene(new QGraphicsScene);
 }
 
 void ControlChangeOverlay::createLineConnector()
@@ -23,10 +26,10 @@ void ControlChangeOverlay::createLineConnector()
 
     for (int i = 0; i < size; ++i)
     {
-        scene->removeItem(lineItems[i]);
+        scene()->removeItem(lineItems[i]);
         delete lineItems.at(i);
     }
-    QList<QGraphicsItem*> tempItem = scene->items(Qt::AscendingOrder);
+    QList<QGraphicsItem*> tempItem = scene()->items(Qt::AscendingOrder);
     lineItems.clear();
 
     size = tempItem.size() - 1;
@@ -42,7 +45,7 @@ void ControlChangeOverlay::createLineConnector()
             auto item2 = *i;
             QPen pen(Qt::red,4);
 
-            lineItems.push_back(scene->addLine(item.second->x(),item.second->y(),item2.second->x(),item2.second->y(),pen));
+            lineItems.push_back(scene()->addLine(item.second->x(),item.second->y(),item2.second->x(),item2.second->y(),pen));
             lineItems.at(j++)->hide();
         }
     }
@@ -52,19 +55,19 @@ void ControlChangeOverlay::createLineConnector()
 // Removes rubberband selected items
 void ControlChangeOverlay::removeSelectedItems()
 {
-    qDebug() << scene->selectedItems().size();
-    for(const auto& var : scene->selectedItems())
+    qDebug() << scene()->selectedItems().size();
+    for(const auto& var : scene()->selectedItems())
     {
         auto item = dynamic_cast<ControlChangeItem*>(var);
         if (item && item != leftItem && item != rightItem)
         {
-            scene->removeItem(item);
+            scene()->removeItem(item);
             activeItems.erase(item->x());
             delete item;
         }
 
     }
-    scene->clearSelection();
+    scene()->clearSelection();
     createLineConnector();
 }
 
@@ -76,7 +79,7 @@ void ControlChangeOverlay::removeCollidingItems(QList<QGraphicsItem *> &items)
         auto ccItem = dynamic_cast<ControlChangeItem*>(i);
         if (ccItem && ccItem != recentItem && ccItem != leftItem && ccItem != rightItem)
         {
-            scene->removeItem(ccItem);
+            scene()->removeItem(ccItem);
             activeItems.erase(ccItem->x());
             delete ccItem;
         }
@@ -92,14 +95,14 @@ void ControlChangeOverlay::addPoint(int x, int value)
         ControlChangeItem *item = new ControlChangeItem();
         item->setX(x);
         int OldRange = (127 - 0);
-        int NewRange = (scene->height() - 0);
+        int NewRange = (scene()->height() - 0);
         int NewValue = (((value - 0) * NewRange) / OldRange) + 0;
         item->setY(NewValue);
         item->overlay = this;
         item->value = 127 - value;
         activeItems[x] = item;
 
-        scene->addItem(item);
+        scene()->addItem(item);
         createLineConnector();
     }
 }
@@ -109,9 +112,9 @@ void ControlChangeOverlay::addPoint(int x, int value)
 void ControlChangeOverlay::fitIntoView()
 {
     setUpdatesEnabled(false);
-    fitInView(scene->sceneRect(), Qt::IgnoreAspectRatio);
+    fitInView(scene()->sceneRect(), Qt::IgnoreAspectRatio);
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    fitInView(scene->sceneRect(), Qt::IgnoreAspectRatio);
+    fitInView(scene()->sceneRect(), Qt::IgnoreAspectRatio);
     setUpdatesEnabled(true);
 }
 
@@ -138,18 +141,14 @@ bool ControlChangeOverlay::eventFilter(QObject *target, QEvent *event)
 
 void ControlChangeOverlay::showEvent(QShowEvent *event)
 {
-    if (scene == nullptr)
-    {
-        return;
-    }
     if (firstShow)
     {
-        scene->addItem(leftItem);
-        scene->addItem(rightItem);
-        scene->addItem(collisionItem);
+        scene()->addItem(leftItem);
+        scene()->addItem(rightItem);
+        scene()->addItem(collisionItem);
         collisionItem->setZValue(2);
-        leftItem->setPos(0,scene->height());
-        rightItem->setPos(960*g_quarterNotes,scene->height());
+        leftItem->setPos(0,scene()->height());
+        rightItem->setPos(960*g_quarterNotes,scene()->height());
         activeItems[0] = leftItem;
         activeItems[960*g_quarterNotes] = rightItem;
         createLineConnector();
@@ -186,12 +185,12 @@ void ControlChangeOverlay::mousePressEvent(QMouseEvent *event)
 void ControlChangeOverlay::mouseDoubleClickEvent(QMouseEvent *event)
 {
     //wtf why no work?
-    for(const auto & i : scene->items(mapToScene(event->pos()),Qt::IntersectsItemShape))
+    for(const auto & i : scene()->items(mapToScene(event->pos()),Qt::IntersectsItemShape))
     {
         auto cci = dynamic_cast<ControlChangeItem*>(i);
         if (cci)
         {
-            scene->removeItem(cci);
+            scene()->removeItem(cci);
             activeItems.erase(cci->x());
             delete cci;
             createLineConnector();
@@ -205,7 +204,7 @@ void ControlChangeOverlay::mouseDoubleClickEvent(QMouseEvent *event)
     item->setPos(t);
     item->overlay = this;
     activeItems[t.x()] = item;
-    scene->addItem(item);
+    scene()->addItem(item);
     createLineConnector();
     recalculateDT();
     QGraphicsView::mouseDoubleClickEvent(event);
@@ -219,24 +218,24 @@ void ControlChangeOverlay::mouseMoveEvent(QMouseEvent *event)
 
         ControlChangeItem *item = new ControlChangeItem();
         recentItem = item;
-        scene->addItem(item);
+        scene()->addItem(item);
         item->setInitalPos(newPos);
         item->overlay = this;
         if (item->x() == 0 && activeItems.count(0))
         {
-            scene->removeItem(item);
+            scene()->removeItem(item);
             delete item;
             return;
         }
-        else if(item->x() == scene->width() && activeItems.count(scene->width()))
+        else if(item->x() == scene()->width() && activeItems.count(scene()->width()))
         {
-            scene->removeItem(item);
+            scene()->removeItem(item);
             delete item;
             return;
         }
         activeItems[item->x()] = item;
 
-        int OldRange = (scene->height() - 0);
+        int OldRange = (scene()->height() - 0);
         int NewRange = (127 - 1);
         int NewValue =127 - (((item->y() - 0) * NewRange) / OldRange);
         item->value = NewValue;
@@ -261,7 +260,7 @@ void ControlChangeOverlay::mouseReleaseEvent(QMouseEvent *event)
         recalculateDT();
     }
 
-//    foreach (const auto& item, scene->selectedItems())
+//    foreach (const auto& item, scene()->selectedItems())
 //    {
 //        ControlChangeItem *cItem = dynamic_cast<ControlChangeItem*>(item);
 //        if (cItem)
@@ -332,8 +331,9 @@ void ControlChangeOverlay::paintEvent(QPaintEvent *event)
 
 void ControlChangeOverlay::recalculateDT()
 {
-    listOfCC.clear();
-    listOfCC.reserve(activeItems.size()*2);
+    auto cc =_controlChange->midiTrack()->ccAt(ccType);
+    cc->listOfNotes.clear();
+    cc->listOfNotes.reserve(activeItems.size()*2);
     int counter = 0;
     int last = 0;
     for(const auto& var : activeItems)
@@ -348,15 +348,15 @@ void ControlChangeOverlay::recalculateDT()
                      0xB0);
         if (counter == 0)
         {
-            listOfCC.push_back(var.first);
-            listOfCC.push_back(event);
+            cc->listOfNotes.push_back(var.first);
+            cc->listOfNotes.push_back(event);
             last = var.first;
             counter++;
         }
         else
         {
-            listOfCC.push_back(var.first - last);
-            listOfCC.push_back(event);
+            cc->listOfNotes.push_back(var.first - last);
+            cc->listOfNotes.push_back(event);
             last = var.first;
         }
 
@@ -389,9 +389,8 @@ void ControlChangeOverlay::switchDrawModes()
     }
 }
 
-void ControlChangeOverlay::updateScene(QGraphicsScene *scene)
+void ControlChangeOverlay::updateScene(QRectF rect)
 {
-    this->scene = scene;
-    rightItem->setX(scene->width());
-    setScene(scene);
+    setSceneRect(rect);
+    rightItem->setX(scene()->width());
 }

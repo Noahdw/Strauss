@@ -38,7 +38,7 @@ void PluginView::disablePlugin(bool state)
     }
     else
     {
-        plugin->canPlay = !state;
+        plugin->setCanProcess(!state);
     }
 
 }

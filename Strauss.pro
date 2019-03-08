@@ -30,6 +30,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += src/main.cpp\
     src/audioplugin.cpp \
     src/audiopluginfactory.cpp \
+    src/browser.cpp \
+    src/controlchange.cpp \
     src/mainwindow.cpp\
     src/midiplayer.cpp\
     src/midimanager.cpp\
@@ -45,10 +47,8 @@ SOURCES += src/main.cpp\
     src/folderview.cpp \
     src/headercontainer.cpp \
     src/tracklengthview.cpp \
-    src/controlchangeview.cpp \
     src/controlchangecontainer.cpp \
     src/controlchangeoverlay.cpp \
-    src/controlchangebridge.cpp \
     src/controlchangeitem.cpp \
     src/collisionitem.cpp \
     src/pianorollhelperview.cpp \
@@ -77,11 +77,14 @@ SOURCES += src/main.cpp\
     src/notation/moment.cpp \
     src/notation/chord.cpp \
     src/notation/formatter.cpp \
-    src/vst2audioplugin.cpp
+    src/vst2audioplugin.cpp \
+    src/vst3audioplugin.cpp
 
 HEADERS  += src/mainwindow.h\
     src/audioplugin.h \
     src/audiopluginfactory.h \
+    src/browser.h \
+    src/controlchange.h \
     src/midiplayer.h\
     src/midimanager.h\
     src/pianoroll.h \
@@ -96,10 +99,8 @@ HEADERS  += src/mainwindow.h\
     src/folderview.h \
     src/headercontainer.h \
     src/tracklengthview.h \
-    src/controlchangeview.h \
     src/controlchangecontainer.h \
     src/controlchangeoverlay.h \
-    src/controlchangebridge.h \
     src/controlchangeitem.h \
     src/collisionitem.h \
     src/pianorollhelperview.h \
@@ -130,7 +131,8 @@ HEADERS  += src/mainwindow.h\
     src/notation/moment.h \
     src/notation/chord.h \
     src/notation/formatter.h \
-    src/vst2audioplugin.h
+    src/vst2audioplugin.h \
+    src/vst3audioplugin.h
 
 LIBS += -lwinmm \
 

@@ -20,6 +20,7 @@ public:
     QQueue<TrackMidi *> &tracksToRemove();
     void setCurrentTrack(TrackMidi *trackMidi);
     TrackMidi *currentTrack(){return _currentTrack;}
+    void updateTrackPositions(bool isPaused, bool isRestart, int custom);
     void initializeDependencies(TrackContainer *tContainer, PianoRollContainer *pContainer, PluginEditorContainer *pEditorContainer);
 private:
     std::vector<std::unique_ptr<TrackMidi>> _midiTracks;

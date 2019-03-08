@@ -6,7 +6,7 @@
 #include <src/common.h>
 #include <src/audioengine.h>
 #include <src/audiomanager.h>
-
+#include "browser.h"
 MidiManager manager;
 
 
@@ -47,16 +47,16 @@ MainWindow::MainWindow(QWidget *parent) :
     trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
     
-    folder_view              = new FolderView(model,masterTrack);
+    browser                  = new Browser(model,masterTrack);
     header_container         = new HeaderContainer(audio_engine);
-    piano_roll_container     = new PianoRollContainer;
+    pianoRollContainer       = new PianoRollContainer;
     plugin_editor_container  = new PluginEditorContainer(model,masterTrack);
-    track_container          = new TrackContainer(plugin_editor_container,piano_roll_container,masterTrack);
-    control_change_container = new ControlChangeContainer(piano_roll_container);
+    track_container          = new TrackContainer(plugin_editor_container,pianoRollContainer,masterTrack);
+    control_change_container = new ControlChangeContainer(masterTrack,pianoRollContainer);
     piano_roll_helper        = new PianoRollHelperView(control_change_container);
-    masterTrack->initializeDependencies(track_container,piano_roll_container,plugin_editor_container);
-    piano_roll_container->setControlChangeContainer(control_change_container);
-    folder_view->pRollContainer = piano_roll_container;
+    masterTrack->initializeDependencies(track_container,pianoRollContainer,plugin_editor_container);
+    pianoRollContainer->setControlChangeContainer(control_change_container);
+   // folder_view->pRollContainer = pianoRollContainer;
     trackScrollArea->setWidget(track_container);
     centralNotationWidget       = new NotationMainWindow(masterTrack);
     mainLayout                  = new QVBoxLayout;
@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     helperLayout->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
     helperLayout->setContentsMargins(0,0,0,0);
     trackSplitter->addWidget(trackScrollArea);
-    trackSplitter->addWidget(folder_view);
+    trackSplitter->addWidget(browser);
     mainLayout->addWidget(header_container);
     prollSplitter->addWidget(trackSplitter);
     prollSplitter->addWidget(control_change_container);
@@ -108,6 +108,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         dir.mkdir(QDir::current().path()+"/ProgramBanks");
     }
+    g_timer->setCurveShape(QTimeLine::LinearCurve);
 }
 
 MainWindow::~MainWindow()

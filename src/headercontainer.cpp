@@ -4,11 +4,8 @@
 
 
 const int maxWidth = 50;
-HeaderContainer::HeaderContainer(AudioEngine *audioManager)
+HeaderContainer::HeaderContainer(AudioEngine *audioEngine) : _audioEngine(audioEngine)
 {
-
-    audio_manager = audioManager;
-
     auto *playButton     = new QPushButton(this);
     auto *pauseButton    = new QPushButton(this);
     auto *restartButton  = new QPushButton(this);
@@ -66,21 +63,20 @@ HeaderContainer::HeaderContainer(AudioEngine *audioManager)
 void HeaderContainer::play()
 {
 
-    if(isPaused){
-        audio_manager->setPaused(true);
+    if(_audioEngine->isPaused()){
+        _audioEngine->setPaused(false);
     }
     else{
-        audio_manager->requestPlaybackRestart();
+        _audioEngine->requestPlaybackRestart();
     }
-    isPaused = false;
 
 }
 
 void HeaderContainer::restart()
 {
-    isPaused = false;
+    _audioEngine->setPaused(false);
     MidiPlayer::canRecordInput = false;
-    audio_manager->requestPlaybackRestart();
+    _audioEngine->requestPlaybackRestart();
     if(MidiPlayer::canRecordInput)
     {
         // MidiPlayer::addMidiAfterRecording();
@@ -90,8 +86,7 @@ void HeaderContainer::restart()
 
 void HeaderContainer::pause()
 {
-    isPaused = true;
-    audio_manager->setPaused(false);
+    _audioEngine->setPaused(true);
     if(MidiPlayer::canRecordInput)
     {
         //MidiPlayer::addMidiAfterRecording();

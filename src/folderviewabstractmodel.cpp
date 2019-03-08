@@ -133,12 +133,11 @@ void FolderViewAbstractModel::buildTree(TreeItem *parent,QString path)
         }
         else
         {
-            if (list.at(i).absoluteFilePath().contains(".dll")) {
+            if (list.at(i).absoluteFilePath().contains(".dll") || list.at(i).absoluteFilePath().contains(".vst3")) {
                 QList<QVariant> var2;
                 var2 << list.at(i).fileName();
                 var2 << list.at(i).absoluteFilePath();
-                auto treeItem = new TreeItem(var2,parent);
-                parent->appendChild(treeItem);
+                parent->appendChild(new TreeItem(var2,parent));
             }
         }
     }

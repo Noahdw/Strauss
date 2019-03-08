@@ -15,7 +15,9 @@ struct EventToAdd
     qreal timeInTicks = 0;
     uchar velocity;
 };
-
+/*
+    Base class for audio plugins
+*/
 class AudioPlugin
 {
 public:
@@ -37,11 +39,14 @@ public:
     virtual void exportAudioEnd() {}
     virtual std::string savePluginState() const =0;
     bool canProcess() {return _canProcess;}
+    TrackMidi* midiTrack() {return _midiTrack;}
+    virtual void setCanProcess(bool state) {_canProcess = state;}
     std::queue<EventToAdd> midiEventQueue;
     std::deque<EventToAdd> recordedMidiEventDeque;
     QString pluginPath;
+       TrackMidi* _midiTrack;
 private:
-   TrackMidi* _midiTrack;
+
    bool _canProcess = false;
 };
 
