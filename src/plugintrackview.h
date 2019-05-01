@@ -1,7 +1,7 @@
 #ifndef PLUGINTRACKVIEW_H
 #define PLUGINTRACKVIEW_H
 
-class TrackView;
+class TrackWidget;
 class PluginView;
 class PluginEditorContainer;
 class TrackMidi;
@@ -16,14 +16,14 @@ class PluginTrackView : public QFrame
 {
     Q_OBJECT
 public:
-    PluginTrackView(TrackView *track);
+    PluginTrackView(TrackWidget *track);
     ~PluginTrackView();
     std::vector<PluginView*> plugins;
     void addPlugin(Vst2AudioPlugin *vst2Plugin);
     void clickedOn(bool state);
     void setTrackName(QString name);
     PluginEditorContainer * pluginEditorContainer;
-    TrackView * trackView;
+    TrackWidget * trackView;
     TrackMidi *midiTrack;
 public slots:
     void panChanged();

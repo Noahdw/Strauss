@@ -5,8 +5,8 @@
 #include "plugineditorcontainer.h"
 #include "trackmidi.h"
 #include "plugintrackview.h"
-
-
+#include "pianoroll.h"
+#include "trackdirector.h"
 MasterTrack::MasterTrack()
 {
 
@@ -14,18 +14,17 @@ MasterTrack::MasterTrack()
 TrackMidi* MasterTrack::addTrack()
 {
     auto midiTrack = std::make_unique<TrackMidi>(this);
-    auto trackView = trackContainer->addSingleView(midiTrack.get());
+    auto trackView = director->getTrackContainer()->addSingleView(midiTrack.get());
     midiTrack->setTrackView(trackView);
     auto pluginTrack = pluginEditorContainer->addTrack(trackView);
     trackView->pluginTrack = pluginTrack;
-    auto pianoRoll = pianoRollContainer->addPianoRoll(trackView);
-    midiTrack->setPianoRoll(pianoRoll);
 
-    if (currentTrack() == nullptr)
+    if (_currentTrack == nullptr)
         _currentTrack = midiTrack.get();
 
     _midiTracks.push_back(std::move(midiTrack));
-    return midiTrack.get();
+    pluginEditorContainer->addTrack(trackView);
+    return currentTrack();
 }
 
 void MasterTrack::addMidiTrackFromProject(const::google::protobuf::RepeatedPtrField<MidiTrack> &pb_midi_track)
@@ -35,12 +34,10 @@ void MasterTrack::addMidiTrackFromProject(const::google::protobuf::RepeatedPtrFi
     {
         auto midiTrack = std::make_unique<TrackMidi>(this);
         auto masterPlug = pb_midi_track[i].master_plugin();
-        auto trackView = trackContainer->addTrackFromLoadProject(pb_midi_track[i],midiTrack.get());
+        auto trackView = director->getTrackContainer()->addTrackFromLoadProject(pb_midi_track[i],midiTrack.get());
         midiTrack->setTrackView(trackView);
         auto pluginTrack = pluginEditorContainer->addTrack(trackView);
         trackView->pluginTrack = pluginTrack;
-        auto pianoRoll = pianoRollContainer->addPianoRoll(trackView);
-        midiTrack->setPianoRoll(pianoRoll);
         if (masterPlug.IsInitialized())
         {
             midiTrack->addPlugin(QString::fromStdString(masterPlug.plugin_url()));
@@ -48,11 +45,13 @@ void MasterTrack::addMidiTrackFromProject(const::google::protobuf::RepeatedPtrFi
                 midiTrack->masterPlugin()->setPluginState(masterPlug.program_bank());
         }
 
-        if (currentTrack() == NULL) {
+        if (_currentTrack == nullptr) {
             _currentTrack = midiTrack.get();
         }
         _midiTracks.push_back(std::move(midiTrack));
+        pluginEditorContainer->addTrack(trackView);
     }
+    director->getPianoRollContainer()->restoreTrack(currentTrack());
 }
 
 /* Adds to a queue of tracks that the Audio Engine will delete
@@ -62,12 +61,25 @@ void MasterTrack::addMidiTrackFromProject(const::google::protobuf::RepeatedPtrFi
 void MasterTrack::removeTrack(TrackMidi *track)
 {
     _tracksToRemove.enqueue(track);
+    if(currentTrack() == track)
+    {
+        for(const auto& t : midiTracks())
+        {
+            if(t.get() != track)
+            {
+                director->setActiveTrack(t.get());
+                return;
+            }
+
+        }
+    }
 }
 /* Must only be called by the Audio Engine when it is safe to remove.
  *
  */
 void MasterTrack::unsafeRemoveTrack(TrackMidi* track)
 {
+    //director->getTrackContainer().
     _midiTracks.erase(std::remove_if(_midiTracks.begin(),
                                      _midiTracks.end(),
                                      [&](std::unique_ptr<TrackMidi> const &t)
@@ -85,21 +97,24 @@ void MasterTrack::setCurrentTrack(TrackMidi* trackMidi)
 {
     Q_ASSERT(trackMidi != NULL);
     _currentTrack = trackMidi;
+    //_midiEditor->setActiveTrack(trackMidi);
 }
 
 void MasterTrack::updateTrackPositions(bool isPaused, bool isRestart, int custom)
 {
-    for(const auto& p : midiTracks())
+    director->getPianoRollContainer()->pianoRoll()->updateSongTrackerPos(isPaused,isRestart,custom);
+    for(const auto& t : midiTracks())
     {
-        p.get()->pianoRoll()->updateSongTrackerPos(isPaused,isRestart,custom);
+        // t.get()->pianoRoll()->updateSongTrackerPos(isPaused,isRestart,custom);
     }
+
 }
 /*
-    TODO: Need a better way to do this, too many classes are dependent on one another to use constructors
+    TODO: Need a better way to do this, don't like the cyclic dependency
 */
-void MasterTrack::initializeDependencies(TrackContainer *tContainer, PianoRollContainer *pContainer, PluginEditorContainer *pEditorContainer)
+void MasterTrack::initializeDependencies(TrackDirector* trackDirector, PluginEditorContainer *pEditorContainer)
 {
-    trackContainer = tContainer;
-    pianoRollContainer = pContainer;
+    director = trackDirector;
     pluginEditorContainer = pEditorContainer;
+
 }

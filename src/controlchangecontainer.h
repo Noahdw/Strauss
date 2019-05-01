@@ -26,7 +26,7 @@ public:
     int currentIndex = 0;
 private:
     MasterTrack* _masterTrack;
-    PianoRollContainer* _pianoRollContainer;
+   // PianoRollContainer* _pianoRollContainer;
     ControlChange *lastControlChange;
 protected:
     void keyPressEvent(QKeyEvent * event);

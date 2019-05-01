@@ -41,9 +41,9 @@ public:
     int configurePluginCallbacks();
     void startPlugin();
     void initializeIO();
-    void processAudio(float **inputs, float **outputs,int numFrames);
+    void processAudio(float **inputs, float **outputs, int numFrames, bool paused);
     void silenceChannel(float **channelData, int numChannels, long numFrames);
-    void processMidi();
+    void processMidi(bool paused);
     void initializeMidiEvents();
     void restartPlayback();
     void addMidiEvent(uchar status, uchar note, uchar velocity, qreal currentTick);

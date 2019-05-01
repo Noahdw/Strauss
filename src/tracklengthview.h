@@ -1,6 +1,6 @@
 #ifndef TRACKLENGTHVIEW_H
 #define TRACKLENGTHVIEW_H
-class PianoRoll;
+
 #include <QWidget>
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -9,25 +9,31 @@ class PianoRoll;
 #include <QMouseEvent>
 #include <QScrollBar>
 
+class PianoRoll;
+class PianoRollContainer;
+class TrackMidi;
 
 class TrackLengthView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    explicit TrackLengthView(QWidget *parent = nullptr);
+    explicit TrackLengthView(PianoRollContainer* p);
+    PianoRollContainer* container(){return _container;}
     QGraphicsScene * scene;
     void setScale(float x, bool needsReset, int wheelPos, double _scaleFactor);
     void initTrackLengthView(QRectF sceneRect, float scaleX);
+    void restoreTrack(TrackMidi* midiTrack);
     PianoRoll *pianoRoll;
-private:
-    double minSpacing = 20.0;
-    double scaleFactor = 1;
 protected:
     void paintEvent(QPaintEvent * event);
     void mouseDoubleClickEvent(QMouseEvent  *event);
     void mousePressEvent(QMouseEvent *event);
     void resizeEvent(QResizeEvent *event);
     void showEvent(QShowEvent *event);
+private:
+    double minSpacing = 20.0;
+    double scaleFactor = 1;
+    PianoRollContainer* _container;
 };
 
 #endif // TRACKLENGTHVIEW_H

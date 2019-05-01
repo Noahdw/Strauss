@@ -1,7 +1,7 @@
 #include "velocityviewitem.h"
 #include <src/midimanager.h>
 #include <QDebug>
-#include <src/trackview.h>
+#include <src/trackwidget.h>
 VelocityViewItem::VelocityViewItem(VelocityView *velocityView)
 {
     velocity_view = velocityView;

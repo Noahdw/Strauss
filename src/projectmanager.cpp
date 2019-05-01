@@ -1,8 +1,9 @@
 #include "projectmanager.h"
 #include "src/mainwindow.h"
 #include "src/common.h"
+#include "mastertrack.h"
 #include "trackmidi.h"
-#include "trackview.h"
+#include "trackwidget.h"
 //./protoc -I=C:/Users/Puter/Documents/MidiInter --cpp_out=./ C:/Users/Puter/Documents/MidiInter/midiinter.proto
 ProjectManager::ProjectManager()
 {
@@ -54,7 +55,7 @@ void ProjectManager::saveAsProject(QString path,  MasterTrack *masterTrack)
     google::protobuf::ShutdownProtobufLibrary();
 }
 
-void ProjectManager::loadProject(QString path, MainWindow * main_window,TrackContainer &track_container)
+void ProjectManager::loadProject(QString path, MainWindow * main_window,MasterTrack *masterTrack)
 {
     std::fstream input(path.toUtf8().constData(), std::ios::in | std::ios::binary);
     if (!input) {
@@ -69,7 +70,10 @@ void ProjectManager::loadProject(QString path, MainWindow * main_window,TrackCon
         delete app;
         return;
     }
-    track_container.deleteAllTracks();
+    for(auto& t : masterTrack->midiTracks())
+    {
+        masterTrack->removeTrack(t.get());
+    }
     g_quarterNotes = app->total_dt() / 960;
     g_totalDt = app->total_dt();
     main_window->audio_engine->changeBlockSize(g_blocksize,app->blocksize());

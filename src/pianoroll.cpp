@@ -9,7 +9,7 @@
 #include <src/keyboard.h>
 #include <src/velocityview.h>
 #include "src/trackmidi.h"
-
+#include "pianorollcontainer.h"
 QList<QGraphicsItem*> activeNotes;
 
 /*!
@@ -28,35 +28,25 @@ QList<QGraphicsItem*> activeNotes;
 */
 
 
-PianoRoll::PianoRoll(TrackMidi *trackMidi) : midiTrack(trackMidi)
+PianoRoll::PianoRoll(PianoRollContainer *p) : _container(p)
 {
+    setScene(new QGraphicsScene());
     setSizePolicy(QSizePolicy ::Expanding , QSizePolicy ::Expanding );
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setViewportUpdateMode(MinimalViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
-    setScene(new QGraphicsScene);
-    scene()->setSceneRect(0,0,tPQN*g_quarterNotes,keyHeight*128);
-    scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
 
     colSpacing = width() / g_quarterNotes;
 
     rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     animation  = new QGraphicsItemAnimation;
-    line       = new QGraphicsRectItem(0,0,1,5000);
-    line->setFlag(QGraphicsItem::ItemIgnoresTransformations,true);
-    scene()->addItem(line);
-    line->setZValue(1);
-    QPen pen(QColor(156,21,25),0);
-    line->setPen(pen);
-    line->setBrush(QColor(156,21,25));
-    line->setPos(0,-50);
 
-    animation->setItem(line);
-    animation->setTimeLine(g_timer);
-    animation->setPosAt(0.0, QPointF(0, 0));
-    animation->setPosAt(1.0, QPointF(scene()->width(), 0));
+    //    animation->setItem(line);
+    //    animation->setTimeLine(g_timer);
+    //    animation->setPosAt(0.0, QPointF(0, 0));
+    //    animation->setPosAt(1.0, QPointF(scene()->width(), 0));
 
     connect(this, &PianoRoll::customContextMenuRequested,
             this, &PianoRoll::ShowContextMenu);
@@ -64,7 +54,7 @@ PianoRoll::PianoRoll(TrackMidi *trackMidi) : midiTrack(trackMidi)
 
 PianoRoll::~PianoRoll()
 {
-    this->parentWidget()->deleteLater();
+    // this->containerWidget()->deleteLater();
 }
 
 
@@ -76,7 +66,7 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
     QGraphicsItem *currentItem = itemAt(event->pos());
-    if(dynamic_cast<QGraphicsRectItem*>(currentItem) == line) return;
+    if(dynamic_cast<QGraphicsRectItem*>(currentItem)) return;
     if(!currentItem)
     {
         if(event->button() == Qt::LeftButton)
@@ -203,7 +193,7 @@ void PianoRoll::clearActiveNotes()
 //Takes track (midi) data and converts to notes on a Pianoroll
 void PianoRoll::convertTrackToItems()
 {
-    totalDT = midiTrack->midiData()->totalDT;
+    totalDT = _midiTrack->midiData()->totalDT;
 
     int tqn = totalDT/MidiManager::TPQN;
     if (tqn == 0)
@@ -219,18 +209,18 @@ void PianoRoll::convertTrackToItems()
     int elapsedDT = 0;
     int noteEnd = 0;
 
-    for(int i = 0; i < midiTrack->midiData()->listOfNotes.length(); i+=2){
-        elapsedDT += midiTrack->midiData()->listOfNotes.at(i);
+    for(int i = 0; i < _midiTrack->midiData()->listOfNotes.length(); i+=2){
+        elapsedDT += _midiTrack->midiData()->listOfNotes.at(i);
         //indicates a note. ignore other junk for now
-        int velocity = (uchar)(midiTrack->midiData()->listOfNotes.at(i+1) >> 16);
+        int velocity = (uchar)(_midiTrack->midiData()->listOfNotes.at(i+1) >> 16);
         if(velocity != 0)
         {
-            curNote = (midiTrack->midiData()->listOfNotes.at(i+1) >> 8) & 127;
+            curNote = (_midiTrack->midiData()->listOfNotes.at(i+1) >> 8) & 127;
 
             //now find its note off
-            for(int j = i+2; j < midiTrack->midiData()->listOfNotes.length(); j+=2){
-                noteEnd += midiTrack->midiData()->listOfNotes.at(j );
-                if(((midiTrack->midiData()->listOfNotes.at(j+1) >> 8) & 127) == curNote ){
+            for(int j = i+2; j < _midiTrack->midiData()->listOfNotes.length(); j+=2){
+                noteEnd += _midiTrack->midiData()->listOfNotes.at(j );
+                if(((_midiTrack->midiData()->listOfNotes.at(j+1) >> 8) & 127) == curNote ){
 
                     PianoRollItem *pNote = new PianoRollItem;
                     scene()->addItem(pNote);
@@ -313,7 +303,7 @@ void PianoRoll::addNoteToScene(int note, int position, int length, int velocity)
     pNote->pianoroll = this;
     pNote->setInitalPosition(position,length,note);
     pNote->setBoundingRect(length);
-    velocityView->addOrRemoveVelocityViewItem(position,velocity,note,true);
+    container()->velocityView()->addOrRemoveVelocityViewItem(position,velocity,note,true);
 
 }
 
@@ -324,15 +314,15 @@ void PianoRoll::changeNotesAfterMouseDrag(QGraphicsItem *item)
         if (item == note) continue;
 
         PianoRollItem *pNote = dynamic_cast<PianoRollItem*>(note);
-        int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,midiTrack->midiData());
-        velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,false);
-        MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,midiTrack->midiData());
+        int velocity = MidiManager::getVelocityFromNote(pNote->noteStart,pNote->note,_midiTrack->midiData());
+        container()->velocityView()->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,false);
+        MidiManager::removeMidiNote(pNote->noteStart,pNote->noteEnd,pNote->note,_midiTrack->midiData());
         pNote->noteStart = pNote->x();
         pNote->note = 127 - pNote->y()/keyHeight;
-        MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,midiTrack->midiData());
-        velocityView->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,true);
+        MidiManager::addMidiNote(pNote->note,velocity,pNote->noteStart,pNote->noteEnd,_midiTrack->midiData());
+        container()->velocityView()->addOrRemoveVelocityViewItem(pNote->noteStart,velocity,pNote->note,true);
     }
-    MidiManager::recalculateNoteListDT(midiTrack->midiData());
+    MidiManager::recalculateNoteListDT(_midiTrack->midiData());
 }
 
 void PianoRoll::forceResize()
@@ -340,7 +330,8 @@ void PianoRoll::forceResize()
     resetMatrix();
     float x = (float)width() / (tPQN*g_quarterNotes);
     scale(x,1);
-    velocityView->onPianoRollResized(x);
+    container()->velocityView()->fitInView(container()->velocityView()->sceneRect());
+   // container()->velocityView()->onPianoRollResized(x);
     track->getTrackMidiView()->onPianoRollResized(x);
     horizontalScrollBar()->setValue(0);
 
@@ -362,13 +353,14 @@ void PianoRoll::copyItems()
 
 void PianoRoll::pasteItems()
 {
-//TODO
+    //TODO
 }
-
 bool PianoRoll::hasPlugin()
 {
-    return  midiTrack->masterPlugin() != nullptr;
+    return  _midiTrack->masterPlugin() != nullptr;
 }
+
+
 /*!
   \fn PianoRoll::playKeyboardNote(int note, bool active)
   Given a piano note, either queue for the note to be played
@@ -380,7 +372,7 @@ void PianoRoll::playKeyboardNote(int note, bool active)
     if(!hasPlugin()) return;
 
     auto velocity =  (active ? 45 : 0);
-    midiTrack->masterPlugin()->addMidiEvent(0x90,note,velocity,g_timer->currentValue());
+    _midiTrack->masterPlugin()->addMidiEvent(0x90,note,velocity,g_timer->currentValue());
 }
 
 //deprecated, remove
@@ -423,21 +415,21 @@ void PianoRoll::setScrollWheelValue(int value)
 {
     verticalScrollBar()->setValue(value);
 }
-// Use DI insteast
-void PianoRoll::setKeyboard(Keyboard *kboard)
+
+void PianoRoll::restoreTrack(TrackMidi *midiTrack)
 {
-    keyboard = kboard;
+
+    _midiTrack = midiTrack;
+    auto state = midiTrack->midiEditorState();
+    setScene(state->pianoRollScene);
+    Q_ASSERT(animation != nullptr && state->line != nullptr);
+    animation->clear();
+    animation->setItem(state->line);
+    animation->setTimeLine(g_timer);
+    animation->setPosAt(0.0, QPointF(0, 0));
+    animation->setPosAt(1.0, QPointF(scene()->width(), 0));
 }
 
-Keyboard *PianoRoll::getKeyboard()
-{
-    return keyboard;
-}
-
-void PianoRoll::setVelocityView(VelocityView *view)
-{
-    velocityView = view;
-}
 
 void PianoRoll::ShowContextMenu(const QPoint &pos)
 {
@@ -511,6 +503,53 @@ void PianoRoll::drawBackground(QPainter * painter, const QRectF & rect)
         painter->setPen(pen);
     }
 }
+
+void PianoRoll::wheelEvent(QWheelEvent *event)
+{
+    if(event->modifiers().testFlag(Qt::ControlModifier))
+    {
+        int previousMousePos = verticalScrollBar()->value();
+
+        if(tPQN*scaleFactor*transform().m11() > kminimumColSpacing)
+        {
+            scaleFactor = prefferedScaleFactor;
+        }
+        while(tPQN*scaleFactor*transform().m11()<kminimumColSpacing)
+        {
+            scaleFactor*=2;
+        }
+
+
+        qreal factor = std::pow(1.1,event->angleDelta().y() /120);
+        scale(factor, 1);
+        auto m = container()->velocityView()->matrix();
+        m.setMatrix(transform().m11(),m.m12(),m.m21(),m.m22(),0,0);
+        container()->velocityView()->setMatrix(m);
+        container()->velocityView()->horizontalScrollBar()->setValue(horizontalScrollBar()->value());
+
+        //trackLengthView->setScale(factor,false,wheelPos->value(),scaleFactor);
+        //trackLengthView->setTransform(transform());
+
+
+        if (transform().m11() <= (float)width() / (tPQN*g_quarterNotes))
+        {
+            resetMatrix();
+            scale((float)width() / (tPQN*g_quarterNotes),1);
+            container()->velocityView()->fitInView(container()->velocityView()->sceneRect());
+           // trackLengthView->setTransform(transform());
+           // trackLengthView->setScale((float)width() / (tPQN*g_quarterNotes),true,0,scaleFactor);
+        }
+        colSpacing *= transform().m11();
+        verticalScrollBar()->setValue(previousMousePos);
+    }
+    else
+    {
+        int yscroller=event->angleDelta().y() /120*14;
+
+        verticalScrollBar()->setValue(verticalScrollBar()->value()-yscroller);
+        container()->keyboard()->verticalScrollBar()->setValue(verticalScrollBar()->value());
+    }
+}
 // Called from the menu option
 void PianoRoll::scaleFactorChanged(double scale)
 {
@@ -520,67 +559,22 @@ void PianoRoll::scaleFactorChanged(double scale)
     {
         scaleFactor *= 2;
     }
-    trackLengthView->setScale(1,false,horizontalScrollBar()->value(),scaleFactor);
+    // trackLengthView->setScale(1,false,horizontalScrollBar()->value(),scaleFactor);
     this->viewport()->update();
 }
 
-void PianoRoll::wheelEvent(QWheelEvent *event)
-{
-    int yscroller = 0;
-    QScrollBar* wheelPos;
-    if(event->modifiers().testFlag(Qt::ControlModifier))
-    {
-    int previousMousePos = verticalScrollBar()->value();
 
-    if(tPQN*scaleFactor*transform().m11() > kminimumColSpacing)
-    {
-        scaleFactor = prefferedScaleFactor;
-    }
-    while(tPQN*scaleFactor*transform().m11()<kminimumColSpacing)
-    {
-        scaleFactor*=2;
-    }
-    yscroller = event->angleDelta().y() /120*11;
-
-    wheelPos = this->horizontalScrollBar();
-    qreal factor = std::pow(1.1,event->angleDelta().y() /120);
-    scale(factor, 1);
-    velocityView->setScale(factor,false,wheelPos->value());
-    trackLengthView->setScale(factor,false,wheelPos->value(),scaleFactor);
-    trackLengthView->setTransform(transform());
-
-
-    if (transform().m11() <= (float)width() / (tPQN*g_quarterNotes))
-    {
-        resetMatrix();
-        scale((float)width() / (tPQN*g_quarterNotes),1);
-        velocityView->setScale((float)width() / (tPQN*g_quarterNotes),true,wheelPos->value());
-        trackLengthView->setTransform(transform());
-        trackLengthView->setScale((float)width() / (tPQN*g_quarterNotes),true,0,scaleFactor);
-    }
-    colSpacing*=transform().m11();
-    wheelPos=this->verticalScrollBar();
-    wheelPos->setValue(previousMousePos);
-    }
-    else
-    {
-        yscroller=event->angleDelta().y() /120*14;
-        wheelPos=this->verticalScrollBar();
-        wheelPos->setValue(verticalScrollBar()->value()-yscroller);
-        keyboard->setScrollWheelValue(wheelPos->value());
-    }
-
-}
 
 void PianoRoll::resizeEvent(QResizeEvent *event)
 {
-    if (!isInitialized) return;
+    // if (!isInitialized) return;
 
     resetMatrix();
     float x = (float)width() / (totalDT);
     scale(x,1);
-    velocityView->onPianoRollResized(x);
-    track->getTrackMidiView()->onPianoRollResized(x);
+    //container()->velocityView()->onPianoRollResized(x);
+    container()->velocityView()->fitInView(container()->velocityView()->sceneRect());
+    //track->getTrackMidiView()->onPianoRollResized(x);
     horizontalScrollBar()->setValue(0);
 
     QGraphicsView::resizeEvent(event);

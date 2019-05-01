@@ -13,6 +13,7 @@ ControlChange::ControlChange(TrackMidi *track) : _midiTrack(track)
     stackedLayout->setStackingMode(QStackedLayout::StackAll);
     stackedLayout->addWidget(backgroundView);
     setLayout(stackedLayout);
+    backgroundView->setScene(track->midiEditorState()->pianoRollScene);
 }
 
 void ControlChange::addOverlay(int index)

@@ -37,10 +37,12 @@ SOURCES += src/main.cpp\
     src/midimanager.cpp\
     src/pianoroll.cpp \
     src/pianorollitem.cpp \
-    src/trackview.cpp \
     src/keyboard.cpp \
     src/pianorollcontainer.cpp \
+    src/tabwidgetview.cpp \
     src/trackcontainer.cpp \
+    src/trackdirector.cpp \
+    src/trackwidget.cpp \
     src/velocityview.cpp \
     src/trackmidiview.cpp \
     src/velocityviewitem.cpp \
@@ -89,10 +91,12 @@ HEADERS  += src/mainwindow.h\
     src/midimanager.h\
     src/pianoroll.h \
     src/pianorollitem.h \
-    src/trackview.h \
     src/keyboard.h \
     src/pianorollcontainer.h \
+    src/tabwidgetview.h \
     src/trackcontainer.h \
+    src/trackdirector.h \
+    src/trackwidget.h \
     src/velocityview.h \
     src/trackmidiview.h \
     src/velocityviewitem.h \

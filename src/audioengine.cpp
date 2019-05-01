@@ -90,7 +90,6 @@ void AudioEngine::initializeIO() {
 }
 /*
     Must end audio engine before calling and start again after
-    blocksize is provided through common variable g_blockSize
 */
 void AudioEngine::changeBlockSize(int oldSize, int newSize)
 {
@@ -127,10 +126,11 @@ void AudioEngine::requestPlaybackRestart()
         if(plugin)
         {
             plugin->restartPlayback();
+           // masterTrack->midiTracks().at(i)->pianoRoll()->
 
         }
     }
-    _paused = false;
+    _paused = firstPause = false;
 }
 /*
     Toggles between paused and resumed playback
@@ -138,6 +138,7 @@ void AudioEngine::requestPlaybackRestart()
 void AudioEngine::setPaused(bool paused)
 {
     _paused = paused;
+    firstPause = true;
     masterTrack->updateTrackPositions(paused,false,-1);
 }
 /*
@@ -208,10 +209,18 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
         if (plugin == nullptr) continue;
         if (!plugin->canProcess()) continue;
 
-        if (engine->isPaused())
+        if (engine->isPaused() )
         {
-            plugin->turnOffAllNotes();
-            plugin->processAudio(engine->input,engine->output,g_blocksize);
+            if(engine->firstPause)
+            {
+                engine->firstPause = false;
+                plugin->turnOffAllNotes();
+            }
+            else {
+               plugin->processMidi(true);
+            }
+
+            plugin->processAudio(engine->input,engine->output,g_blocksize,true);
         }
         else
         {
@@ -219,8 +228,8 @@ int patestCallback( const void *inputBuffer, void *outputBuffer,
             {
                 //TODO
             }
-            plugin->processMidi();
-            plugin->processAudio(engine->input,engine->output,g_blocksize);
+            plugin->processMidi(false);
+            plugin->processAudio(engine->input,engine->output,g_blocksize,false);
         }
         if(track->isMuted())
         {

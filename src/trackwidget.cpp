@@ -1,4 +1,4 @@
-#include "trackview.h"
+#include "trackwidget.h"
 #include "QGraphicsRectItem"
 #include <QGraphicsItem>
 #include <src/pianorollitem.h>
@@ -11,7 +11,7 @@
 std::default_random_engine generator;
 std::uniform_int_distribution<int> distribution(80,255);
 
-TrackView::TrackView(TrackMidi *midiTrack, TrackMidiView *trackMidiView,TrackContainer *trackContainer, QWidget *parent) : QFrame(parent)
+TrackWidget::TrackWidget(TrackMidi *midiTrack, TrackMidiView *trackMidiView,TrackContainer *trackContainer, QWidget *parent) : QFrame(parent)
 {
     setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
     _trackContainer = trackContainer;
@@ -59,12 +59,12 @@ TrackView::TrackView(TrackMidi *midiTrack, TrackMidiView *trackMidiView,TrackCon
     randomGreen = distribution(generator);
     randomBlue = distribution(generator);
 
-    connect(instrumentLabel,      &QLineEdit::customContextMenuRequested,this,&TrackView::ShowContextMenu);
-    QObject::connect(recordButton,&QPushButton::toggled,   this,&TrackView::toggleRecording);
-    QObject::connect(muteButton,  &QPushButton::toggled,   this,&TrackView::toggleMute);
-    QObject::connect(showButton,  &QPushButton::clicked,   this,&TrackView::showPlugin);
+    connect(instrumentLabel,      &QLineEdit::customContextMenuRequested,this,&TrackWidget::ShowContextMenu);
+    QObject::connect(recordButton,&QPushButton::toggled,   this,&TrackWidget::toggleRecording);
+    QObject::connect(muteButton,  &QPushButton::toggled,   this,&TrackWidget::toggleMute);
+    QObject::connect(showButton,  &QPushButton::clicked,   this,&TrackWidget::showPlugin);
     QObject::connect(this, &QWidget::customContextMenuRequested,
-                     this,&TrackView::ShowContextMenu);
+                     this,&TrackWidget::ShowContextMenu);
     connect(comboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [=](int index){ comboBoxIdChanged(index);}); // wtf
 
@@ -73,14 +73,14 @@ TrackView::TrackView(TrackMidi *midiTrack, TrackMidiView *trackMidiView,TrackCon
     comboBox->setMaxCount(24);
 }
 
-TrackView::~TrackView()
+TrackWidget::~TrackWidget()
 {
     pluginTrack->deleteLater();
 
     _trackContainer->deleteTrack(this,_trackMidiView);
 }
 
-bool TrackView::eventFilter(QObject *target, QEvent *event)
+bool TrackWidget::eventFilter(QObject *target, QEvent *event)
 {
     if(target == instrumentLabel)
     {
@@ -129,30 +129,30 @@ bool TrackView::eventFilter(QObject *target, QEvent *event)
 
 
 // Will result in this class gettting deleted.
-void TrackView::deleteTrack()
+void TrackWidget::deleteTrack()
 {
     _midiTrack->prepareToDelete();
 
 }
 
-void TrackView::deselect()
+void TrackWidget::deselect()
 {
     setProperty("clicked",false);
     style()->unpolish(this);
     style()->polish(this);
 }
 
-QString TrackView::getTrackName() const
+QString TrackWidget::getTrackName() const
 {
     return instrumentLabel->text();
 }
 
-TrackMidiView *TrackView::getTrackMidiView()
+TrackMidiView *TrackWidget::getTrackMidiView()
 {
     return _trackMidiView;
 }
 
-void TrackView::toggleMute(bool state)
+void TrackWidget::toggleMute(bool state)
 {
     muteButton->setProperty("toggled",state);
     style()->unpolish(muteButton);
@@ -161,7 +161,7 @@ void TrackView::toggleMute(bool state)
 
 }
 
-void TrackView::toggleRecording(bool state)
+void TrackWidget::toggleRecording(bool state)
 {
     recordButton->setProperty("toggled",state);
     style()->unpolish(recordButton);
@@ -170,27 +170,27 @@ void TrackView::toggleRecording(bool state)
 
 }
 
-void TrackView::ShowContextMenu(const QPoint &pos)
+void TrackWidget::ShowContextMenu(const QPoint &pos)
 {
     QMenu contextMenu(("Context menu"), this);
     QAction renameAction("Rename", this);
     QAction deleteAction("Delete track",this);
-    connect(&renameAction,&QAction::triggered,this,&TrackView::renameTrack);
-    connect(&deleteAction,&QAction::triggered,this,&TrackView::deleteTrack);
+    connect(&renameAction,&QAction::triggered,this,&TrackWidget::renameTrack);
+    connect(&deleteAction,&QAction::triggered,this,&TrackWidget::deleteTrack);
 
     contextMenu.addAction(&renameAction);
     contextMenu.addAction(&deleteAction);
     contextMenu.exec(mapToGlobal(pos));
 }
 
-void TrackView::showPlugin()
+void TrackWidget::showPlugin()
 {
     if(midiTrack()->plugin())
         midiTrack()->plugin()->showPlugin();
 
 }
 
-void TrackView::renameTrack()
+void TrackWidget::renameTrack()
 {
     instrumentLabel->setReadOnly(false);
     canEditLine = true;
@@ -198,19 +198,19 @@ void TrackView::renameTrack()
     instrumentLabel->setStyleSheet("QLineEdit { background-color: rgba(randomRed, 50, 50, 255); }");//?? works though
 }
 
-void TrackView::comboBoxIdChanged(int index)
+void TrackWidget::comboBoxIdChanged(int index)
 {
 
 }
 
-void TrackView::paintEvent(QPaintEvent *event)
+void TrackWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.setBrush(brush);
     painter.drawRect(0,0,width() - 1,instrumentLabel->height() + 7);
 }
 
-void TrackView::mousePressEvent(QMouseEvent *event)
+void TrackWidget::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
     {

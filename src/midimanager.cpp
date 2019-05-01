@@ -291,6 +291,7 @@ void MidiManager::addMidiNote(int note,int velocity, int start, int length,MidiD
     DWORD event =( velocity << 16 |
                    note << 8  |
                    0x90);
+    Q_ASSERT(track);
     track->noteMap[start].push_back(event);
     track->noteMap[start+length].push_back(event & 0x00FFFF);
 }

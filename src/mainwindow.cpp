@@ -7,9 +7,13 @@
 #include <src/audioengine.h>
 #include <src/audiomanager.h>
 #include "browser.h"
+#include "tabwidgetview.h"
+#include "controlchangecontainer.h"
+#include "trackdirector.h"
+
 MidiManager manager;
 
-
+//TODO: Rmove this crap
 // init common vars
 bool keyboardModeEnabled = false;
 double g_tempo = 120;
@@ -22,42 +26,31 @@ QTimeLine *g_timer = new QTimeLine((float)(60.0/(float)g_tempo)*g_quarterNotes*1
 QColor g_backgroundColor(82,82,82);
 QColor g_baseColor(54,54,54);
 QColor g_selectedColor(96,96,96);
-//end init
+
 
 MainWindow::MainWindow(QWidget *parent) :
                                           QMainWindow(parent)
 {
-    model = new FolderViewAbstractModel(getFoldersFromSettings());
+    model         = new FolderViewAbstractModel(getFoldersFromSettings());
     centralWidget = new QWidget(this);
-    masterTrack              = new MasterTrack;
-    player = new MidiPlayer(masterTrack);
+    masterTrack   = new MasterTrack;
+    player        = new MidiPlayer(masterTrack);
     pluginEdiorCentralWidget = new QWidget(this);
-    stackedCentralWidget = new QStackedWidget;
-    audio_engine     = new AudioEngine(masterTrack);
-
-
+    stackedCentralWidget     = new QStackedWidget;
+    audio_engine             = new AudioEngine(masterTrack);
 
     setCentralWidget(stackedCentralWidget);
-    trackScrollArea = new QScrollArea;
-    trackScrollArea->setWidgetResizable(true);
-    trackScrollArea->setMinimumWidth(1000);
-    trackScrollArea->setMinimumHeight(200);
-    trackScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    trackScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    trackScrollArea->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
-    
-    browser                  = new Browser(model,masterTrack);
+
+    trackDirector            = new TrackDirector(masterTrack,model);
+
+    browserTab               = new TabWidgetView;
+    trackTab                 = new TabWidgetView;
+    midiTab                  = new TabWidgetView;
     header_container         = new HeaderContainer(audio_engine);
-    pianoRollContainer       = new PianoRollContainer;
     plugin_editor_container  = new PluginEditorContainer(model,masterTrack);
-    track_container          = new TrackContainer(plugin_editor_container,pianoRollContainer,masterTrack);
-    control_change_container = new ControlChangeContainer(masterTrack,pianoRollContainer);
-    piano_roll_helper        = new PianoRollHelperView(control_change_container);
-    masterTrack->initializeDependencies(track_container,pianoRollContainer,plugin_editor_container);
-    pianoRollContainer->setControlChangeContainer(control_change_container);
-   // folder_view->pRollContainer = pianoRollContainer;
-    trackScrollArea->setWidget(track_container);
+    // piano_roll_helper        = new PianoRollHelperView(control_change_container);
+    masterTrack->initializeDependencies(trackDirector,plugin_editor_container);
     centralNotationWidget       = new NotationMainWindow(masterTrack);
     mainLayout                  = new QVBoxLayout;
     QHBoxLayout *helperLayout   = new QHBoxLayout;
@@ -67,26 +60,27 @@ MainWindow::MainWindow(QWidget *parent) :
     prollSplitter->setOrientation(Qt::Vertical);
     helperLayout->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
     helperLayout->setContentsMargins(0,0,0,0);
-    trackSplitter->addWidget(trackScrollArea);
-    trackSplitter->addWidget(browser);
+    trackSplitter->addWidget(trackTab);
+    trackSplitter->addWidget(browserTab);
     mainLayout->addWidget(header_container);
     prollSplitter->addWidget(trackSplitter);
-    prollSplitter->addWidget(control_change_container);
+    prollSplitter->addWidget(midiTab);
     QVBoxLayout *pSpacerLayout = new QVBoxLayout();
     pSpacerLayout->addSpacerItem(new QSpacerItem(0,100,QSizePolicy::Fixed,QSizePolicy::Expanding));
-    pSpacerLayout->addWidget(piano_roll_helper);
+    //  pSpacerLayout->addWidget(piano_roll_helper);
     helperLayout->addLayout(pSpacerLayout);
     helperLayout->addWidget(prollSplitter);
     mainLayout->addLayout(helperLayout);
     centralWidget->setLayout(mainLayout);
     stackedCentralWidget->addWidget(centralWidget);
-
     stackedCentralWidget->addWidget(plugin_editor_container);
-        stackedCentralWidget->addWidget(centralNotationWidget);
-    QObject::connect(track_container,&TrackContainer::switchControlChange,control_change_container,
-                     &ControlChangeContainer::switchControlChangeContainer);
+    stackedCentralWidget->addWidget(centralNotationWidget);
+    auto track = masterTrack->addTrack();
+     trackDirector->setActiveTrack(track);
+    setUpTabViews();
 
-    addNewTrack();
+    // midiEditor->setActiveTrack(track);
+
     setUpMenuBar();
     AudioEngine::requestedPlaybackPos = -1;
     audio_engine->startPortAudio();
@@ -149,7 +143,7 @@ void MainWindow::openFile()
 
         file.close();
     }
-    track_container->addTrackView(manager.song);
+    // track_container->addTrackView(manager.song);
 }
 
 
@@ -200,7 +194,7 @@ void MainWindow::loadProject()
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open project"), QDir::currentPath(),
                                                     tr("Project files (*.mipr)"));
     ProjectManager project;
-    project.loadProject(filePath,this,*track_container);
+    project.loadProject(filePath,this,masterTrack);
 }
 
 void MainWindow::on_actionPlay_triggered()
@@ -255,7 +249,7 @@ void MainWindow::setUpMenuBar()
     connect(settingsAction, &QAction::triggered, this, &MainWindow::displaySettingsDialog);
 
     switchNotationAction = new QAction("Notation View");
-     connect(switchNotationAction, &QAction::triggered, this, &MainWindow::switchNotationView);
+    connect(switchNotationAction, &QAction::triggered, this, &MainWindow::switchNotationView);
 
     //Add pause
 
@@ -274,8 +268,17 @@ void MainWindow::setUpMenuBar()
     editMenu->addAction(deleteAllNotesAction);
     editMenu->addAction(addNewTrackAction);
 
-     QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
-     viewMenu->addAction(switchNotationAction);
+    QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
+    viewMenu->addAction(switchNotationAction);
+}
+
+void MainWindow::setUpTabViews()
+{
+    browserTab->addTab(trackDirector->getFolderView(),"Browser");
+    trackTab->addTab(trackDirector->getTrackContainer(), "Tracks");
+    midiTab->addTab(trackDirector->getPianoRollContainer(), "Piano Roll");
+    midiTab->addTab(trackDirector->getControlChangeContainer(), "Control Change");
+    trackDirector->getControlChangeContainer()->switchControlChange(0);
 }
 
 
@@ -352,8 +355,8 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 
 void MainWindow::addNewTrack()
 {
-   auto track = masterTrack->addTrack();
-   centralNotationWidget->addInstrument(track);
+    auto track = masterTrack->addTrack();
+    // centralNotationWidget->addInstrument(track);
 }
 
 void MainWindow::displaySettingsDialog()

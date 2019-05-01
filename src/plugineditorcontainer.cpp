@@ -1,5 +1,5 @@
 #include "plugineditorcontainer.h"
-#include "src/trackview.h"
+#include "src/trackwidget.h"
 #include "src/plugintrackview.h"
 #include "src/pluginview.h"
 
@@ -46,7 +46,7 @@ PluginEditorContainer::PluginEditorContainer(FolderViewAbstractModel *model,Mast
     trackScrollArea->show();
 }
 
-PluginTrackView* PluginEditorContainer::addTrack(TrackView *track)
+PluginTrackView* PluginEditorContainer::addTrack(TrackWidget *track)
 {
     PluginTrackView * pluginTrack = new PluginTrackView(track);
     pluginTrack->pluginEditorContainer = this;

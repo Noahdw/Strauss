@@ -26,6 +26,7 @@ public:
     void requestPlaybackRestart();
     void setPaused(bool paused);
     bool isPaused() {return _paused;}
+    bool firstPause = true;
     bool isRunning = false;
     float sampleRate = 44100;
     MasterTrack *masterTrack;

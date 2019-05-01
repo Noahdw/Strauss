@@ -22,8 +22,8 @@ class AudioPlugin
 {
 public:
     AudioPlugin(TrackMidi* track);
-    virtual void processAudio(float** input, float** output, int numFrames) =0;
-    virtual void processMidi() =0;
+    virtual void processAudio(float** input, float** output, int numFrames, bool paused) =0;
+    virtual void processMidi(bool paused) =0;
     virtual bool loadPlugin(QString path, QString pluginName) =0;
     virtual void unloadPlugin() =0;
     virtual void showPlugin() =0;

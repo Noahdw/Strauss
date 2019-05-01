@@ -1,13 +1,13 @@
 #include "keyboard.h"
 #include <src/pianoroll.h>
-
+#include "pianorollcontainer.h"
 /*This class represents the keyboard to the left of the Piano Roll.
  *It emits MIDI data to the VST for playbck.
  * */
 
-Keyboard::Keyboard(PianoRoll *pianoRoll, QWidget *parent) : QGraphicsView(parent)
+Keyboard::Keyboard(PianoRollContainer* p) : _container(p)
 {
-    piano_roll = pianoRoll;
+    piano_roll = p->pianoRoll();
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scene = new QGraphicsScene;
@@ -17,13 +17,17 @@ Keyboard::Keyboard(PianoRoll *pianoRoll, QWidget *parent) : QGraphicsView(parent
     addNotesToScene();
 }
 
-
-void Keyboard::setScrollWheelValue(int value)
+void Keyboard::updateWheel(QWheelEvent *event)
 {
-    QScrollBar* wheelPos;
-    wheelPos=this->verticalScrollBar();
-    wheelPos->setValue(value);
+    if(event->modifiers().testFlag(Qt::ControlModifier))
+        return;
+    int yscroller= 0;
+    yscroller=event->angleDelta().y() /120*14;
+    verticalScrollBar()->setValue(verticalScrollBar()->value()-yscroller);
 }
+
+
+
 
 void Keyboard::addNotesToScene()
 {
@@ -190,13 +194,12 @@ void Keyboard::mouseDoubleClickEvent(QMouseEvent *event)
 
 void Keyboard::wheelEvent(QWheelEvent *event)
 {
-    int yscroller= 0;
-    yscroller=event->angleDelta().y() /120*14;
-    QScrollBar *wheelPos;
-    wheelPos=this->verticalScrollBar();
-    wheelPos->setValue(verticalScrollBar()->value()-yscroller);
-    piano_roll->setScrollWheelValue(wheelPos->value());
+    int yscroller=event->angleDelta().y() /120*14;
+
+    verticalScrollBar()->setValue(verticalScrollBar()->value()-yscroller);
+    container()->pianoRoll()->verticalScrollBar()->setValue(verticalScrollBar()->value());
 }
+
 
 void Keyboard::mouseReleaseEvent(QMouseEvent *event)
 {

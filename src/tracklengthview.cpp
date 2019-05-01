@@ -3,13 +3,15 @@
 #include "src/audioengine.h"
 #include "src/common.h"
 #include "src/pianoroll.h"
+#include "trackmidi.h"
+#include "pianorollcontainer.h"
 /*
 This class represents a multi-use bar above the piano roll. It displays
 the current time of the track that is dependent on how zoomed in you
 are in the piano roll. It also allows for a user to start playback from
 a specific spot as well as to zoom the piano roll by dragging up/down.
 */
-TrackLengthView::TrackLengthView(QWidget *parent) : QGraphicsView(parent)
+TrackLengthView::TrackLengthView(PianoRollContainer *p) : _container(p)
 {
     // setViewportUpdateMode(MinimalViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -31,7 +33,7 @@ TrackLengthView::TrackLengthView(QWidget *parent) : QGraphicsView(parent)
 
 void TrackLengthView::paintEvent(QPaintEvent *event)
 {
-    scaleFactor = pianoRoll->scaleFactor;
+    scaleFactor = 1;//pianoRoll->scaleFactor;
     QPainter painter(viewport());
     QPen pen;
     pen.setColor(Qt::black);
@@ -80,6 +82,11 @@ void TrackLengthView::initTrackLengthView(QRectF sceneRect, float scaleX)
     resetMatrix();
     setScale(scaleX,true,0,1);
     viewport()->update();
+}
+
+void TrackLengthView::restoreTrack(TrackMidi *midiTrack)
+{
+    auto state = midiTrack->midiEditorState();
 }
 void TrackLengthView::mousePressEvent(QMouseEvent *event)
 {

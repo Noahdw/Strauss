@@ -1,11 +1,6 @@
 #ifndef PIANOROLL_H
 #define PIANOROLL_H
 
-//Forward declarations
-class Keyboard;
-class VelocityView;
-class ControlChangeBridge;
-class TrackMidi;
 #include <QWidget>
 #include <QPainter>
 #include <QGraphicsView>
@@ -13,7 +8,7 @@ class TrackMidi;
 #include <QMenu>
 #include <src/midimanager.h>
 #include <QHBoxLayout>
-#include <src/trackview.h>
+#include <src/trackwidget.h>
 #include <QTimeLine>
 #include <QGraphicsItemAnimation>
 #include <QTimer>
@@ -25,17 +20,23 @@ class TrackMidi;
 #include <src/common.h>
 #include "src/command.h"
 #include <QStack>
+
+class ControlChangeBridge;
+class TrackMidi;
+class PianoRollContainer;
+
 class PianoRoll : public QGraphicsView{
     Q_OBJECT
 public:
-    PianoRoll(TrackMidi *trackMidi);
+    PianoRoll(PianoRollContainer* p);
     ~PianoRoll();
-    Keyboard* getKeyboard();
-    void setKeyboard(Keyboard *kboard);
-    void setVelocityView(VelocityView *view);
+
+    PianoRollContainer* container() {return _container;}
+    void restoreTrack(TrackMidi* midiTrack);
     void playKeyboardNote(int note, bool active);
     void clearActiveNotes();
     void deleteAllNotes();
+    TrackMidi* midiTrack() {return _midiTrack;}
     void resizeSelectedNotes(int xAdjustL,int xAdjustR);
     void deleteSelectedNotes();
     void setScrollWheelValue(int value);
@@ -48,10 +49,8 @@ public:
     void copyItems();
     void pasteItems();
     bool hasPlugin();
-    TrackView *track;
-    TrackLengthView * trackLengthView;
-    VelocityView *velocityView;
-    TrackMidi *midiTrack;
+    TrackWidget *track;
+
     ControlChangeBridge * bridge;
     int tPQN = MidiManager::TPQN;
     int totalDT = MidiManager::TPQN*g_quarterNotes;
@@ -59,7 +58,7 @@ public:
     double scaleFactor = 1;
     double prefferedScaleFactor = 1.0;
     bool isInitialized = false;
-
+   // void updateWheel(QWheelEvent *event);
 public slots:
     void ShowContextMenu(const QPoint &pos);
     void scaleFactorChanged(double scale);
@@ -72,19 +71,18 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void drawBackground(QPainter * painter, const QRectF & rect);
-    void wheelEvent(QWheelEvent *event);
+    void wheelEvent(QWheelEvent* event);
     void resizeEvent(QResizeEvent *event);
     void keyPressEvent(QKeyEvent *event);
 private:
-
-    Keyboard *keyboard;
+    TrackMidi* _midiTrack;
     QGraphicsItemAnimation *animation;
     QRubberBand *rubberBand;
-    QGraphicsRectItem *line;
     QPoint origin;
     QList<QGraphicsItem*> lastSelectedItems;
     QList<QGraphicsItem*> copiedItems;
     QStack<Command*> commands;
+    PianoRollContainer* _container;
     int currentTimer = 0;
     int lastYNote = 0;
     const double kminimumColSpacing = 20.0;

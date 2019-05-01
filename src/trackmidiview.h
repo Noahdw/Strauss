@@ -2,7 +2,7 @@
 #define TRACKMIDIVIEW_H
 
 
-class TrackView;
+class TrackWidget;
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -13,15 +13,13 @@ class TrackMidiView: public QGraphicsView{
     Q_OBJECT
 public:
     TrackMidiView(QWidget* parent = 0);
-    TrackView * trackView;
+    TrackWidget * trackView;
     void onPianoRollResized(float x);
-    void shareScene(QGraphicsScene * scene);
     void clickedOn(bool state);
     int totalDT = MidiManager::TPQN * 50;
 
 
 private:
-    QGraphicsScene *scene;
     int highestNote = 0;
     int lowestNote = 127;
     QBrush brush;

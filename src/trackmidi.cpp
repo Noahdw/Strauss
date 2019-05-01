@@ -1,6 +1,6 @@
 #include "trackmidi.h"
 
-#include "src/trackview.h"
+#include "src/trackwidget.h"
 #include "src/pianoroll.h"
 #include "src/plugintrackview.h"
 #include "src/mainwindow.h"
@@ -19,21 +19,15 @@ TrackMidi::TrackMidi(MasterTrack *mTrack) : masterTrack(mTrack)
 TrackMidi::~TrackMidi()
 {
     _trackView->deleteLater();
-    _pianoRoll->deleteLater();
 }
 
-void TrackMidi::setTrackView(TrackView *trackView)
+void TrackMidi::setTrackView(TrackWidget *trackView)
 {
     _trackView = trackView;
     //_trackView->pluginTrack->midiTrack = this;
 }
 
-void TrackMidi::setPianoRoll(PianoRoll *pianoRoll)
-{
-    _pianoRoll = pianoRoll;
-    _controlChange->backgroundView->setScene(pianoRoll->scene());
-    //_plugin.setPianoRollRef(pianoRoll);
-}
+
 //Will delete this class
 void TrackMidi::prepareToDelete()
 {

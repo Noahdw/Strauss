@@ -2,6 +2,7 @@
 #include <src/velocityview.h>
 #include <QDebug>
 #include "src/trackmidi.h"
+#include "pianorollcontainer.h"
 
 PianoRollItem::PianoRollItem()
 {
@@ -31,6 +32,7 @@ void PianoRollItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    if(event->lastScenePos().x() < 0 || event->lastScenePos().x() > pianoroll->sceneRect().width()) return;
     QGraphicsItem::mouseMoveEvent(event);
     lastSceneResizePos = x();
     if (canResizeRight)
@@ -64,6 +66,7 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
     int xPos = (x() / scaleFactor);
     int xAdjust = ( event->lastScenePos().x()/scaleFactor) - (initMouseXPos/ scaleFactor);
+
     if (pianoroll->prefferedScaleFactor <= 0.03125)
     {
         setPos(x() + event->lastScenePos().x() - initMouseXPos,yPos*keyHeight);
@@ -160,7 +163,7 @@ void PianoRollItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    auto data = pianoroll->midiTrack->midiData();
+    auto data = pianoroll->midiTrack()->midiData();
     if (canResizeLeft || canResizeRight)
     {
         if (initWidth != width || initXPos != x())
@@ -201,7 +204,7 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         note = 127 - (lastYPos/keyHeight);
         int velocity = MidiManager::getVelocityFromNote(noteStart,note,data);
         MidiManager::removeMidiNote(noteStart,noteEnd,note,data);
-        pianoroll->velocityView->changeVelocityViewItemPosition(noteStart,x(),note,127-yPos);
+        pianoroll->container()->velocityView()->changeVelocityViewItemPosition(noteStart,x(),note,127-yPos);
         note = 127 - yPos;
         MidiManager::addMidiNote(note,velocity,x(),noteEnd,data);
         noteStart = x();

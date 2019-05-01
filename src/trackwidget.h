@@ -22,13 +22,13 @@ class TrackMidi;
 #include <QSlider>
 #include <QComboBox>
 
-class TrackView: public QFrame
+class TrackWidget: public QFrame
 {
     Q_OBJECT
 
 public:
-    TrackView(TrackMidi *midiTrack, TrackMidiView *_trackMidiView, TrackContainer *_trackContainer, QWidget* parent = 0);
-    ~TrackView();
+    TrackWidget(TrackMidi *midiTrack, TrackMidiView *_trackMidiView, TrackContainer *_trackContainer, QWidget* parent = 0);
+    ~TrackWidget();
     void deleteTrack();
     void deselect();
     QString getTrackName() const;
@@ -61,7 +61,7 @@ private:
     const int widgetWidth = 100;
 
 signals:
-    void trackClickedOn(TrackView *track_View);
+    void trackClickedOn(TrackWidget *track_View);
 
 private slots:
     void toggleMute(bool state);

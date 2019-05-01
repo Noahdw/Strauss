@@ -10,6 +10,7 @@
 class FolderView;
 class FolderViewAbstractModel;
 class MasterTrack;
+
 class Browser : public QFrame
 {
 public:

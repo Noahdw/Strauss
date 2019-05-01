@@ -4,6 +4,20 @@ QComboBox {
     border: 1px solid rgb(44,44,44);
    padding: 1px 0px 1px 3px;
 }
+QTabBar{
+    font: bold 11px;
+    color: rgb(220,220,220);
+}
+QTabWidget::pane {
+    background: rgb(44,55,178);
+    border: 1px solid rgb(44,44,44);
+}
+QTabBar::tab {
+    border: 1px solid rgb(44,44,44);
+    border-bottom-color: rgb(82,82,82);
+    background: rgb(82,82,82);
+    padding: 2px;
+}
 
 QListView{
     color: rgb(220,220,220);

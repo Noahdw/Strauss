@@ -4,12 +4,12 @@
 #include <src/pianorollitem.h>
 #include <QScrollBar>
 #include <src/velocityviewitem.h>
-#include <src/trackview.h>
+#include <src/trackwidget.h>
 #include "src/trackmidi.h"
+#include "pianorollcontainer.h"
 int viewHeight = 70;
-VelocityView::VelocityView(TrackView *trackView, QWidget *parent) : QGraphicsView(parent)
+VelocityView::VelocityView(PianoRollContainer *p) : _container(p)
 {
-    track_view = trackView;
     setViewportUpdateMode(FullViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -19,37 +19,35 @@ VelocityView::VelocityView(TrackView *trackView, QWidget *parent) : QGraphicsVie
     setMinimumHeight(70);
     setMaximumHeight(70);
     setMouseTracking(true);
-    scene = new QGraphicsScene;
-    scene->setSceneRect(0,0,MidiManager::TPQN*50,height());
-    this->setScene(scene);
-    this->scale(((float)width() / (MidiManager::TPQN*50)),1);
+    setScene(new QGraphicsScene);
+
 
 }
 
 void VelocityView::addOrRemoveVelocityViewItem(int start, int velocity, int note, bool adding)
 {
     int OldRange = (127 - 0);
-    int NewRange = (height() - 0);
+    int NewRange = (scene()->height() - 0);
     int NewValue = (((velocity - 0) * NewRange) / OldRange) + 0;
 
     if (adding)
     {
         VelocityViewItem *line = new VelocityViewItem(this);
-        scene->addItem(line);
+        scene()->addItem(line);
         line->velocity = velocity;
         line->note = note;
-        line->viewHeight = height();
-        line->setPos(start,height() - NewValue);
+        line->viewHeight = scene()->height();
+        line->setPos(start,scene()->height() - NewValue);
     }
     else
     {
-        foreach (const auto& item, scene->items())
+        foreach (const auto& item, scene()->items())
         {
-            qDebug() <<"ITEM.x: " << item->x() << "start " << start << "count " << scene->items().length();
+            qDebug() <<"ITEM.x: " << item->x() << "start " << start << "count " << scene()->items().length();
             if (floor(item->x()) == start) {
                  VelocityViewItem *line = dynamic_cast<VelocityViewItem*>(item);
                  if (line->note == note) {
-                     scene->removeItem(line);
+                     scene()->removeItem(line);
                      delete line;
                      return;
                  }
@@ -60,7 +58,7 @@ void VelocityView::addOrRemoveVelocityViewItem(int start, int velocity, int note
 
 void VelocityView::changeVelocityViewItemPosition(int oldPos, int newPos, int oldNote, int newNote)
 {
-    foreach (const auto& item, scene->items())
+    foreach (const auto& item, scene()->items())
     {
         if (item->x() == oldPos) {
              VelocityViewItem *line = dynamic_cast<VelocityViewItem*>(item);
@@ -73,7 +71,7 @@ void VelocityView::changeVelocityViewItemPosition(int oldPos, int newPos, int ol
     }
 }
 
-void VelocityView::populateVelocityViewFromTrack(TrackView *trackView)
+void VelocityView::populateVelocityViewFromTrack(TrackWidget *trackView)
 {
     auto data = trackView->midiTrack()->midiData();
     int vLength = data->listOfNotes.length();
@@ -104,11 +102,19 @@ void VelocityView::setScale(float x, bool needsReset, int wheelPos)
 
 void VelocityView::onPianoRollResized(float x)
 {
-    resetMatrix();
-    scale(x,1);
+   // resetMatrix();
+    fitInView(scene()->sceneRect());
+    //scale(x,1);
+    horizontalScrollBar()->setValue(0);
+}
+
+void VelocityView::restoreTrack(TrackMidi *midiTrack)
+{
+    _midiTrack = midiTrack;
+    setScene(midiTrack->midiEditorState()->velocityViewScene);
 }
 
 MidiData *VelocityView::getMidiData()
 {
-    return track_view->midiTrack()->midiData();
+    return _midiTrack->midiData();
 }

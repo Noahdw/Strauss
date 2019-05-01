@@ -1,7 +1,8 @@
 #ifndef VELOCITYVIEW_H
 #define VELOCITYVIEW_H
-class TrackView;
-
+class TrackWidget;
+class TrackMidi;
+class PianoRollContainer;
 #include <QWidget>
 #include <QPainter>
 #include <QGraphicsView>
@@ -14,19 +15,22 @@ class VelocityView : public QGraphicsView{
     Q_OBJECT
 
 public:
-    VelocityView(TrackView *trackView,QWidget *parent =0);
+    VelocityView(PianoRollContainer* p);
+    PianoRollContainer* container(){return _container;}
     void setScale(float x,bool needsReset,int wheelPos);
     void addOrRemoveVelocityViewItem(int start, int velocity,int note, bool adding);
     void changeVelocityViewItemPosition(int oldPos,int newPos, int oldNote,int newNote);
-    void populateVelocityViewFromTrack(TrackView *trackView);
+    void populateVelocityViewFromTrack(TrackWidget *trackView);
     void onPianoRollResized(float x);
+    void restoreTrack(TrackMidi* midiTrack);
     MidiData *getMidiData();
 protected:
 
 
 private:
-    QGraphicsScene *scene;
-    TrackView *track_view;
+    TrackWidget *track_view;
+    TrackMidi* _midiTrack;
+    PianoRollContainer* _container;
 
 };
 

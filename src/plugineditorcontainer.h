@@ -1,7 +1,7 @@
 #ifndef PLUGINEDITORCONTAINER_H
 #define PLUGINEDITORCONTAINER_H
 
-class TrackView;
+class TrackWidget;
 class PluginTrackView;
 class Vst2AudioPlugin;
 
@@ -16,7 +16,7 @@ class PluginEditorContainer : public QFrame
     Q_OBJECT
 public:
     PluginEditorContainer(FolderViewAbstractModel *model, MasterTrack *masterTrack);
-    PluginTrackView* addTrack(TrackView *track);
+    PluginTrackView* addTrack(TrackWidget *track);
     void switchPluginViews(PluginTrackView *pluginTrack);
     void pluginTrackClickedOn();
     PluginTrackView *lastPluginTrack = NULL;

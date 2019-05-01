@@ -1,5 +1,5 @@
 #include "trackmidiview.h"
-#include <src/trackview.h>
+#include <src/trackwidget.h>
 #include <src/pianorollitem.h>
 /*
 This class is a view of a midi track, it does not edit any midi data and is only for show.
@@ -8,6 +8,7 @@ The TrackView class is composed with this one to represent a midi track for some
 */
 TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 {
+    setScene(new QGraphicsScene);
     setViewportUpdateMode(MinimalViewportUpdate);
     setMinimumHeight(115);
     setMaximumHeight(115);
@@ -19,20 +20,14 @@ TrackMidiView::TrackMidiView(QWidget *parent)  : QGraphicsView(parent)
 
 void TrackMidiView::resizeEvent(QResizeEvent *event)
 {
-    fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
+    fitInView(sceneRect(),Qt::IgnoreAspectRatio);
 }
 void TrackMidiView::onPianoRollResized(float x)
 {
-    fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
+   // fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
 }
 
-void TrackMidiView::shareScene(QGraphicsScene *scene)
-{
-    this->scene = scene;
-    setScene(scene);
-    totalDT = scene->width();
-    fitInView(scene->sceneRect(),Qt::IgnoreAspectRatio);
-}
+
 
 void TrackMidiView::clickedOn(bool state)
 {

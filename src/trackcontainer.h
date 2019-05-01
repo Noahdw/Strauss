@@ -8,8 +8,9 @@ class MasterTrack;
 
 #include <QObject>
 #include <QWidget>
+#include <QScrollArea>
 #include <src/midimanager.h>
-#include <src/trackview.h>
+#include <src/trackwidget.h>
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <src/pianorollcontainer.h>
@@ -20,32 +21,35 @@ class MasterTrack;
 #include "src/plugineditorcontainer.h"
 #include "src/midiinter.pb.h"
 
-class TrackContainer : public QFrame
+class TrackDirector;
+
+class TrackContainer : public QScrollArea
 {
     Q_OBJECT
 public:
-    TrackContainer(PluginEditorContainer *pluginEditorContainer, PianoRollContainer * pianoRollContainer, MasterTrack * masterTrack);
-    TrackView *addTrackFromLoadProject(const MidiTrack &midi_track, TrackMidi *midiTrack);
-    TrackView *addSingleView(TrackMidi *midiTrack);
-    void deleteTrack(TrackView *trackView, TrackMidiView *midiView);
+    TrackContainer(MasterTrack *masterTrack, TrackDirector* tDirector);
+    TrackWidget *addTrackFromLoadProject(const MidiTrack &midi_track, TrackMidi *midiTrack);
+    TrackWidget *addSingleView(TrackMidi *midiTrack);
+    void deleteTrack(TrackWidget *trackView, TrackMidiView *midiView);
     int getNumTracks() const;
     void deleteAllTracks();
-    void trackClicked(TrackView * trackView);
-    std::vector<TrackView *> getTrackViews() const;
+    void trackClicked(TrackWidget * trackView);
+    std::vector<TrackWidget *> getTrackViews() const;
 signals:
     void switchControlChange();
 public slots:
     void addTrackView(const mSong &song);
 signals:
-    void addPianoRoll(TrackView *track);
+    void addPianoRoll(TrackWidget *track);
     void requestTrackChange(int id);
 protected:
     void keyPressEvent(QKeyEvent * event);
 
 private:
-    MasterTrack *masterTrack;
-    PluginEditorContainer *pluginEditorContainer;
-    PianoRollContainer    *pianoRollContainer;
+    MasterTrack *_masterTrack;
+    TrackDirector * director;
+    //PluginEditorContainer *pluginEditorContainer;
+    //PianoRollContainer    *pianoRollContainer;
     QSplitter   *vSplitter;
     QVBoxLayout *vLayout;
     QHBoxLayout *hLayout;

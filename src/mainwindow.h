@@ -3,6 +3,11 @@
 
 class AudioManager;
 class Browser;
+class TracksView;
+class TabWidgetView;
+class TrackDirector;
+
+//TODO: clean these up, move to cpp
 #include <QFileDialog>
 #include <QFile>
 #include <QMessageBox>
@@ -24,7 +29,6 @@ class Browser;
 #include <QLibrary>
 #include <qvector.h>
 #include <QSplitter>
-#include <src/controlchangecontainer.h>
 #include "src/pianorollhelperview.h"
 #include <QPainter>
 #include <QKeyEvent>
@@ -68,14 +72,15 @@ private slots:
     void exportAudio();
 private:
     void setUpMenuBar();
+    void setUpTabViews();
     int getNoteFromKeyboard(int key);
-
-    PianoRollContainer     *pianoRollContainer;
-    TrackContainer         *track_container;
-    Browser                *browser;
+    TrackDirector          *trackDirector;
+   // Browser                *browser;
     HeaderContainer        *header_container;
-    ControlChangeContainer *control_change_container;
-    PianoRollHelperView    *piano_roll_helper;
+    TabWidgetView          *browserTab;
+    TabWidgetView          *trackTab;
+    TabWidgetView          *midiTab;
+   // PianoRollHelperView    *piano_roll_helper;
     QVBoxLayout            *mainLayout;
     PluginEditorContainer  *plugin_editor_container;
 
@@ -92,7 +97,6 @@ private:
     QAction *saveAsAction;
     QAction *loadAction;
     QAction *switchNotationAction;
-    QScrollArea *trackScrollArea;
     int velocity = 70;
     QWidget *centralWidget;
     QWidget *pluginEdiorCentralWidget;

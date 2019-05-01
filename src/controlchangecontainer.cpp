@@ -9,14 +9,14 @@ This class holds two views which can be switched between. // TODO, this should b
 The first is the PianoRollContainer which is a collection of
 PianoRolls in a stackedLayout. The second is a StackedWidget of ControlChanges
 */
-ControlChangeContainer::ControlChangeContainer(MasterTrack *masterTrack,PianoRollContainer* pianoRollContainer) : _masterTrack(masterTrack), _pianoRollContainer(pianoRollContainer)
+ControlChangeContainer::ControlChangeContainer(MasterTrack *masterTrack,PianoRollContainer* pianoRollContainer) : _masterTrack(masterTrack)
 {
     sLayout = new QStackedLayout;
     sLayout2 = new QStackedLayout;
     ccStackedHolder = new QWidget;
 
     ccStackedHolder->setLayout(sLayout2);
-    sLayout->addWidget(_pianoRollContainer);
+
     sLayout->addWidget(ccStackedHolder);
     setLayout(sLayout);
 }
@@ -30,7 +30,7 @@ void ControlChangeContainer::switchControlChangeContainer()
 //    }
   //  else {
         sLayout->setCurrentIndex(!sLayout->currentIndex());
-        sLayout2->setCurrentIndex(_pianoRollContainer->stackedLayout->currentIndex());
+        //sLayout2->setCurrentIndex(_pianoRollContainer->stackedLayout->currentIndex());
         _masterTrack->currentTrack()->_controlChange->switchOverlay(currentIndex);
  //   }
 

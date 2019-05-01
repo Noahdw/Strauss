@@ -296,7 +296,7 @@ void Vst2AudioPlugin::silenceChannel(float **channelData, int numChannels, long 
 /*
 This is used to convert midi arrays into blocks for processing
 */
-void Vst2AudioPlugin::processMidi()
+void Vst2AudioPlugin::processMidi(bool paused)
 { 
     events->numEvents =0;
     uint i = 0;
@@ -380,10 +380,12 @@ void Vst2AudioPlugin::processMidi()
      *
      * This might all be 100% wrong :)
      */
-    if (!hasReachedEnd) {
+    if (!paused && !hasReachedEnd) {
         auto cc = midiTrack()->cc();
         for (const auto& c : cc) //TODO
         {
+            if(c.second.noteMap.size() == 0)
+                continue;
             int p = c.first;
             df = 0;
             canSkip = false;
@@ -409,6 +411,7 @@ void Vst2AudioPlugin::processMidi()
                 if (!canSkip) {
                     //Deltaframes, bless its heart, is actually samples since the start of a block.
                     // A lot of sources claimed it was Microseconds since the start. Wrong.
+                    qDebug() << cc.at(p).listOfNotes.size();
                     df = cc.at(p).listOfNotes.at(ccVecPos[p]) * samplesPerTick;
                     k+=df;
                     if (k > g_blocksize) {
@@ -633,8 +636,8 @@ int Vst2AudioPlugin::exportAudioBegin(float **outputs,
                                       int numFrames)
 {
      if (editor == nullptr) return 0;
-    processMidi();
-    processAudio(outputs,outputs,numFrames);
+    processMidi(false);
+    processAudio(outputs,outputs,numFrames,false);
     if (hasReachedEnd)
     {
         return 0;
@@ -689,7 +692,7 @@ void Vst2AudioPlugin::setPluginState(const std::string &chunk)
 }
 
 void Vst2AudioPlugin::processAudio(float **inputs, float **outputs,
-                                   int numFrames)
+                                   int numFrames, bool paused)
 {
     if (!canProcess()) return;
 
@@ -716,7 +719,7 @@ void Vst2AudioPlugin::processAudio(float **inputs, float **outputs,
         {
             if (p->canProcess())
             {
-                p->processAudio(outputs,outputs,numFrames);
+                p->processAudio(outputs,outputs,numFrames,paused);
             }
         }
     }

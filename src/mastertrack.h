@@ -8,6 +8,7 @@ class PianoRollContainer;
 class PluginEditorContainer;
 class TrackMidi;
 
+class TrackDirector;
 class MasterTrack
 {
 public:
@@ -19,14 +20,15 @@ public:
     void unsafeRemoveTrack(TrackMidi *track);
     QQueue<TrackMidi *> &tracksToRemove();
     void setCurrentTrack(TrackMidi *trackMidi);
-    TrackMidi *currentTrack(){return _currentTrack;}
+    TrackMidi *currentTrack(){ return _currentTrack;}
+
     void updateTrackPositions(bool isPaused, bool isRestart, int custom);
-    void initializeDependencies(TrackContainer *tContainer, PianoRollContainer *pContainer, PluginEditorContainer *pEditorContainer);
+    void initializeDependencies(TrackDirector* trackDirector,PluginEditorContainer *pEditorContainer);
 private:
     std::vector<std::unique_ptr<TrackMidi>> _midiTracks;
     TrackMidi *_currentTrack = NULL;
-    TrackContainer *trackContainer;
-    PianoRollContainer *pianoRollContainer;
+
+    TrackDirector* director;
     PluginEditorContainer *pluginEditorContainer;
     QQueue<TrackMidi*> _tracksToRemove;
 };

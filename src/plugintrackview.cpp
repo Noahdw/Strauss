@@ -1,5 +1,5 @@
 #include "plugintrackview.h"
-#include "src/trackview.h"
+#include "src/trackwidget.h"
 #include "src/pluginview.h"
 #include "src/plugineditorcontainer.h"
 #include "trackmidi.h"
@@ -8,7 +8,7 @@ This is the representation of a track that is shown on the
 pluginEditorContainer view. It is simillar to the track shown on
 a PianoRoll view but it contains much more details and options
 */
-PluginTrackView::PluginTrackView(TrackView * track)
+PluginTrackView::PluginTrackView(TrackWidget * track)
 {
     trackView = track;
     setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Minimum);
@@ -88,11 +88,11 @@ void PluginTrackView::paintEvent(QPaintEvent *event)
 
 void PluginTrackView::mousePressEvent(QMouseEvent *event)
 {
-    pluginEditorContainer->masterTrack->setCurrentTrack(midiTrack);
-    pluginEditorContainer->switchPluginViews(this);
-    pluginEditorContainer->pluginTrackClickedOn();
-    pluginEditorContainer->masterTrack->setCurrentTrack(midiTrack);
-    clickedOn(true);
+//    pluginEditorContainer->masterTrack->setCurrentTrack(midiTrack);
+//    pluginEditorContainer->switchPluginViews(this);
+//    pluginEditorContainer->pluginTrackClickedOn();
+//    pluginEditorContainer->masterTrack->setCurrentTrack(midiTrack);
+//    clickedOn(true);
     QFrame::mousePressEvent(event);
 }
 
