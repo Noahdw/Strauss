@@ -2,7 +2,7 @@
 
 
 
-Strauss is a Digital Audio Workstation / Notation software that attemps to create a more efficient workflow for the modern composer. Note input is done through the notation side while there is an entire DAW underneath it that allows for fine tuning of notes and their sounnds.
+Strauss is a Digital Audio Workstation / Notation software that attemps to create a more efficient workflow for the modern composer.The ultimate goal is that note input is done through the notation side all the while there is an entire DAW underneath it that allows for fine tuning of notes and their sounds.
 
 Strauss is  "basic feature" complete and is fully capable of producing music with.
 
