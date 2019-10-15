@@ -2,26 +2,27 @@
 #include <QApplication>
 #include "trackmidi.h"
 #include "controlchangeoverlay.h"
-#include "pianoroll.h"
-ControlChange::ControlChange(TrackMidi *track) : _midiTrack(track)
+#include "pianorollwidget.h"
+#include "Controllers/controlchangecontainer.h"
+#include "mastertrack.h"
+ControlChange::ControlChange(ControlChangeContainer *container) : _container(container)
 {
+    _overlay = new ControlChangeOverlay(this);
     backgroundView = new QGraphicsView;
-    //  backgroundView->setInteractive(false);
     backgroundView->installEventFilter(this);
 
     stackedLayout = new QStackedLayout;
     stackedLayout->setStackingMode(QStackedLayout::StackAll);
     stackedLayout->addWidget(backgroundView);
+    stackedLayout->addWidget(_overlay);
     setLayout(stackedLayout);
-    backgroundView->setScene(track->midiEditorState()->pianoRollScene);
+    //switchOverlay(0,container->_masterTrack->currentTrack());
+   // backgroundView->setScene(container->_masterTrack->currentTrack()->midiEditorState()->pianoRollScene);
 }
 
 void ControlChange::addOverlay(int index)
 {
-    if(_midiTrack->addCC(index))
-    {
-        _overlays[index] = std::make_unique<ControlChangeOverlay>(index,this);
-    }
+
 }
 bool ControlChange::eventFilter(QObject *target, QEvent *event)
 {
@@ -41,23 +42,38 @@ void ControlChange::resizeEvent(QResizeEvent *event)
 
 }
 
-void ControlChange::switchOverlay(int index)
+void ControlChange::switchOverlay(int index,TrackMidi *track)
 {
-    if(_overlays.count(index) == 0)
-    {
-        addOverlay(index);
-    }
-    if(lastOverlay == nullptr)
-        lastOverlay = _overlays[index].get();
-    stackedLayout->addWidget(_overlays[index].get());
-    stackedLayout->setCurrentWidget(_overlays[index].get());
-    if(lastOverlay != _overlays[index].get())
-        stackedLayout->removeWidget(lastOverlay);
-   // _overlays[index].get()->show();
-    lastOverlay = _overlays[index].get();
+    Q_ASSERT(index >= 0 && index < 255);
+    _midiTrack = track;
     currentIndex = index;
-    backgroundView->fitInView(backgroundView->sceneRect());
-    lastOverlay->updateScene(backgroundView->scene()->sceneRect());
+    auto state = track->midiEditorState();
+    backgroundView->setScene(state->pianoRollScene);
+    if(state->controlScenes.count(index) == 0)
+    {
+       state->controlScenes[index] = std::make_unique<QGraphicsScene>();
+       //state->controlLists[index] = std::make_unique<std::map<int,int>>();
+    }
+
+    //_overlay->restoreOverlay(state->controlScenes.at(index).get(),state->controlLists.at(index).get());
+
+
+    //    if(_overlays.count(index) == 0)
+    //    {
+    //        addOverlay(index);
+    //    }
+    //    if(lastOverlay == nullptr)
+    //        lastOverlay = _overlays[index].get();
+    //    stackedLayout->addWidget(_overlays[index].get());
+    //    stackedLayout->setCurrentWidget(_overlays[index].get());
+    //    if(lastOverlay != _overlays[index].get())
+    //        stackedLayout->removeWidget(lastOverlay);
+    //   // _overlays[index].get()->show();
+    //    lastOverlay = _overlays[index].get();
+    //    currentIndex = index;
+    //    backgroundView->fitInView(backgroundView->sceneRect());
+    //    lastOverlay->fitIntoView();
+    //    lastOverlay->updateScene(backgroundView->scene()->sceneRect());
 
 }
 

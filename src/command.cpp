@@ -1,9 +1,9 @@
 #include "command.h"
-#include "pianoroll.h"
+#include "pianorollwidget.h"
 #include "pianorollitem.h"
 #include "trackmidi.h"
 #include "velocityview.h"
-#include "pianorollcontainer.h"
+#include "Controllers/pianorollcontainer.h"
 
 Command::Command()
 {
@@ -17,7 +17,7 @@ Command::~Command()
 
 
 
-PianoRollMoveCommand::PianoRollMoveCommand(PianoRoll *pianoRoll, QList<QGraphicsItem*> items, int x, int y, QGraphicsItem *skipItem)
+PianoRollMoveCommand::PianoRollMoveCommand(PianoRollWidget *pianoRoll, QList<QGraphicsItem*> items, int x, int y, QGraphicsItem *skipItem)
     :skippedItem(skipItem), items(items),xPos(x),yPos(y),_pianoRoll(pianoRoll)
 {
 
@@ -77,7 +77,7 @@ void PianoRollMoveCommand::undo()
 }
 
 
-PianoRollAddCommand::PianoRollAddCommand(PianoRoll *pianoRoll, QList<ItemData> items)
+PianoRollAddCommand::PianoRollAddCommand(PianoRollWidget *pianoRoll, QList<ItemData> items)
     : items(items),_pianoRoll(pianoRoll)
 {
 
@@ -118,7 +118,7 @@ PianoRollAddCommand::~PianoRollAddCommand()
 }
 
 
-PianoRollRemoveCommand::PianoRollRemoveCommand(PianoRoll *pianoRoll, QList<QGraphicsItem *> items)
+PianoRollRemoveCommand::PianoRollRemoveCommand(PianoRollWidget *pianoRoll, QList<QGraphicsItem *> items)
     : removedItems(items),_pianoRoll(pianoRoll)
 {
 
@@ -152,7 +152,7 @@ void PianoRollRemoveCommand::undo()
     MidiManager::recalculateNoteListDT(_pianoRoll->midiTrack()->midiData());
 }
 
-PianoRollResizeCommand::PianoRollResizeCommand(PianoRoll *pianoRoll, QList<QGraphicsItem *> items, int xLeftAdjust, int xRightAdjust)
+PianoRollResizeCommand::PianoRollResizeCommand(PianoRollWidget *pianoRoll, QList<QGraphicsItem *> items, int xLeftAdjust, int xRightAdjust)
 {
     _pianoRoll = pianoRoll;
     resizedItems = items;

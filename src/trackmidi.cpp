@@ -1,7 +1,7 @@
 #include "trackmidi.h"
 
 #include "src/trackwidget.h"
-#include "src/pianoroll.h"
+#include "src/pianorollwidget.h"
 #include "src/plugintrackview.h"
 #include "src/mainwindow.h"
 #include "src/mastertrack.h"
@@ -13,7 +13,7 @@
 TrackMidi::TrackMidi(MasterTrack *mTrack) : masterTrack(mTrack)
 {
     _midiData.instrumentName = "New Track";
-    _controlChange = new ControlChange(this);
+    //_controlChange = new ControlChange(this);
 }
 
 TrackMidi::~TrackMidi()
@@ -43,6 +43,11 @@ void TrackMidi::addPlugin(QString actualPath)
     if(_plugin != nullptr)
         _plugin->setCanProcess(true);
 
+}
+void TrackMidi::addMidiEventToPlayback(uchar status,uchar note, uchar velocity, qreal currentTick)
+{
+    if (masterPlugin())
+        masterPlugin()->addMidiEvent(status,note,velocity,currentTick);
 }
 
 MidiData *TrackMidi::ccAt(int index)

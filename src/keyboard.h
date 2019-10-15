@@ -1,7 +1,7 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-class PianoRoll;
+class PianoRollWidget;
 class PianoRollContainer;
 #include <QWidget>
 #include <QPainter>
@@ -18,7 +18,6 @@ class Keyboard: public QGraphicsView{
     Q_OBJECT
 public:
     Keyboard(PianoRollContainer* p);
-    PianoRoll *getPianoRoll(){return piano_roll;}
     PianoRollContainer* container(){return _container;}
     void updateWheel(QWheelEvent *event);
     void setNoteColors();
@@ -26,7 +25,6 @@ public:
 private:
     void addNotesToScene();
     QGraphicsScene *scene;
-    PianoRoll *piano_roll;
     QGraphicsRectItem *activeNote;
     QBrush activeBrush;
     int lastNote;

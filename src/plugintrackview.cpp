@@ -1,7 +1,7 @@
 #include "plugintrackview.h"
 #include "src/trackwidget.h"
 #include "src/pluginview.h"
-#include "src/plugineditorcontainer.h"
+#include "Controllers/plugineditorcontainer.h"
 #include "trackmidi.h"
 /*
 This is the representation of a track that is shown on the

@@ -6,7 +6,7 @@
 #include <src/velocityviewitem.h>
 #include <src/trackwidget.h>
 #include "src/trackmidi.h"
-#include "pianorollcontainer.h"
+#include "Controllers/pianorollcontainer.h"
 int viewHeight = 70;
 VelocityView::VelocityView(PianoRollContainer *p) : _container(p)
 {

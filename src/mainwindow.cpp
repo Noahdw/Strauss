@@ -8,7 +8,7 @@
 #include <src/audiomanager.h>
 #include "browser.h"
 #include "tabwidgetview.h"
-#include "controlchangecontainer.h"
+#include "Controllers/controlchangecontainer.h"
 #include "trackdirector.h"
 
 MidiManager manager;
@@ -43,7 +43,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     trackDirector            = new TrackDirector(masterTrack,model);
-
     browserTab               = new TabWidgetView;
     trackTab                 = new TabWidgetView;
     midiTab                  = new TabWidgetView;
@@ -78,9 +77,8 @@ MainWindow::MainWindow(QWidget *parent) :
     auto track = masterTrack->addTrack();
      trackDirector->setActiveTrack(track);
     setUpTabViews();
-
     // midiEditor->setActiveTrack(track);
-
+    trackDirector->getControlChangeContainer()->switchControlChange(0);
     setUpMenuBar();
     AudioEngine::requestedPlaybackPos = -1;
     audio_engine->startPortAudio();
@@ -333,7 +331,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
             QMainWindow::keyReleaseEvent(event);
             return;
         }
-        for(const auto& track : masterTrack->midiTracks())
+        for (const auto& track : masterTrack->midiTracks())
         {
             auto plugin = track->plugin();
             if (track->canRecord())

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+message MidiTrack{
+	string name = 1;
+	message MidiData{
+		int32 total_dt = 1;
+		int32 event = 2;
+	}
+	message Plugin{
+		string plugin_url = 1;
+		bytes program_bank = 2;
+	}	
+	message CCData{
+		int32 cc_type = 1;
+		int32 x_value = 2;
+		int32 y_value = 3;
+	}
+	Plugin master_plugin = 3;
+	repeated Plugin child_plugin = 4;
+	repeated MidiData midi_data = 5;
+	repeated CCData cc_data = 6;
+}
+
+message Application{
+	string name = 1;
+	int32 total_dt = 2;
+	repeated MidiTrack midi_track = 3;
+	int32 blockSize = 4;
+	int32 sample_rate = 5;
+}

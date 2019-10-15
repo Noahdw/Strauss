@@ -1,5 +1,5 @@
 #include "pianorollhelperview.h"
-#include "src/controlchangecontainer.h"
+#include "Controllers/controlchangecontainer.h"
 
 PianoRollHelperView::PianoRollHelperView(ControlChangeContainer *controlChangeContainer)
 {
@@ -91,6 +91,6 @@ void PianoRollHelperView::initializeComboBox()
 
 void PianoRollHelperView::switchView()
 {
-    _controlChangeContainer->switchControlChangeContainer();
+    //_controlChangeContainer->switchControlChangeContainer();
 }
 

@@ -3,6 +3,7 @@
 
 class ControlChangeItem;
 class CollisionItem;
+class TrackMidi;
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -25,7 +26,8 @@ class ControlChangeOverlay  : public QGraphicsView{
     Q_OBJECT
 
 public:
-    ControlChangeOverlay(int _ccType,ControlChange* controlChange);
+    ControlChangeOverlay(ControlChange* controlChange);
+    void restoreOverlay(QGraphicsScene *_scene, std::map<int, int> *m);
     void createLineConnector();
     void removeSelectedItems();
     void removeCollidingItems(QList<QGraphicsItem*> &items);
@@ -51,6 +53,7 @@ protected:
     void resizeEvent(QResizeEvent *event);
     void paintEvent(QPaintEvent *event);
 private:
+    std::map<int,int> *activeList;
     CollisionItem *collisionItem;
     ControlChange* _controlChange;
     bool firstShow = true;

@@ -125,7 +125,7 @@ VelocityView{
     background: rgb(96,96,96);
 }
 
-PianoRoll{
+PianoRollWidget{
     border: 1px solid rgb(44,44,44);
     background: rgb(96,96,96);
 }

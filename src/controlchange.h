@@ -9,14 +9,15 @@
 #include <QMouseEvent>
 #include <QDebug>
 class TrackMidi;
+class ControlChangeContainer;
 class ControlChangeOverlay;
 
 class ControlChange : public QFrame{
     Q_OBJECT
 
 public:
-    ControlChange(TrackMidi* track);
-    void switchOverlay(int index);
+    ControlChange(ControlChangeContainer *container);
+    void switchOverlay(int index, TrackMidi *track);
     void addOverlay(int index);
     int currentIndex = 0;
     QGraphicsView *backgroundView;
@@ -27,11 +28,10 @@ protected:
     void resizeEvent(QResizeEvent *event);
 
 private:
-
-    TrackMidi* _midiTrack;
-
+    TrackMidi *_midiTrack;
     QStackedLayout *stackedLayout;
-    ControlChangeOverlay* lastOverlay;
+    ControlChangeContainer *_container;
+    ControlChangeOverlay *_overlay;
     std::map<int,std::unique_ptr<ControlChangeOverlay>> _overlays;
 };
 

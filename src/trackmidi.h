@@ -6,7 +6,7 @@
 #include "QGraphicsScene"
 #include <QGraphicsRectItem>
 #include <QList>
-class PianoRoll;
+class PianoRollWidget;
 class TrackWidget;
 class MasterTrack;
 class AudioPlugin;
@@ -31,10 +31,11 @@ public:
 
         velocityViewScene = new QGraphicsScene(0,0,g_totalDt,128);
     }
-
+    std::map<int,std::unique_ptr<QGraphicsScene>> controlScenes;
+   // std::map<int,std::unique_ptr<std::map<int,int>>> controlLists;
     QGraphicsScene* pianoRollScene;
     QGraphicsScene* velocityViewScene;
-       QGraphicsRectItem* line;
+    QGraphicsRectItem* line;
 private:
 
 };
@@ -56,7 +57,7 @@ public:
     MidiEditorState* midiEditorState(){return &_midiEditorState;}
     TrackWidget*  trackView(){return _trackView;}
     MidiData*   midiData(){return &_midiData;}
-    PianoRoll*  pianoRoll(){return _pianoRoll;}\
+    PianoRollWidget*  pianoRoll(){return _pianoRoll;}\
     MidiData*   ccAt(int index);
     bool addCC(int index);
     std::map<int,MidiData> &cc() {return _cc;}
@@ -64,12 +65,13 @@ public:
     AudioPlugin* masterPlugin(){return _plugin.get();}
     QList<Vst2AudioPlugin*> effectPlugins; // TODO
     ControlChange* _controlChange;
+    void addMidiEventToPlayback(uchar status, uchar note, uchar velocity, qreal currentTick);
 private:
     MidiEditorState _midiEditorState;
     TrackWidget * _trackView;
     MidiData  _midiData;
     std::map<int,MidiData> _cc;
-    PianoRoll* _pianoRoll;
+    PianoRollWidget* _pianoRoll;
     std::unique_ptr<AudioPlugin> _plugin;
     MasterTrack *masterTrack;
     bool _canRecord = false;

@@ -10,7 +10,7 @@ class Vst2AudioPlugin;
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <src/folderview.h>
-#include "mastertrack.h"
+#include "src/mastertrack.h"
 class PluginEditorContainer : public QFrame
 {
     Q_OBJECT

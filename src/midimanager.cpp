@@ -359,22 +359,22 @@ void MidiManager::recalculateNoteListDT(MidiData *track)
     track->listOfNotes.reserve(track->noteMap.size()*2);
     int counter = 0;
     int last = 0;
-    for(const auto& var : track->noteMap)
+    for(const auto& [key,value] : track->noteMap)
     {
-        for (uint i = 0; i < var.second.size(); ++i)
+        for (uint i = 0; i < value.size(); ++i)
         {
             if (counter == 0)
             {
-                track->listOfNotes.push_back(var.first);
-                track->listOfNotes.push_back(var.second.at(i));
-                last = var.first;
+                track->listOfNotes.push_back(key);
+                track->listOfNotes.push_back(value.at(i));
+                last = key;
                 counter++;
             }
             else
             {
-                track->listOfNotes.push_back(var.first - last);
-                track->listOfNotes.push_back(var.second.at(i));
-                last = var.first;
+                track->listOfNotes.push_back(key - last);
+                track->listOfNotes.push_back(value.at(i));
+                last = key;
             }
         }
     }

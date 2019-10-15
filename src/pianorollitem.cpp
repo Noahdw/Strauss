@@ -2,7 +2,7 @@
 #include <src/velocityview.h>
 #include <QDebug>
 #include "src/trackmidi.h"
-#include "pianorollcontainer.h"
+#include "Controllers/pianorollcontainer.h"
 
 PianoRollItem::PianoRollItem()
 {
@@ -123,7 +123,7 @@ void PianoRollItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     //Perhaps a bad idea, but if a drag changes the yPos, play the new note
     if (lastYWithSound != yPos*keyHeight) {
         int note = 127 - yPos;
-        pianoroll->playKeyboardNote(note,true);
+        pianoroll->container()->playKeyboardNote(note,true);
 
         QTimer::singleShot(300,[=](){
             pianoroll->turnNoteOff(note);
@@ -173,8 +173,7 @@ void PianoRollItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             this->velocity = velocity;
             noteStart = x();
             noteEnd = width;
-            //MidiManager::addMidiNote(note,velocity,x(),noteEnd,data);
-            //MidiManager::recalculateNoteListDT(data);
+
 
             int widthAdjust = 0;
             int xAdjust = 0;

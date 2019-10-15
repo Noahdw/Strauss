@@ -2,9 +2,9 @@
 #include "src/midimanager.h"
 #include "src/audioengine.h"
 #include "src/common.h"
-#include "src/pianoroll.h"
+#include "src/pianorollwidget.h"
 #include "trackmidi.h"
-#include "pianorollcontainer.h"
+#include "Controllers/pianorollcontainer.h"
 /*
 This class represents a multi-use bar above the piano roll. It displays
 the current time of the track that is dependent on how zoomed in you
@@ -24,8 +24,8 @@ TrackLengthView::TrackLengthView(PianoRollContainer *p) : _container(p)
     scene->setSceneRect(0,0,MidiManager::TPQN*g_quarterNotes,height());
     this->setScene(scene);
 
-   // QPalette pal = palette();
-   // pal.setColor(QPalette::Background,g_baseColor);
+    // QPalette pal = palette();
+    // pal.setColor(QPalette::Background,g_baseColor);
     //setAutoFillBackground(true);
     //setPalette(pal);
     setBackgroundRole(QPalette::NoRole);
@@ -33,7 +33,7 @@ TrackLengthView::TrackLengthView(PianoRollContainer *p) : _container(p)
 
 void TrackLengthView::paintEvent(QPaintEvent *event)
 {
-    scaleFactor = 1;//pianoRoll->scaleFactor;
+    //scaleFactor = 1;//pianoRoll->scaleFactor;
     QPainter painter(viewport());
     QPen pen;
     pen.setColor(Qt::black);
@@ -49,12 +49,12 @@ void TrackLengthView::paintEvent(QPaintEvent *event)
         {
             painter.drawText(var*(float)MidiManager::TPQN * transform().m11() * scaleFactor - horizontalScrollBar()->value() + adjust ,height()/2,QString::number((float)var/4.0*scaleFactor));
             painter.drawLine(var*(float)MidiManager::TPQN * transform().m11() * scaleFactor - horizontalScrollBar()->value(),0,var*MidiManager::TPQN * transform().m11()
-                             * scaleFactor - horizontalScrollBar()->value(),height()/2);
+                                     * scaleFactor - horizontalScrollBar()->value(),height()/2);
         }
         else
         {
             painter.drawLine(var*(float)MidiManager::TPQN * transform().m11() * scaleFactor - horizontalScrollBar()->value(),0,var*MidiManager::TPQN * transform().m11()
-                             * scaleFactor - horizontalScrollBar()->value(),height()/4);
+                                     * scaleFactor - horizontalScrollBar()->value(),height()/4);
         }
 
     }
@@ -64,23 +64,18 @@ void TrackLengthView::mouseDoubleClickEvent(QMouseEvent *event)
 {
 
 }
-void TrackLengthView::setScale(float x, bool needsReset, int wheelPos, double _scaleFactor)
+void TrackLengthView::setScale(QMatrix matrix,qreal _scaleFactor)
 {
     scaleFactor = _scaleFactor;
-    if (needsReset) {
-        resetMatrix();
-    }
-    scale(x,1);
-    horizontalScrollBar()->setValue(wheelPos);
+    setMatrix(matrix);
     viewport()->update();
-
 }
 
 void TrackLengthView::initTrackLengthView(QRectF sceneRect, float scaleX)
 {
     setSceneRect(sceneRect);
     resetMatrix();
-    setScale(scaleX,true,0,1);
+    scale(scaleX,1);
     viewport()->update();
 }
 

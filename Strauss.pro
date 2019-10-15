@@ -35,10 +35,10 @@ SOURCES += src/main.cpp\
     src/mainwindow.cpp\
     src/midiplayer.cpp\
     src/midimanager.cpp\
-    src/pianoroll.cpp \
     src/pianorollitem.cpp \
     src/keyboard.cpp \
-    src/pianorollcontainer.cpp \
+    src/Controllers/pianorollcontainer.cpp \
+    src/pianorollwidget.cpp \
     src/tabwidgetview.cpp \
     src/trackcontainer.cpp \
     src/trackdirector.cpp \
@@ -49,12 +49,12 @@ SOURCES += src/main.cpp\
     src/folderview.cpp \
     src/headercontainer.cpp \
     src/tracklengthview.cpp \
-    src/controlchangecontainer.cpp \
+    src/Controllers/controlchangecontainer.cpp \
     src/controlchangeoverlay.cpp \
     src/controlchangeitem.cpp \
     src/collisionitem.cpp \
     src/pianorollhelperview.cpp \
-    src/plugineditorcontainer.cpp \
+    src/Controllers/plugineditorcontainer.cpp \
     src/plugintrackview.cpp \
     src/pluginview.cpp \
     src/settingsdialog.cpp \
@@ -89,10 +89,10 @@ HEADERS  += src/mainwindow.h\
     src/controlchange.h \
     src/midiplayer.h\
     src/midimanager.h\
-    src/pianoroll.h \
     src/pianorollitem.h \
     src/keyboard.h \
-    src/pianorollcontainer.h \
+    src/Controllers/pianorollcontainer.h \
+    src/pianorollwidget.h \
     src/tabwidgetview.h \
     src/trackcontainer.h \
     src/trackdirector.h \
@@ -103,13 +103,13 @@ HEADERS  += src/mainwindow.h\
     src/folderview.h \
     src/headercontainer.h \
     src/tracklengthview.h \
-    src/controlchangecontainer.h \
+    src/Controllers/controlchangecontainer.h \
     src/controlchangeoverlay.h \
     src/controlchangeitem.h \
     src/collisionitem.h \
     src/pianorollhelperview.h \
     src/common.h \
-    src/plugineditorcontainer.h \
+    src/Controllers/plugineditorcontainer.h \
     src/plugintrackview.h \
     src/pluginview.h \
     src/settingsdialog.h \

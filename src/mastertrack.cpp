@@ -1,35 +1,35 @@
 #include "mastertrack.h"
 #include <algorithm>
 #include "trackcontainer.h"
-#include "pianorollcontainer.h"
-#include "plugineditorcontainer.h"
+#include "Controllers/pianorollcontainer.h"
+#include "Controllers/plugineditorcontainer.h"
 #include "trackmidi.h"
 #include "plugintrackview.h"
-#include "pianoroll.h"
+#include "pianorollwidget.h"
 #include "trackdirector.h"
+
 MasterTrack::MasterTrack()
 {
-
 }
+
 TrackMidi* MasterTrack::addTrack()
 {
-    auto midiTrack = std::make_unique<TrackMidi>(this);
+    auto midiTrack = std::make_shared<TrackMidi>(this);
     auto trackView = director->getTrackContainer()->addSingleView(midiTrack.get());
     midiTrack->setTrackView(trackView);
     auto pluginTrack = pluginEditorContainer->addTrack(trackView);
     trackView->pluginTrack = pluginTrack;
 
-    if (_currentTrack == nullptr)
-        _currentTrack = midiTrack.get();
+    if (mCurTrack == nullptr)
+        mCurTrack = midiTrack.get();
 
-    _midiTracks.push_back(std::move(midiTrack));
+    _midiTracks.push_back(midiTrack);
     pluginEditorContainer->addTrack(trackView);
     return currentTrack();
 }
 
 void MasterTrack::addMidiTrackFromProject(const::google::protobuf::RepeatedPtrField<MidiTrack> &pb_midi_track)
 {
-
     for (int i = pb_midi_track.size() - 1; i >= 0 ; --i)
     {
         auto midiTrack = std::make_unique<TrackMidi>(this);
@@ -45,13 +45,14 @@ void MasterTrack::addMidiTrackFromProject(const::google::protobuf::RepeatedPtrFi
                 midiTrack->masterPlugin()->setPluginState(masterPlug.program_bank());
         }
 
-        if (_currentTrack == nullptr) {
-            _currentTrack = midiTrack.get();
+        if (mCurTrack == nullptr) {
+            mCurTrack = midiTrack.get();
         }
         _midiTracks.push_back(std::move(midiTrack));
         pluginEditorContainer->addTrack(trackView);
     }
-    director->getPianoRollContainer()->restoreTrack(currentTrack());
+   // director->getPianoRollContainer()->restoreTrack(currentTrack());
+    director->getPianoRollContainer()->pianoRoll()->setScene(currentTrack()->midiEditorState()->pianoRollScene);
 }
 
 /* Adds to a queue of tracks that the Audio Engine will delete
@@ -60,7 +61,7 @@ void MasterTrack::addMidiTrackFromProject(const::google::protobuf::RepeatedPtrFi
  */
 void MasterTrack::removeTrack(TrackMidi *track)
 {
-    _tracksToRemove.enqueue(track);
+    mTracksToRemove.enqueue(track);
     if(currentTrack() == track)
     {
         for(const auto& t : midiTracks())
@@ -79,24 +80,31 @@ void MasterTrack::removeTrack(TrackMidi *track)
  */
 void MasterTrack::unsafeRemoveTrack(TrackMidi* track)
 {
-    //director->getTrackContainer().
     _midiTracks.erase(std::remove_if(_midiTracks.begin(),
-                                     _midiTracks.end(),
-                                     [&](std::unique_ptr<TrackMidi> const &t)
-                                     {
-                                         return t.get() == track;
-                                     }));
+        _midiTracks.end(),
+        [&](TrackMidiPtr const &t)
+        {
+            return t.get() == track;
+        }));
+}
+
+/* Must only be called when the audio engine is shut down.
+ *
+ */
+void MasterTrack::unsafeRemoveAllTracks()
+{
+    _midiTracks.clear();
+    mTracksToRemove.clear();
 }
 
 QQueue<TrackMidi *> &MasterTrack::tracksToRemove()
 {
-    return _tracksToRemove;
+    return mTracksToRemove;
 }
 
 void MasterTrack::setCurrentTrack(TrackMidi* trackMidi)
 {
-    Q_ASSERT(trackMidi != NULL);
-    _currentTrack = trackMidi;
+    mCurTrack = trackMidi;
     //_midiEditor->setActiveTrack(trackMidi);
 }
 

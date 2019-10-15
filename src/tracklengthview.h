@@ -9,7 +9,7 @@
 #include <QMouseEvent>
 #include <QScrollBar>
 
-class PianoRoll;
+class PianoRollWidget;
 class PianoRollContainer;
 class TrackMidi;
 
@@ -20,10 +20,10 @@ public:
     explicit TrackLengthView(PianoRollContainer* p);
     PianoRollContainer* container(){return _container;}
     QGraphicsScene * scene;
-    void setScale(float x, bool needsReset, int wheelPos, double _scaleFactor);
+    void setScale(QMatrix matrix, qreal scaleFactor);
     void initTrackLengthView(QRectF sceneRect, float scaleX);
     void restoreTrack(TrackMidi* midiTrack);
-    PianoRoll *pianoRoll;
+    double scaleFactor = 1;
 protected:
     void paintEvent(QPaintEvent * event);
     void mouseDoubleClickEvent(QMouseEvent  *event);
@@ -32,7 +32,7 @@ protected:
     void showEvent(QShowEvent *event);
 private:
     double minSpacing = 20.0;
-    double scaleFactor = 1;
+
     PianoRollContainer* _container;
 };
 

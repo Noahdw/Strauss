@@ -10,7 +10,7 @@
 
 #include <QPainter>
 
-class PianoRoll;
+class PianoRollWidget;
 class Keyboard;
 class VelocityView;
 class TrackLengthView;
@@ -22,16 +22,21 @@ class PianoRollContainer : public QFrame
 public:
     PianoRollContainer();
     void restoreTrack(TrackMidi *midiTrack);
+    void playKeyboardNote(int note, bool active);
+    void scaleWidgets(QMatrix matrix);
+    void setScrollPositions(int value, Qt::Orientation axis);
+    void setScaleFactor(qreal scale);
     VelocityView* velocityView() {return _velocityView;}
     TrackLengthView* trackLengthView(){return _trackLengthView;}
-    PianoRoll* pianoRoll(){return _pianoRoll;}
+    PianoRollWidget* pianoRoll(){return _pianoRoll;}
     Keyboard* keyboard(){return _keyboard;}
 private:
     QHBoxLayout*  hLayout;
     QVBoxLayout*  mainLayout;
-    PianoRoll*    _pianoRoll;
+    PianoRollWidget*    _pianoRoll;
     Keyboard*     _keyboard;
     VelocityView* _velocityView;
+    TrackMidi*    _currentMidiTrack;
     TrackLengthView* _trackLengthView;
 };
 

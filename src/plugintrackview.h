@@ -5,6 +5,7 @@ class TrackWidget;
 class PluginView;
 class PluginEditorContainer;
 class TrackMidi;
+
 #include <QObject>
 #include <QFrame>
 #include <QLineEdit>
@@ -12,6 +13,7 @@ class TrackMidi;
 #include <QVBoxLayout>
 #include "src/vst2audioplugin.h"
 #include <QSlider>
+
 class PluginTrackView : public QFrame
 {
     Q_OBJECT
@@ -25,13 +27,16 @@ public:
     PluginEditorContainer * pluginEditorContainer;
     TrackWidget * trackView;
     TrackMidi *midiTrack;
+
 public slots:
     void panChanged();
     void volumeChanged();
+
 protected:
     void paintEvent(QPaintEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseDoubleClickEvent(QMouseEvent *event);
+
 private:
     QSlider *volumeSlider;
     QSlider *panSlider;
@@ -41,6 +46,7 @@ private:
     QVBoxLayout *vlayout;
     QBrush brush;
     QPen pen;
+
     int red;
     int green;
     int blue;

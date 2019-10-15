@@ -13,12 +13,12 @@ class MasterTrack;
 #include <src/trackwidget.h>
 #include <QVBoxLayout>
 #include <QScrollArea>
-#include <src/pianorollcontainer.h>
+#include "Controllers/pianorollcontainer.h"
 #include <QSpacerItem>
 #include <QSplitter>
 #include <QKeyEvent>
 #include <QPainter>
-#include "src/plugineditorcontainer.h"
+#include "Controllers/plugineditorcontainer.h"
 #include "src/midiinter.pb.h"
 
 class TrackDirector;
@@ -37,9 +37,6 @@ public:
     std::vector<TrackWidget *> getTrackViews() const;
 signals:
     void switchControlChange();
-public slots:
-    void addTrackView(const mSong &song);
-signals:
     void addPianoRoll(TrackWidget *track);
     void requestTrackChange(int id);
 protected:

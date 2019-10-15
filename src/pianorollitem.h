@@ -8,7 +8,7 @@ class VelocityView;
 #include <QPainter>
 #include <QDrag>
 #include <QGraphicsSceneMouseEvent>
-#include <src/pianoroll.h>
+#include <src/pianorollwidget.h>
 #include <QScrollBar>
 #include <QTimer>
 #include <QGraphicsSceneHoverEvent>
@@ -21,7 +21,7 @@ public:
     void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0);
     void setBoundingRect(int _width);
     void setInitalPosition(int start, int length, int note);
-    PianoRoll *pianoroll;
+    PianoRollWidget *pianoroll;
     QBrush brush;
 
     int noteStart;

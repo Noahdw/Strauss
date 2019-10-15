@@ -1,7 +1,7 @@
 #include "folderview.h"
 #include <QDebug>
 #include <src/audioengine.h>
-#include <src/plugineditorcontainer.h>
+#include "Controllers/plugineditorcontainer.h"
 #include "src/trackmidi.h"
 int FolderView::tempFolderID = 0;
 

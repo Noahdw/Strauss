@@ -1,5 +1,5 @@
-#ifndef PIANOROLL_H
-#define PIANOROLL_H
+#ifndef PIANOROLLWIDGET_H
+#define PIANOROLLWIDGET_H
 
 #include <QWidget>
 #include <QPainter>
@@ -25,18 +25,17 @@ class ControlChangeBridge;
 class TrackMidi;
 class PianoRollContainer;
 
-class PianoRoll : public QGraphicsView{
+class PianoRollWidget : public QGraphicsView {
     Q_OBJECT
 public:
-    PianoRoll(PianoRollContainer* p);
-    ~PianoRoll();
+    PianoRollWidget(PianoRollContainer* p);
+    ~PianoRollWidget();
 
     PianoRollContainer* container() {return _container;}
     void restoreTrack(TrackMidi* midiTrack);
-    void playKeyboardNote(int note, bool active);
+
     void clearActiveNotes();
     void deleteAllNotes();
-    TrackMidi* midiTrack() {return _midiTrack;}
     void resizeSelectedNotes(int xAdjustL,int xAdjustR);
     void deleteSelectedNotes();
     void setScrollWheelValue(int value);
@@ -48,9 +47,11 @@ public:
     void issueMoveCommand(int xMove, int yMove, QGraphicsItem* item);
     void copyItems();
     void pasteItems();
-    bool hasPlugin();
-    TrackWidget *track;
 
+    bool hasPlugin();
+
+    TrackWidget *track;
+    TrackMidi* midiTrack() {return _midiTrack;}
     ControlChangeBridge * bridge;
     int tPQN = MidiManager::TPQN;
     int totalDT = MidiManager::TPQN*g_quarterNotes;
@@ -66,14 +67,15 @@ public slots:
     void turnNoteOff(int note);
 
 protected:
-    void paintEvent(QPaintEvent * event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void drawBackground(QPainter * painter, const QRectF & rect);
-    void wheelEvent(QWheelEvent* event);
-    void resizeEvent(QResizeEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+    void paintEvent(QPaintEvent * event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void drawBackground(QPainter * painter, const QRectF & rect) override;
+    void wheelEvent(QWheelEvent* event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+
 private:
     TrackMidi* _midiTrack;
     QGraphicsItemAnimation *animation;
@@ -93,4 +95,4 @@ private:
 
 
 
-#endif // PIANOROLL_H
+#endif // PIANOROLLWIDGET_H

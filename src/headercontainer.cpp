@@ -17,6 +17,7 @@ HeaderContainer::HeaderContainer(AudioEngine *audioEngine) : _audioEngine(audioE
     groupBox             = new QGroupBox;
     auto *tempoLabel     = new QLabel("Tempo");
     auto *tempoWidget = new QDraggingWidget(10,400,120);
+
     hbox->addWidget(playButton);
     hbox->addWidget(pauseButton);
     hbox->addWidget(restartButton);
@@ -39,6 +40,7 @@ HeaderContainer::HeaderContainer(AudioEngine *audioEngine) : _audioEngine(audioE
     mainbox->setAlignment(Qt::AlignTop|Qt::AlignCenter);
     setLayout(mainbox);
     recordButton ->setCheckable(true);
+
     QObject::connect(playButton,     &QPushButton::clicked,this,&HeaderContainer::play);
     QObject::connect(pauseButton,    &QPushButton::clicked,this,&HeaderContainer::pause);
     QObject::connect(restartButton,  &QPushButton::clicked,this,&HeaderContainer::restart);

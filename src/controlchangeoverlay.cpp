@@ -4,10 +4,9 @@
 #include "src/common.h"
 #include "controlchange.h"
 #include "trackmidi.h"
-
-ControlChangeOverlay::ControlChangeOverlay(int _ccType, ControlChange* controlChange) : _controlChange(controlChange)
+#include <QGraphicsScene>
+ControlChangeOverlay::ControlChangeOverlay(ControlChange* controlChange) : _controlChange(controlChange)
 {
-    ccType = _ccType;
     setStyleSheet("background-color: transparent;");
     setViewportUpdateMode(FullViewportUpdate);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -18,6 +17,21 @@ ControlChangeOverlay::ControlChangeOverlay(int _ccType, ControlChange* controlCh
     collisionItem = new CollisionItem(this);
     rubberBand    = new QRubberBand(QRubberBand::Rectangle, this);
     setScene(new QGraphicsScene);
+}
+
+void ControlChangeOverlay::restoreOverlay(QGraphicsScene *_scene, std::map<int,int> *m)
+{
+    Q_ASSERT(scene() != nullptr);
+    activeList = m;
+    scene()->removeItem(leftItem);
+    scene()->removeItem(rightItem);
+    scene()->removeItem(collisionItem);
+    setScene(_scene);
+    scene()->addItem(leftItem);
+    scene()->addItem(rightItem);
+    scene()->addItem(collisionItem);
+
+
 }
 
 void ControlChangeOverlay::createLineConnector()
@@ -331,36 +345,36 @@ void ControlChangeOverlay::paintEvent(QPaintEvent *event)
 
 void ControlChangeOverlay::recalculateDT()
 {
-    auto cc =_controlChange->midiTrack()->ccAt(ccType);
-    cc->listOfNotes.clear();
-    cc->listOfNotes.reserve(activeItems.size()*2);
-    int counter = 0;
-    int last = 0;
-    for(const auto& var : activeItems)
-    {
-        auto item = static_cast<ControlChangeItem*>(var.second);
-        if (item == leftItem || item == rightItem)
-        {
-            continue;
-        }
-        int event = (item->value << 16 |
-                     ccType << 8  |
-                     0xB0);
-        if (counter == 0)
-        {
-            cc->listOfNotes.push_back(var.first);
-            cc->listOfNotes.push_back(event);
-            last = var.first;
-            counter++;
-        }
-        else
-        {
-            cc->listOfNotes.push_back(var.first - last);
-            cc->listOfNotes.push_back(event);
-            last = var.first;
-        }
 
-    }
+//    activeList->clear();
+//    activeList->reserve(activeItems.size()*2);
+//    int counter = 0;
+//    int last = 0;
+//    for(const auto& var : activeItems)
+//    {
+//        auto item = static_cast<ControlChangeItem*>(var.second);
+//        if (item == leftItem || item == rightItem)
+//        {
+//            continue;
+//        }
+//        int event = (item->value << 16 |
+//                     ccType << 8  |
+//                     0xB0);
+//        if (counter == 0)
+//        {
+//            activeList->push_back(var.first);
+//            activeList->push_back(event);
+//            last = var.first;
+//            counter++;
+//        }
+//        else
+//        {
+//            activeList->push_back(var.first - last);
+//            activeList->push_back(event);
+//            last = var.first;
+//        }
+
+//    }
 }
 
 void ControlChangeOverlay::switchDrawModes()

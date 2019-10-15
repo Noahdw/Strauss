@@ -9,11 +9,13 @@ AudioPluginFactory::AudioPluginFactory(TrackMidi *track) : midiTrack(track)
 std::unique_ptr<AudioPlugin> AudioPluginFactory::createAudioPlugin(QString path)
 {
     auto type = path.section('.',-1);
-    if (type == "") return nullptr;
-    if(type == "dll")
+    if (type == "")
+        return nullptr;
+    if (type == "dll")
         return createVst2Plugin(path);
-    if(type == "vst3")
+    if (type == "vst3")
         return createVst3Plugin(path);
+
     return nullptr;
 }
 
@@ -29,7 +31,7 @@ std::unique_ptr<AudioPlugin> AudioPluginFactory::createVst2Plugin(QString path)
     {
         qDebug() << QDir::current().path();
         qDebug() << "Could not copy plugin";
-        return false;
+        return nullptr;
     }
     int last = path.lastIndexOf("/") + 1;
     QString pluginName = path.right(path.length() - last);

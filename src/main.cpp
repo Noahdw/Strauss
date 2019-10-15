@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
-#include <src/pianoroll.h>
+#include <src/pianorollwidget.h>
 #include <src/midiplayer.h>
 #include <src/pianorollitem.h>
 int main(int argc, char *argv[])

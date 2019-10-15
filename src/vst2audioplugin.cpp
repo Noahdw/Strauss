@@ -6,7 +6,7 @@
 #include <SDK/vstfxstore.h>
 #include "src/trackmidi.h"
 #include <qdatetime.h>
-#include <src/pianoroll.h>
+#include <src/pianorollwidget.h>
 #include <src/audioengine.h>
 #include <src/controlchangeoverlay.h>
 #include <src/plugintrackview.h>
@@ -567,7 +567,7 @@ void Vst2AudioPlugin::setCustomPlackbackPos(int playbackPos)
     }
 }
 
-void Vst2AudioPlugin::setPianoRollRef(PianoRoll * piano)
+void Vst2AudioPlugin::setPianoRollRef(PianoRollWidget * piano)
 {
     pianoroll = piano;
 }

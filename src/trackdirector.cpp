@@ -1,6 +1,6 @@
 #include "trackdirector.h"
-#include "controlchangecontainer.h"
-#include "pianorollcontainer.h"
+#include "Controllers/controlchangecontainer.h"
+#include "Controllers/pianorollcontainer.h"
 #include "mastertrack.h"
 #include "folderview.h"
 #include "trackcontainer.h"

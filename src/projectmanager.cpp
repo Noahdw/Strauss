@@ -18,15 +18,15 @@ void ProjectManager::saveProject()
 void ProjectManager::saveAsProject(QString path,  MasterTrack *masterTrack)
 {
 
-    Application *app = new Application;
-    app->set_name(path.toUtf8().constData());
-    app->set_blocksize(g_blocksize);
-    app->set_sample_rate(g_sampleRate);
-    app->set_total_dt(g_quarterNotes * 960);
+    Application app;
+    app.set_name(path.toUtf8().constData());
+    app.set_blocksize(g_blocksize);
+    app.set_sample_rate(g_sampleRate);
+    app.set_total_dt(g_quarterNotes * 960);
 
     for (const auto& track : masterTrack->midiTracks()) {
 
-        auto midi_track = app->add_midi_track();
+        auto midi_track = app.add_midi_track();
 
         midi_track->set_name( track->trackView()->getTrackName().toUtf8().constData());
 
@@ -47,11 +47,10 @@ void ProjectManager::saveAsProject(QString path,  MasterTrack *masterTrack)
     }
 
     std::fstream output(path.toUtf8().constData(),std::ios::out | std::ios::trunc | std::ios::binary);
-    if (!app->SerializePartialToOstream(&output))
+    if (!app.SerializePartialToOstream(&output))
     {
         qDebug() << "Failed to write to protobuf:Application";
     }
-    delete app;
     google::protobuf::ShutdownProtobufLibrary();
 }
 
@@ -63,22 +62,22 @@ void ProjectManager::loadProject(QString path, MainWindow * main_window,MasterTr
         return;
     }
 
-    Application *app = new Application;
-    if (!app->ParseFromIstream(&input))
+    Application app;
+    if (!app.ParseFromIstream(&input))
     {
         qDebug() << "Failed to parse project file";
-        delete app;
         return;
     }
-    for(auto& t : masterTrack->midiTracks())
-    {
-        masterTrack->removeTrack(t.get());
-    }
-    g_quarterNotes = app->total_dt() / 960;
-    g_totalDt = app->total_dt();
-    main_window->audio_engine->changeBlockSize(g_blocksize,app->blocksize());
-    main_window->masterTrack->addMidiTrackFromProject(app->midi_track());
+    main_window->audio_engine->stopPortAudio();
+    masterTrack->unsafeRemoveAllTracks();
 
-    delete app;
+    g_quarterNotes = app.total_dt() / 960;
+    g_totalDt = app.total_dt();
+    main_window->audio_engine->changeBlockSize(g_blocksize,app.blocksize());
+    main_window->masterTrack->addMidiTrackFromProject(app.midi_track());
+    main_window->audio_engine->startPortAudio();
+    main_window->audio_engine->openStream();
+    main_window->audio_engine->startStream();
+
     google::protobuf::ShutdownProtobufLibrary();
 }

@@ -13,7 +13,7 @@ public:
     std::unique_ptr<AudioPlugin> createAudioPlugin(QString path);
 private:
     std::unique_ptr<AudioPlugin> createVst2Plugin(QString path);
-     std::unique_ptr<AudioPlugin> createVst3Plugin(QString path);
+    std::unique_ptr<AudioPlugin> createVst3Plugin(QString path);
     TrackMidi* midiTrack;
 };
 

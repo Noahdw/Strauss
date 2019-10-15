@@ -19,15 +19,14 @@ public:
     ControlChangeContainer(MasterTrack* masterTrack,PianoRollContainer* pianoRollContainer);
     QStackedLayout *sLayout;
     QStackedLayout *sLayout2;
+    MasterTrack* _masterTrack;
     QWidget * ccStackedHolder;
-    void switchControlChangeContainer();
     void addControlChange();
     void switchControlChange(int index);
     int currentIndex = 0;
 private:
-    MasterTrack* _masterTrack;
-   // PianoRollContainer* _pianoRollContainer;
-    ControlChange *lastControlChange;
+
+    ControlChange *controlChange;
 protected:
     void keyPressEvent(QKeyEvent * event);
 };

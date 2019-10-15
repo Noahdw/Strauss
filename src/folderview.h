@@ -10,7 +10,7 @@ class PluginEditorContainer;
 #include <QFileSystemModel>
 #include <QListView>
 #include <QTreeView>
-#include "pianorollcontainer.h"
+#include "Controllers/pianorollcontainer.h"
 #include "src/folderviewabstractmodel.h"
 #include "src/mastertrack.h"
 class FolderView : public QWidget

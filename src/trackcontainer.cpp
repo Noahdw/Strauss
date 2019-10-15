@@ -1,7 +1,7 @@
 #include "trackcontainer.h"
 #include <QWidget>
 #include <src/trackmidiview.h>
-#include "src/plugineditorcontainer.h"
+#include "Controllers/plugineditorcontainer.h"
 #include "src/trackmidi.h"
 #include "src/mastertrack.h"
 #include "trackdirector.h"
@@ -60,37 +60,14 @@ TrackWidget *TrackContainer::addTrackFromLoadProject(const MidiTrack &midi_track
     MidiManager::recalculateNoteListDT(midiData);
     auto *midiView = new TrackMidiView;
     TrackWidget *trackView = new TrackWidget(midiTrack,midiView,this);
-    midiData->instrumentName = QString::fromStdString(midi_track.name());
-
     trackView->id = ID++;
-    vLayout->addWidget(midiView);
     vSplitter->addWidget(trackView);
+
+    midiData->instrumentName = QString::fromStdString(midi_track.name());
+    vLayout->addWidget(midiView);
+    midiView->setScene(midiTrack->midiEditorState()->pianoRollScene);
+    midiView->fitInView(midiView->sceneRect());
     return trackView;
-}
-
-void TrackContainer::addTrackView(const mSong &song)
-{
-    //    foreach (const auto &track, song.tracks)
-    //    {
-    //        QWidget *widget = new QWidget;
-    //        auto *midiView = new TrackMidiView;
-    //        auto *view = new TrackView(track,midiView,this);
-    //        auto *hlayout = new QHBoxLayout;
-    //        hlayout->setAlignment(Qt::AlignTop);
-    //        hlayout->setSpacing(0);
-    //        hlayout->setContentsMargins(0,0,0,0);
-    //        widget->setLayout(hlayout);
-    //        hlayout->addWidget(view);
-
-    //        view->id = ID++;
-
-    //        emit addPianoRoll(view);
-    //        QObject::connect(view,&TrackView::trackClickedOn,pianoRollContainer,&PianoRollContainer::switchPianoRoll);
-    //        vLayout->addWidget(midiView);
-    //        vSplitter->addWidget(view);
-    //        view->pluginTrack = pluginEditorContainer->addTrack(view);
-    //    }
-    //    adjustSize();
 }
 
 
@@ -99,8 +76,9 @@ TrackWidget* TrackContainer::addSingleView(TrackMidi *midiTrack)
     auto *midiView = new TrackMidiView;
     TrackWidget *trackView = new TrackWidget(midiTrack,midiView,this);
     trackView->id = ID++;
-    vLayout->addWidget(midiView);
     vSplitter->addWidget(trackView);
+    vLayout->addWidget(midiView);
+
     midiView->setScene(midiTrack->midiEditorState()->pianoRollScene);
     midiView->fitInView(midiView->sceneRect());
     return trackView;
@@ -162,7 +140,7 @@ void TrackContainer::deleteAllTracks()
 void TrackContainer::trackClicked(TrackWidget *trackView)
 {
     director->setActiveTrack(trackView->midiTrack());
-   // _masterTrack->setCurrentTrack(trackView->midiTrack());
+    // _masterTrack->setCurrentTrack(trackView->midiTrack());
     //  pianoRollContainer->switchPianoRoll(trackView);
     for(const auto &track : getTrackViews())
     {

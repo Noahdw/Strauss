@@ -1,7 +1,7 @@
 #ifndef VST2HOSTCALLBACK_H
 #define VST2HOSTCALLBACK_H
 
-class PianoRoll;
+class PianoRollWidget;
 class PluginTrackView;
 class TrackMidi;
 
@@ -47,7 +47,7 @@ public:
     void initializeMidiEvents();
     void restartPlayback();
     void addMidiEvent(uchar status, uchar note, uchar velocity, qreal currentTick);
-    void setPianoRollRef(PianoRoll *piano);
+    void setPianoRollRef(PianoRollWidget *piano);
     void turnOffAllNotes();
     void showPlugin();
     void hidePlugin();
@@ -62,7 +62,7 @@ public:
     EventToAdd eventToAdd;
     int ccFramesTillBlock[128];
     int ccVecPos[128];
-    PianoRoll *pianoroll;
+    PianoRollWidget *pianoroll;
 
     double trackVolume = 1.0;
     float pan = 0.0;

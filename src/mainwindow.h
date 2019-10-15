@@ -16,14 +16,14 @@ class TrackDirector;
 #include <QUrl>
 #include <src/midiplayer.h>
 #include <QtConcurrent/QtConcurrent>
-#include <src/pianoroll.h>
+#include <src/pianorollwidget.h>
 #include <src/pianorollitem.h>
 #include <QVBoxLayout>
 #include <QMenuBar>
 #include <QMainWindow>
 #include <src/midimanager.h>
 #include <QGraphicsScene>
-#include <src/pianorollcontainer.h>
+#include <src/Controllers/pianorollcontainer.h>
 #include <src/trackcontainer.h>
 #include <src/headercontainer.h>
 #include <QLibrary>
@@ -33,7 +33,7 @@ class TrackDirector;
 #include <QPainter>
 #include <QKeyEvent>
 #include <QStackedWidget>
-#include "src/plugineditorcontainer.h"
+#include "src/Controllers/plugineditorcontainer.h"
 #include "src/settingsdialog.h"
 #include "src/mastertrack.h"
 #include "src/projectmanager.h"
@@ -47,10 +47,11 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-   // static QVector<Vst2HostCallback*> pluginHolderVec;
+
     AudioEngine *audio_engine;
     MasterTrack *masterTrack;
     MidiPlayer *player;
+
 public slots:
     void addNewTrack();
 
@@ -70,6 +71,7 @@ private slots:
     void switchNotationView();
     void loadProject();
     void exportAudio();
+
 private:
     void setUpMenuBar();
     void setUpTabViews();
@@ -97,6 +99,7 @@ private:
     QAction *saveAsAction;
     QAction *loadAction;
     QAction *switchNotationAction;
+
     int velocity = 70;
     QWidget *centralWidget;
     QWidget *pluginEdiorCentralWidget;
